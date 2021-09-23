@@ -9,7 +9,7 @@
 
 권나연 김광훈 안휘원 양해준
 
-## 🛠 사용기술
+## 🛠 [사용기술](https://github.com/hellonayeon/recipe-recommend-service/wiki/%EC%82%AC%EC%9A%A9-%EA%B8%B0%EC%88%A0-%EC%86%8C%EA%B0%9C)
 
 ### Front-End
 
@@ -28,7 +28,7 @@ MongoDB
 농림축산식품 공공데이터
 
 
-## 💡 주요기능
+## 💡 [주요기능](https://github.com/hellonayeon/recipe-recommend-service/wiki/%EC%A3%BC%EC%9A%94-%EA%B8%B0%EB%8A%A5-%EC%86%8C%EA%B0%9C)
 
 * 냉장고 속 재료 선택
 
