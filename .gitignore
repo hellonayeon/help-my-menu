@@ -1,5 +1,6 @@
-#########################################
-##### JetBrains IDE Project Setting #####
-#########################################
+# JetBrains IDE Project Setting 
 
 **/.idea
+
+# Image files
+/static/images
