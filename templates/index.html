@@ -10,6 +10,12 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
+    <!-- File Upload -->
+    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <!-- Google Font: Jua -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,6 +31,7 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 
+
     <title></title>
 
     <style>
@@ -33,7 +40,7 @@
         }
 
         .wrap {
-            width: 800px;
+            width: 1000px;
             margin: 20px auto 20px auto; /* 컨텐츠 상우하좌 여백 설정 */
         }
 
@@ -52,6 +59,11 @@
             margin-botton: 50px;
         }
 
+        #detail-step > div {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
         /* 레시피 상세정보 이미지 크기 채우기 */
         .detail-img-container {
             overflow:hidden;
@@ -64,13 +76,45 @@
             object-fit:cover;
         }
 
+        #comment-box {
+            margin-top: 30px;
+        }
+
+        .comment-upload-box {
+            margin-top: 20px;
+        }
+
+        .comment-text-area {
+            height: 150px;
+        }
+
+        #comment-list {
+            height: 400px;
+            overflow:auto;
+
+            margin-bottom: 20px;
+
+            border: 1px solid gray;
+            border-radius: 10px;
+        }
+
+        #comment-list > div {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
     </style>
 
 
     <script>
 
         $(document).ready(function(){
+            // 사진 업로드
+            bsCustomFileInput.init()
 
+            // 레시피 카드 클릭시 호출
+            getRecipeDetail(1)
+            getComment(1)
         })
 
         /* 레시피 상세정보 요청 함수 */
@@ -81,7 +125,6 @@
                 type: "GET",
                 url: `/recipe/detail?recipe_id=${recipe_id}`,
                 success: function(response) {
-                    console.log(response)
                     makeRecipeDetail(response["info"], response["detail"])
                 }
             })
@@ -99,22 +142,92 @@
             `
             let detail_html = ``
             detail.forEach(function(step){
-                detail_html += `<p>STEP<span class="detail-step-num">${step["COOKING_NO"]}. </span> ${step["COOKING_DC"]}</p>`
+                detail_html += `<div class="col-12">STEP<span class="detail-step-num">${step["COOKING_NO"]}. </span> ${step["COOKING_DC"]}</div>`
             })
+
+            // 댓글 저장 시, RECIPE_ID 정보 필요
+            let comment_btn_html = `<button type="button" class="btn btn-primary" onclick="saveComment(${info["RECIPE_ID"]})">댓글 작성</button>`
 
             // 이전에 출력했던 상세정보 지우기
             $('#detail-img').empty()
             $('#detail-info').empty()
             $('#detail-step').empty()
+            $('#comment_upload-btn-div').empty()
 
             $('#detail-img').attr("src", info["IMG_URL"])
             $('#detail-info').append(info_html)
             $('#detail-step').append(detail_html)
+            $('#comment-upload-btn-div').append(comment_btn_html)
         }
 
-        /* HTML요소 보이기&숨기기 제어 함수 */
-        function showControl() {
+        /* 댓글 리스트 요청 함수 */
+        function getComment(recipe_id) {
+            console.log("called 'getComment' func. recipe_id=" + recipe_id)
+            $.ajax({
+                type: "GET",
+                url: `/recipe/comment?recipe_id=${recipe_id}`,
+                success: function(response) {
+                    makeComment(response)
+                }
+            })
+        }
 
+        /* 댓글 저장 요청 함수 */
+        function saveComment(recipe_id) {
+            console.log("called 'saveComment' func.")
+
+            let text = $('#comment-text-area').val()
+            let img_src = $('#file')[0].files[0]
+
+            let form_data = new FormData()
+            form_data.append("recipe_id", recipe_id)
+            form_data.append("text", text)
+            form_data.append("img_src", img_src)
+
+            $.ajax({
+                type: "POST",
+                url: "/recipe/comment",
+                data: form_data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    getComment(recipe_id)
+                }
+            })
+        }
+
+        /* 작성한 댓글을 댓글 리스트에 출력하는 함수 */
+        function makeComment(comments) {
+            console.log("called 'makeComment' func.")
+
+            // 업로드된 파일, 댓글창 지우기
+            $('#file').val("")
+            $('#img-src-label').empty()
+            $('#comment-text-area').val("")
+            // 댓글 리스트 다시 출력
+            $('#comment-list').empty()
+
+            let comment_html = ``
+            comments.forEach(function(comment) {
+                // 이미지가 있는 경우
+                if(comment["IMG_SRC"] != "") {
+                    comment_html += `<div class="row">
+                                        <div class="col-12"><img src="../static/images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"></div>
+                                        <div class="col-12">${comment["TEXT"]}</div>
+                                        <div class="col-12">${comment["DATE"]}</div>
+                                    </div>`
+                }
+                // 이미지가 없는 경우
+                else {
+                    comment_html += `<div class="row">
+                                        <div class="col-12">${comment["TEXT"]}</div>
+                                        <div class="col-12">${comment["DATE"]}</div>
+                                     </div>`
+                }
+            })
+
+            $('#comment-list').append(comment_html)
         }
 
     </script>
@@ -125,15 +238,39 @@
     <div class="wrap">
 
         <!-- 레시피 상세 정보 영역 -->
-        <div id="detail-box">
+        <div class="container" id="detail-box">
             <div class="row">
-                <div class="col md-6" class="detail-img-container"><img id="detail-img" src=""></div>
-                <div class="col md-6" id="detail-info"></div>
+                <div class="col" class="detail-img-container"><img id="detail-img" src=""></div>
+                <div class="col" id="detail-info"></div>
             </div>
-            <div class="row"><div id="detail-step"></div></div>
-            <div class="row"><button type="button" class="btn btn-primary" onclick="getRecipeDetail(1)">닫기</button></div>
+            <div class="row" id="detail-step"></div>
         </div>
 
+        <!-- 댓글 영역 -->
+        <div class="container" id="comment-box">
+            <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>
+            <!-- 등록된 댓글 리스트 -->
+            <div class="container" id="comment-list"></div>
+            <!-- 댓글 입력 [텍스트, 사진, 확인] -->
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 form-floating">
+                      <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요" id="comment-text-area"></textarea>
+                    </div>
+                </div>
+                <div class="row comment-upload-box justify-content-end" id="comment-upload-box">
+                    <div class="col-4 custom-file">
+                        <input type="file" class="custom-file-input" id="file">
+                        <label class="custom-file-label" for="file" placeholder="사진 업로드" id="img-src-label"></label>
+                    </div>
+                    <div class="col-1" id="comment-upload-btn-div">
+                        <!-- 댓글 작성 버튼 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row"><button type="button" class="btn btn-primary" onclick="">닫기</button></div>
     </div>
 </body>
 </html>

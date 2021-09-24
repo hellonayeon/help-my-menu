@@ -1,3 +1,6 @@
 # JetBrains IDE Project Setting 
 
 **/.idea
+
+# Image files
+/static/images
