@@ -14,17 +14,255 @@
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-        crossorigin="anonymous"></script>
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-        crossorigin="anonymous"></script>
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
 
     <title></title>
+
+
+    <style>
+        .wrap {
+            width: 1000px;
+            margin: auto;
+        }
+
+        .comment-list {
+            width: 700px;
+            margin: auto;
+        }
+
+        .title-text {
+            margin-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        {#.heart {#}
+        {#    background-image: url("heart.svg");#}
+        {#}#}
+
+    </style>
+
+    <script>
+        let recipeId
+
+        //댓글 시간 표시
+        let today = new Date();
+        $('#time').text(`${today.toLocaleString()}`)
+
+
+        $(document).ready(function () {
+            getRecipeList();
+            $('#replay');
+        });
+
+        // 전체 레시피 불러오기
+
+        function getRecipeList() {
+            $.ajax({
+                type: "GET",
+                url: "/recipe",
+                data: {},
+                success: function (response) {
+                    let recipe = response['recipe_list']
+                    for (let i = 0; i < recipe.length; i++) {
+                        let recipeUrl = recipe[i]['IMG_URL']
+                        let recipeName = recipe[i]['RECIPE_NM_KO']
+                        let recipeDesc = recipe[i]['SUMRY']
+                        recipeId = recipe[i]['RECIPE_ID']
+
+                        makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc)
+                    }
+                }
+            })
+        }
+
+        // 레시피 세부사항 표시
+
+        function getDetailRecipe(recipeId) {
+            $('#recipe-list').hide();
+            $('#detail-list').show();
+            $.ajax({
+                type: "GET",
+                url: `/recipe/code?recipe-id=${recipeId}`,
+                data: {},
+                success: function (response) {
+                    let recipeUrl = response['recipe']['IMG_URL']
+                    let recipeName = response['recipe']['RECIPE_NM_KO']
+                    let recipeDesc = response['recipe']['SUMRY']
+                    let recipeProcess = response['recipe_process']
+
+                    makeDetailRecipe(recipeId, recipeUrl, recipeName, recipeDesc,)
+
+                    for (let i = 0; i < recipeProcess.length; i++) {
+                        let cookingNum = recipeProcess[i]['COOKING_NO']
+                        let cookingDsce = recipeProcess[i]['COOKING_DC']
+                        console.log(cookingNum, cookingDsce)
+
+                        makeRecipeProcess(cookingNum, cookingDsce)
+                    }
+                    getCommentList(recipeId)
+                }
+            })
+
+        }
+
+        // 댓글 입력
+
+        function getComment(recipeId) {
+            let userName = $('#user-name').val();
+            let userComment = $('#user-comment').val();
+            console.log(userName, userComment)
+
+            $.ajax({
+                type: 'POST',
+                url: '/recipe/comment',
+                data: {userName: userName, userComment: userComment, recipeId: recipeId},
+                success: function (response) {
+                    alert(response['msg']);
+                    $('#user-name').val('');
+                    $('#user-comment').val('');
+                    getCommentList(recipeId);
+                }
+            });
+        }
+
+        // 댓글 리스트 보기
+
+        function getCommentList(recipeId) {
+            $.ajax({
+                type: 'GET',
+                url: `/recipe/comment?recipe-id=${recipeId}`,
+                data: {},
+                success: function (response) {
+                    let user = response['recipe_comment']
+                    console.log(user)
+                    for (let i = 0; i < user.length; i++) {
+                        let userName = user[i]['USER_NM']
+                        let userComment = user[i]['USER_COMT']
+                        console.log(userName, userComment)
+
+                        makeComment(userName, userComment)
+                    }
+
+                }
+            });
+        }
+
+
+        // 레시피 리스트 html
+
+        function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc) {
+            let tempHtml = `<div  id="recipe${recipeId}" class="card">
+                                <img class="card-img-top" src="${recipeUrl}" alt="Card image cap">
+                                <div class="card-body">
+                                    <h5 class="card-title">${recipeName}<a href="#" class="btn btn-primary"><img src="./heart.svg"></a></h5>
+                                    <p class="card-text">${recipeDesc}</p>
+                                    <button onclick="getDetailRecipe(${recipeId})" class="card-link">더보기</button>
+                                </div>
+                            </div>`
+            $('#recipe-list').append(tempHtml)
+        }
+
+        // 상세 레시피 html
+
+        function makeDetailRecipe(recipeId, recipeUrl, recipeName, recipeDesc,) {
+            let tempHtml = `<div class="card">
+                                <img class="card-img-top" src="${recipeUrl}" alt="Card image cap">
+                                <div class="card-body">
+                                    <h5 class="card-title">${recipeName}<a href="#" class="btn btn-primary">좋아요</a></h5>
+                                    <p class="card-text">${recipeDesc}</p>
+                                    <hr>
+                                    <div id="recipe-process">
+                                        <p>조리 방법</p>
+                                    </div>
+                                    <button onclick="closeDetail()" class="card-link">더보기 닫기</button>
+                                </div>
+                            </div>`
+
+            tempHtml += `<div id="comment-input" class="comment-input">
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="basic-addon1">Username</span>
+                                </div>
+                                <input id="user-name" type="text" class="form-control" placeholder="" aria-label="Username"
+                                       aria-describedby="basic-addon1">
+                            </div>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Comment</span>
+                                </div>
+                                <textarea id="user-comment" class="form-control" aria-label="With textarea"></textarea>
+                            </div>
+                            <button onclick="getComment(${recipeId})" style="display:block; margin-top: 10px; margin-left: 580px;" type="button"
+                                    class="btn btn-secondary btn-lg">댓글 입력
+                            </button>
+                        </div>`
+
+            $('#detail-list').append(tempHtml)
+        }
+
+        // 댓글 html
+
+        function makeComment(userName, userComment) {
+            let tempHtml = `<p>${userName}</p>
+                        <p>${userComment}</p>
+                        <p id="time" style="font-size : 5px;"></p>
+                        <a href="">수정</a>
+                        <a href="">삭제</a>
+                        <hr>`
+
+            $('#comment').append(tempHtml)
+        }
+
+        // 레시피 프로세스 보기
+
+        function makeRecipeProcess(cookingNum, cookingDsce) {
+            let tempHtml = `<p>${cookingNum}. ${cookingDsce}</p>`
+
+            $('#recipe-process').append(tempHtml)
+        }
+
+        // 더보기
+        function closeDetail() {
+            location.reload();
+        }
+
+        // 다시 선택
+        function replay() {
+            location.reload();
+        }
+
+
+    </script>
 </head>
 
 <body>
-    <h1>테스트</h1>
+<div class="wrap">
+    <div class="jumbotron">
+        <h1 class="display-4">Help My Menu</h1>
+        <p class="lead">냉장고에 있는 재료로 맛있는 요리를 만들어보아요.</p>
+        <hr class="my-4">
+        <p id="tag"></p>
+        <p class="lead">
+            <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
+        </p>
+    </div>
+
+    <div id="recipe-list" class="card-columns"></div>
+    <div id="detail-list" style="display:none;"></div>
+
+    <div id="refresh" class="comment-list">
+        <h3 class="title-text">댓글 목록</h3>
+        <hr>
+        <div id="comment">
+        </div>
+    </div>
+
+
+</div>
 </body>
 
 </html>
