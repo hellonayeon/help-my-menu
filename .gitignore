@@ -1,5 +1,13 @@
-#########################################
 ##### JetBrains IDE Project Setting #####
-#########################################
 
 **/.idea
+
+
+##### Python directory #####
+
+/__pycache__
+
+
+##### API Key File #####
+
+/keys.txt
