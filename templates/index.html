@@ -35,6 +35,10 @@
     <title></title>
 
     <style>
+        * {
+            font-family: 'Jua', sans-serif;
+        }
+
         .wrap {
             width: 1000px;
             margin: auto;
@@ -45,8 +49,14 @@
             padding-bottom: 10px;
         }
 
-        * {
-            font-family: 'Jua', sans-serif;
+        .detail-title {
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .detail-info {
+            font-size: 20px;
+            color: lightgray;
         }
 
         #detail-box > div {
@@ -104,17 +114,33 @@
     <script>
         let recipe_id
 
+        // 화면 출력 제어 플래그
+        const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
+        const RECIPE_DETAIL_DISPLAY = "RECIPE_DETAIL_DISPLAY"
+
         $(document).ready(function () {
             getRecipeList();
 
             // 사진 업로드
             bsCustomFileInput.init()
 
-            // 수정(광훈) - getRecipeDetail()함수와 자세히 버튼과 연동했습니다.
-            // 레시피 카드 클릭시 호출
-            // getRecipeDetail(1)
-            // getComment(1)
+            // 화면 출력 내용: 초기에는 "레시피 리스트"로 설정
+            showControl(RECIPE_LIST_DISPLAY)
         });
+
+        /* 화면에 보여지는 내용 보이기, 숨기기 */
+        function showControl(display) {
+            switch (display) {
+                case RECIPE_LIST_DISPLAY:
+                    $("#recipe-detail-container").hide()
+                    $("#recipe-list-container").show()
+                    break
+                case RECIPE_DETAIL_DISPLAY:
+                    $("#recipe-list-container").hide()
+                    $("#recipe-detail-container").show()
+                    break
+            }
+        }
 
         // 전체 레시피 불러오기
 
@@ -145,7 +171,7 @@
                                 <div class="card-body">
                                     <h5 class="card-title">${recipe_name}<a href="#" class="btn btn-primary">좋아요</a></h5>
                                     <p class="card-text">${recipe_desc}</p>
-                                    <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id})" class="card-link">자세히</a>
+                                    <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>
                                 </div>
                             </div>`
             $('#recipe-list').append(tempHtml)
@@ -153,11 +179,11 @@
 
         /* 레시피 상세정보 요청 함수 */
         function getRecipeDetail(recipe_id) {
-            /* 추가(광훈) - 자세히 누르면 기본레시피 숨김, 세부페이지 보임 */
-            $('#recipe-list').hide();
-            $('#detail-box').show();
-            $('#comment-box').show();
-            $('#closeBtn').show();
+            /* 추가(광훈) - 자세히 누르면 기본레시피 숨김, 세부페이지 보임 -> (나연) 'showControl()' 함수로 분리했습니다!*/
+            // $('#recipe-list').hide();
+            // $('#detail-box').show();
+            // $('#comment-box').show();
+            // $('#closeBtn').show();
             console.log("called 'getRecipeDetail' func.")
 
             $.ajax({
@@ -191,7 +217,7 @@
             $('#detail-img').empty()
             $('#detail-info').empty()
             $('#detail-step').empty()
-            $('#comment_upload-btn-div').empty()
+            $('#comment-upload-btn-div').empty()
 
             $('#detail-img').attr("src", info["IMG_URL"])
             $('#detail-info').append(info_html)
@@ -279,69 +305,66 @@
             location.reload();
         }
 
-    </script>
-
-
+        </script>
 </head>
 
 <body>
-<div class="wrap">
+    <div class="wrap">
 
-    <!-- 레시피 리스트 화면 내용 -->
-    <!----------------------->
-    <div class="jumbotron">
-        <h1 class="display-4">Help My Menu</h1>
-        <p class="lead">냉장고에 있는 재료로 맛있는 요리를 만들어보아요.</p>
-        <hr class="my-4">
-        <p id="tag"></p>
-        <p class="lead">
-            <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
-        </p>
-    </div>
-    <div id="recipe-list" class="card-columns"></div>
+        <!-- 레시피 리스트 화면 내용 -->
+        <!----------------------->
+        <div class="container" id="recipe-list-container">
+            <div class="jumbotron">
+                <h1 class="display-4">Help My Menu</h1>
+                <p class="lead">냉장고에 있는 재료로 맛있는 요리를 만들어보아요.</p>
+                <hr class="my-4">
+                <p id="tag"></p>
+                <p class="lead">
+                    <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
+                </p>
+            </div>
 
-
-    <!-- 레시피 상세보기 화면 내용 -->
-    <!----------------------->
-    <!-- 레시피 상세 정보 영역 -->
-    <!-- 추가(광훈) - 상세 영억 보이지 않음 설정 -->
-    <div class="container" id="detail-box" style="display:none;">
-        <div class="row">
-            <div class="col" class="detail-img-container"><img id="detail-img" src=""></div>
-            <div class="col" id="detail-info"></div>
+            <div id="recipe-list" class="card-columns"></div>
         </div>
-        <div class="row" id="detail-step"></div>
-    </div>
-    <!-- 댓글 영역 -->
-    <!-- 추가(광훈) - 댓글 영억 보이지 않음 설정 -->
-    <div class="container" id="comment-box" style="display: none;">
-        <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>
-        <!-- 등록된 댓글 리스트 -->
-        <div class="container" id="comment-list"></div>
-        <!-- 댓글 입력 [텍스트, 사진, 확인] -->
-        <div class="container">
-            <div class="row">
-                <div class="col-12 form-floating">
-                    <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요"
-                              id="comment-text-area"></textarea>
+
+        <!-- 레시피 상세보기 화면 내용 -->
+        <!----------------------->
+        <!-- 레시피 상세 정보 영역 -->
+        <div class="container" id="recipe-detail-container">
+            <div class="container" id="detail-box">
+                <div class="row">
+                    <div class="col" class="detail-img-container"><img id="detail-img" src=""></div>
+                    <div class="col" id="detail-info"></div>
+                </div>
+                <div class="row" id="detail-step"></div>
+            </div>
+            <!-- 댓글 영역 -->
+            <div class="container" id="comment-box">
+                <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>
+                <!-- 등록된 댓글 리스트 -->
+                <div class="container" id="comment-list"></div>
+                <!-- 댓글 입력 [텍스트, 사진, 확인] -->
+                <div class="container">
+                    <div class="row">
+                        <div class="col-12 form-floating">
+                          <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요" id="comment-text-area"></textarea>
+                        </div>
+                    </div>
+                    <div class="row comment-upload-box justify-content-end" id="comment-upload-box">
+                        <div class="col-4 custom-file">
+                            <input type="file" class="custom-file-input" id="file">
+                            <label class="custom-file-label" for="file" placeholder="사진 업로드" id="img-src-label"></label>
+                        </div>
+                        <div class="col-1" id="comment-upload-btn-div">
+                            <!-- 댓글 작성 버튼: (레시피 아이디를 기반으로 한 버튼 아이디 값 부여하기 위해 동적으로 생성 -->
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="row comment-upload-box justify-content-end" id="comment-upload-box">
-                <div class="col-4 custom-file">
-                    <input type="file" class="custom-file-input" id="file">
-                    <label class="custom-file-label" for="file" placeholder="사진 업로드" id="img-src-label"></label>
-                </div>
-                <div class="col-1" id="comment-upload-btn-div">
-                    <!-- 댓글 작성 버튼 -->
-                </div>
-            </div>
+
+            <div class="row"><button type="button" class="btn btn-primary" onclick="showControl(RECIPE_LIST_DISPLAY)">닫기</button></div>
         </div>
     </div>
 
-    <!-- 추가(광훈) - 버튼 보이지 않음 설정 / 클릭시 새로고침(임시방편) -->
-    <div id="closeBtn" class="row" style="display: none;">
-        <button type="button" class="btn btn-primary" onclick="closeDetail()">닫기</button>
-    </div>
-</div>
 </body>
 </html>

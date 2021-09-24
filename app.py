@@ -14,9 +14,8 @@ def home():
 # 전체 레시피 리스트
 @app.route('/recipe', methods=['GET'])
 def recipe_list():
-    recipe_list = list(db.recipe_basic.find({},{'_id':False}))
+    recipe_list = list(db.recipe_basic.find({},{'_id':False}))[:5] # 테스트용 상위 5개 데이터
     return jsonify({'recipe_list':recipe_list})
-
 
 # 레시피 상세정보 API
 @app.route('/recipe/detail', methods=['GET'])
@@ -35,6 +34,22 @@ def get_recipe_detail():
 
     return jsonify({"info":info, "detail": detail})
 
+# 댓글 목록 API
+@app.route('/recipe/comment', methods=['GET'])
+def get_comments():
+    recipe_id = int(request.args.get("recipe_id"))
+    print(recipe_id)
+    comments = list(db.comment.find({"RECIPE_ID": recipe_id}, {"_id": False}))
+    print(f'comments = {comments}')
+
+    return jsonify(comments)
+
+
+# 댓글 작성 API
+@app.route('/recipe/comment', methods=['POST'])
+def save_comment():
+    recipe_id = int(request.form["recipe_id"])
+    text = request.form["text"]
 
     # [업로드 이미지 처리]
     # 클라이언트가 업로드한 파일을 서버에 저장
@@ -72,8 +87,6 @@ def get_recipe_detail():
     db.comment.insert_one(doc)
 
     return jsonify({'result': 'success'})
-
-
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
