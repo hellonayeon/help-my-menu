@@ -14,17 +14,17 @@ def home():
 # 전체 레시피 리스트
 @app.route('/recipe', methods=['GET'])
 def recipe_list():
-    recipe_list = list(db.recipe_basic.find({},{'_id':False}))
+    recipe_list = list(db.recipe_basic.find({},{'_id':False}))[:5]
     return jsonify({'recipe_list':recipe_list})
 
-# 레시피 상세 보기
-@app.route('/recipe/code', methods=['GET'])
-def detail_recipe():
-    recipe_id = int(request.args.get('recipe-id'))
-    recipe_number = list(db.recipe_number.find({'RECIPE_ID':recipe_id},{'_id':False}))
-    recipe = db.recipe_basic.find_one({'RECIPE_ID':recipe_id}, {"_id": False})
-    return jsonify({'recipe_process':recipe_number, 'recipe':recipe})
-
+# # 레시피 상세 보기
+# @app.route('/recipe/code', methods=['GET'])
+# def detail_recipe():
+#     recipe_id = int(request.args.get('recipe-id'))
+#     recipe_number = list(db.recipe_number.find({'RECIPE_ID':recipe_id},{'_id':False}))
+#     recipe = db.recipe_basic.find_one({'RECIPE_ID':recipe_id}, {"_id": False})
+#     return jsonify({'recipe_process':recipe_number, 'recipe':recipe})
+#
 # # 댓글 DB저장
 # @app.route('/recipe/comment', methods=['POST'])
 # def recipe_comment():

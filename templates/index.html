@@ -35,6 +35,10 @@
     <title></title>
 
     <style>
+        * {
+            font-family: 'Jua', sans-serif;
+        }
+
         .wrap {
             width: 1000px;
             margin: auto;
@@ -48,14 +52,6 @@
         .title-text {
             margin-top: 10px;
             padding-bottom: 10px;
-        }
-
-        {#.heart {#}
-        {#    background-image: url("heart.svg");#}
-        {#}#}
-
-         * {
-            font-family: 'Jua', sans-serif;
         }
 
         .detail-title {
@@ -127,10 +123,18 @@
         let today = new Date();
         $('#time').text(`${today.toLocaleString()}`)
 
+        // 화면 출력 제어 플래그
+        const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
+        const RECIPE_DETAIL_DISPLAY = "RECIPE_DETAIL_DISPLAY"
 
         $(document).ready(function () {
             getRecipeList();
             $('#replay');
+
+            // 사진 업로드
+            bsCustomFileInput.init()
+            // 레시피 리스트 출력 (상세보기 구역 안보이게)
+            showControl(RECIPE_LIST_DISPLAY)
         });
 
         // 전체 레시피 불러오기
@@ -230,10 +234,10 @@
         // 레시피 리스트 html
 
         function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc) {
-            let tempHtml = `<div  id="recipe${recipeId}" class="card">
+            let tempHtml = `<div  id="recipe${recipeId}" class="card" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(RECIPE_DETAIL_DISPLAY)">
                                 <img class="card-img-top" src="${recipeUrl}" alt="Card image cap">
                                 <div class="card-body">
-                                    <h5 class="card-title">${recipeName}<a href="#" class="btn btn-primary"><img src="./heart.svg"></a></h5>
+                                    <h5 class="card-title">${recipeName}<a href="#" class="btn btn-primary"><img src="./static/heart.svg"></a></h5>
                                     <p class="card-text">${recipeDesc}</p>
                                     <button onclick="getDetailRecipe(${recipeId})" class="card-link">더보기</button>
                                 </div>
@@ -292,15 +296,6 @@
             $('#comment').append(tempHtml)
         }
 
-        $(document).ready(function(){
-            // 사진 업로드
-            bsCustomFileInput.init()
-
-            // 레시피 카드 클릭시 호출
-            getRecipeDetail(1)
-            getComment(1)
-        })
-
         /* 레시피 상세정보 요청 함수 */
         function getRecipeDetail(recipe_id) {
             console.log("called 'getRecipeDetail' func.")
@@ -336,7 +331,7 @@
             $('#detail-img').empty()
             $('#detail-info').empty()
             $('#detail-step').empty()
-            $('#comment_upload-btn-div').empty()
+            $('#comment-upload-btn-div').empty()
 
             $('#detail-img').attr("src", info["IMG_URL"])
             $('#detail-info').append(info_html)
@@ -432,12 +427,21 @@
             location.reload();
         }
 
+        /* 화면에 보여지는 내용 컨트롤 */
+        function showControl(display) {
+            switch (display) {
+                case RECIPE_LIST_DISPLAY:
+                    $("#recipe-detail-container").hide()
+                    $("#recipe-list-container").show()
+                    break
+                case RECIPE_DETAIL_DISPLAY:
+                    $("#recipe-list-container").hide()
+                    $("#recipe-detail-container").show()
+                    break
+            }
+        }
+
         </script>
-
-
-
-
-
 </head>
 
 <body>
@@ -445,61 +449,65 @@
 
         <!-- 레시피 리스트 화면 내용 -->
         <!----------------------->
-        <div class="jumbotron">
-            <h1 class="display-4">Help My Menu</h1>
-            <p class="lead">냉장고에 있는 재료로 맛있는 요리를 만들어보아요.</p>
-            <hr class="my-4">
-            <p id="tag"></p>
-            <p class="lead">
-                <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
-            </p>
-        </div>
+        <div class="container" id="recipe-list-container">
+            <div class="jumbotron">
+                <h1 class="display-4">Help My Menu</h1>
+                <p class="lead">냉장고에 있는 재료로 맛있는 요리를 만들어보아요.</p>
+                <hr class="my-4">
+                <p id="tag"></p>
+                <p class="lead">
+                    <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
+                </p>
+            </div>
 
-        <div id="recipe-list" class="card-columns"></div>
-        <div id="detail-list" style="display:none;"></div>
+            <div id="recipe-list" class="card-columns"></div>
+            <div id="detail-list" style="display:none;"></div>
 
-        <div id="refresh" class="comment-list">
-            <h3 class="title-text">댓글 목록</h3>
-            <hr>
-            <div id="comment">
+            <div id="refresh" class="comment-list">
+                <h3 class="title-text">댓글 목록</h3>
+                <hr>
+                <div id="comment">
+                </div>
             </div>
         </div>
 
         <!-- 레시피 상세보기 화면 내용 -->
         <!----------------------->
         <!-- 레시피 상세 정보 영역 -->
-        <div class="container" id="detail-box">
-            <div class="row">
-                <div class="col" class="detail-img-container"><img id="detail-img" src=""></div>
-                <div class="col" id="detail-info"></div>
-            </div>
-            <div class="row" id="detail-step"></div>
-        </div>
-        <!-- 댓글 영역 -->
-        <div class="container" id="comment-box">
-            <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>
-            <!-- 등록된 댓글 리스트 -->
-            <div class="container" id="comment-list"></div>
-            <!-- 댓글 입력 [텍스트, 사진, 확인] -->
-            <div class="container">
+        <div class="container" id="recipe-detail-container">
+            <div class="container" id="detail-box">
                 <div class="row">
-                    <div class="col-12 form-floating">
-                      <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요" id="comment-text-area"></textarea>
-                    </div>
+                    <div class="col" class="detail-img-container"><img id="detail-img" src=""></div>
+                    <div class="col" id="detail-info"></div>
                 </div>
-                <div class="row comment-upload-box justify-content-end" id="comment-upload-box">
-                    <div class="col-4 custom-file">
-                        <input type="file" class="custom-file-input" id="file">
-                        <label class="custom-file-label" for="file" placeholder="사진 업로드" id="img-src-label"></label>
+                <div class="row" id="detail-step"></div>
+            </div>
+            <!-- 댓글 영역 -->
+            <div class="container" id="comment-box">
+                <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>
+                <!-- 등록된 댓글 리스트 -->
+                <div class="container" id="comment-list"></div>
+                <!-- 댓글 입력 [텍스트, 사진, 확인] -->
+                <div class="container">
+                    <div class="row">
+                        <div class="col-12 form-floating">
+                          <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요" id="comment-text-area"></textarea>
+                        </div>
                     </div>
-                    <div class="col-1" id="comment-upload-btn-div">
-                        <!-- 댓글 작성 버튼 -->
+                    <div class="row comment-upload-box justify-content-end" id="comment-upload-box">
+                        <div class="col-4 custom-file">
+                            <input type="file" class="custom-file-input" id="file">
+                            <label class="custom-file-label" for="file" placeholder="사진 업로드" id="img-src-label"></label>
+                        </div>
+                        <div class="col-1" id="comment-upload-btn-div">
+                            <!-- 댓글 작성 버튼 -->
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="row"><button type="button" class="btn btn-primary" onclick="">닫기</button></div>
+            <div class="row"><button type="button" class="btn btn-primary" onclick="showControl(RECIPE_LIST_DISPLAY)">닫기</button></div>
+        </div>
     </div>
 </body>
 </html>
