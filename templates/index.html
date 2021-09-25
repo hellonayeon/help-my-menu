@@ -183,6 +183,7 @@
                                 </div>
                             </div>`
             }
+
             $('#recipe-list').append(tempHtml)
         }
 
@@ -437,6 +438,9 @@
         <!----------------------->
         <div class="container" id="recipe-list-container">
             <div class="jumbotron">
+                <!-- [추천, 좋아요] 페이지 네비게이션 -->
+                <!-- 상세정보 페이지에서는 네비게이션 숨김 -->
+                <!-- FIXME: 최종적인 페이지 구성에 따라 변경 필요 -->
                 <ul class="nav" style="margin: -40px 0px 0px 0px">
                     <li class="nav-item" id="part-rec">
                         <a class="nav-link active" aria-current="page" href="#" onclick="changePart('rec')">추천</a>
@@ -446,6 +450,7 @@
                     </li>
                 </ul>
                 <hr>
+
                 <h1 class="display-4">Help My Menu</h1>
                 <p class="lead">냉장고에 있는 재료로 맛있는 요리를 만들어보아요.</p>
                 <hr class="my-4">
