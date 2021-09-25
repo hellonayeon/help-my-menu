@@ -5,6 +5,12 @@ client = MongoClient('localhost', 27017)
 # client = MongoClient('mongodb://test:test@localhost', 27017) # EC2 업로드용
 db = client.dbrecipe
 
+def database_del():
+    if db.recipe_basic.estimated_document_count() :
+        db.recipe_basic.delete_many({})
+        db.recipe_ingredient.delete_many({})
+        db.recipe_number.delete_many({})
+
 def database_init():
     # 데이터 기본 정보 537개
     url = "http://211.237.50.150:7080/openapi/636efef2ee651816d34e0aa4bae9f1a0f131cab04e533fef4273222d9bdf56fd/json/Grid_20150827000000000226_1/1/537"
@@ -41,4 +47,5 @@ def database_init():
 
     print("Success")
 
+database_del()
 database_init()
