@@ -24,13 +24,12 @@ def get_recipe_detail():
 
     # 레시피 정보
     projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
+                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
     info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
-    print(info)
 
     # 상세정보(조리과정)
     projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
-    detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
+    detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection).sort("Liked",-1))
 
     return jsonify({"info":info, "detail": detail})
 
@@ -87,6 +86,34 @@ def save_comment():
     db.comment.insert_one(doc)
 
     return jsonify({'result': 'success'})
+
+# 좋아요 누르기
+@app.route('/recipe/like', methods=['PUT'])
+def set_like():
+    recipe_id = request.form['recipe_id']
+    target_recipe = list(db.recipe_basic.find({"RECIPE_ID": int(recipe_id)}))
+    current_like = target_recipe[0]["Liked"]
+    new_like = current_like + 1
+    db.recipe_basic.update_one({"RECIPE_ID": int(recipe_id)}, {'$set': {"Liked": int(new_like)}})
+    return jsonify({"msg":"좋아요가 추가되었습니다."}) 
+
+# 좋아요 해제
+@app.route('/recipe/unlike', methods=['PUT'])
+def set_unlike():
+    recipe_id = request.form['recipe_id']
+    target_recipe = list(db.recipe_basic.find({"RECIPE_ID": int(recipe_id)}))
+    current_like = target_recipe[0]["Liked"]
+    new_like = current_like - 1
+    db.recipe_basic.update_one({"RECIPE_ID": int(recipe_id)}, {'$set': {"Liked": int(new_like)}})
+    return jsonify({"msg":"좋아요가 해제되었습니다."}) 
+
+# 좋아요 탭
+@app.route('/recipe/liked', methods=['GET'])
+def get_recipe_liked():
+    projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
+            "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
+    recipe_liked_list = list(db.recipe_basic.find({"Liked": {"$gte":1}}, projection).sort("Liked",-1))
+    return jsonify({'recipe_liked':recipe_liked_list})
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
