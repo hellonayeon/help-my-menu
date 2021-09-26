@@ -61,7 +61,7 @@
 
         #detail-box > div {
             margin-top: 50px;
-            margin-botton: 50px;
+            margin-bottom: 50px;
         }
 
         #detail-step > div {
@@ -150,14 +150,16 @@
                 url: "/recipe",
                 data: {},
                 success: function (response) {
+                    $('#recipe-list').empty();
                     let recipe = response['recipe_list']
                     for (let i = 0; i < recipe.length; i++) {
                         let recipe_url = recipe[i]['IMG_URL']
                         let recipe_name = recipe[i]['RECIPE_NM_KO']
                         let recipe_desc = recipe[i]['SUMRY']
-                        recipe_id = recipe[i]['RECIPE_ID']
+                        let recipe_id = recipe[i]['RECIPE_ID']
+                        let recipe_liked = recipe[i]['Liked']
 
-                        makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc)
+                        makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked)
                     }
                 }
             })
@@ -165,15 +167,23 @@
 
         // 레시피 리스트 html
 
-        function makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc) {
+        function makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
             let tempHtml = `<div  id="recipe${recipe_id}" class="card">
                                 <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
                                 <div class="card-body">
-                                    <h5 class="card-title">${recipe_name}<a href="#" class="btn btn-primary">좋아요</a></h5>
+                                    <h5 class="card-title">${recipe_name}</h5>
                                     <p class="card-text">${recipe_desc}</p>
-                                    <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>
+                                    <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
+            if (recipe_liked >= 1) {
+                tempHtml += `<a id="before-like_${recipe_id}" style="color:black; float:right; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_${recipe_id}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a>
                                 </div>
                             </div>`
+            } else {
+                tempHtml += `<a id="before-like_${recipe_id}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_${recipe_id}" style="color:red; float:right; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a>
+                                </div>
+                            </div>`
+            }
+
             $('#recipe-list').append(tempHtml)
         }
 
@@ -201,10 +211,17 @@
 
             let info_html = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                              <span class="detail-info">${info["COOKING_TIME"]}</span>
-                             <span class="detail-info">${info["QNT"]}</span>
+                             <span class="detail-info">${info["QNT"]}</span>` 
+            if (info['Liked'] >= 1) {
+                info_html += `<a id="before-like_detail_${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like_detail_${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
+                            
+                            <h4>${info["SUMRY"]}</h4>`
+            } else {
+                info_html += `<a id="before-like_detail_${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like_detail_${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
+                            
+                            <h4>${info["SUMRY"]}</h4>`
+            }
 
-                             <h4>${info["SUMRY"]}</h4>
-            `
             let detail_html = ``
             detail.forEach(function (step) {
                 detail_html += `<div class="col-12">STEP<span class="detail-step-num">${step["COOKING_NO"]}. </span> ${step["COOKING_DC"]}</div>`
@@ -305,6 +322,112 @@
             location.reload();
         }
 
+        // 좋아요 버튼 눌렀을 때
+        function setLike(recipe_id) {
+            $('#before-like_'+recipe_id).hide();            
+            $('#after-like_'+recipe_id).show();
+            $('#before-like_detail_'+recipe_id).hide();            
+            $('#after-like_detail_'+recipe_id).show();
+            $('#before-like_liked_'+recipe_id).hide();            
+            $('#after-like_liked_'+recipe_id).show();
+            $.ajax({
+                type: "PUT",
+                url: `/recipe/like?recipe-id=${recipe_id}`,
+                data: {recipe_id: recipe_id},
+                success: function (response) {
+                    alert(response["msg"]);
+                }
+            })
+        }
+
+        // 좋아요 해제
+        function setUnLike(recipe_id) { 
+            $('#after-like_'+recipe_id).hide();
+            $('#after-like_'+recipe_id).text();
+            $('#before-like_'+recipe_id).show();
+            $('#after-like_detail_'+recipe_id).hide();   
+            $('#before-like_detail_'+recipe_id).show();         
+            $('#after-like_liked_'+recipe_id).hide();   
+            $('#before-like_liked_'+recipe_id).show();         
+            $.ajax({
+                type: "PUT",
+                url:  `/recipe/unlike?recipe-id=${recipe_id}`,
+                data: {recipe_id: recipe_id},
+                success: function (response) {
+                    alert(response["msg"]);
+                }
+            })
+        }
+
+        function getRecipesLikedList() { // 좋아요 탭 
+            $.ajax({
+                type: "GET",
+                url: "/recipe/liked",
+                success: function (response) {
+                    $('#recipe-liked-list').empty();
+                    let recipe = response['recipe_liked'];
+                    console.log(response['recipe_liked'])
+                    for (let i = 0; i < recipe.length; i++) {
+                        let recipe_url = recipe[i]['IMG_URL']
+                        let recipe_name = recipe[i]['RECIPE_NM_KO']
+                        let recipe_desc = recipe[i]['SUMRY']
+                        let recipe_id = recipe[i]['RECIPE_ID']
+                        let recipe_liked = recipe[i]['Liked']
+
+                        makeRecipesLikedList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked)
+                    }
+                }
+            })
+        }
+
+        // 좋아요탭의 좋아요한 레시피 표시
+        function makeRecipesLikedList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
+            let tempHtml = `<div  id="recipe${recipe_id}" class="card">
+                                <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
+                                <div class="card-body">
+                                    <h5 class="card-title">${recipe_name}</h5>
+                                    <p class="card-text">${recipe_desc}</p>
+                                    <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
+            if (recipe_liked >= 1) {
+                tempHtml += `<a id="before-like_liked_${recipe_id}" style="color:black; float:right; display:none;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_liked_${recipe_id}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a>
+                                </div>
+                            </div>`
+
+            } else {
+                tempHtml += `<a id="before-like_liked_${recipe_id}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_liked_${recipe_id}" style="color:red; float:right; display:none;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a>
+                                </div>
+                            </div>`
+            }
+            $('#recipe-liked-list').append(tempHtml)
+        }        
+
+        function changePart(part) { // 좋아요 탭 눌렀을 경우 OK
+            if (part == 'rec') {
+                $('#recipe-liked-list').hide();
+                $('#recipe-list').show();
+                getRecipeList();
+                if ($('#part-rec').children("a").hasClass("disabled")) {
+                    $('#part-rec').children("a").removeClass("disabled")
+                    $('#part-rec').children("a").addClass("active")
+                }
+                if ($('#part-like').children("a").hasClass("active")) {
+                    $('#part-like').children("a").removeClass("active")
+                    $('#part-like').children("a").addClass("disabled")
+                }
+            } else {
+                $('#recipe-list').hide();
+                $('#recipe-liked-list').show();
+                getRecipesLikedList();
+                if ($('#part-like').children("a").hasClass("disabled")) {
+                    $('#part-like').children("a").removeClass("disabled")
+                    $('#part-like').children("a").addClass("active")
+                }
+                if ($('#part-rec').children("a").hasClass("active")) {
+                    $('#part-rec').children("a").removeClass("active")
+                    $('#part-rec').children("a").addClass("disabled")
+                }
+            }
+        }
         </script>
 </head>
 
@@ -315,6 +438,19 @@
         <!----------------------->
         <div class="container" id="recipe-list-container">
             <div class="jumbotron">
+                <!-- [추천, 좋아요] 페이지 네비게이션 -->
+                <!-- 상세정보 페이지에서는 네비게이션 숨김 -->
+                <!-- FIXME: 최종적인 페이지 구성에 따라 변경 필요 -->
+                <ul class="nav" style="margin: -40px 0px 0px 0px">
+                    <li class="nav-item" id="part-rec">
+                        <a class="nav-link active" aria-current="page" href="#" onclick="changePart('rec')">추천</a>
+                    </li>
+                    <li class="nav-item" id="part-like">
+                        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true" onclick="changePart('like')">즐겨찾기</a>
+                    </li>
+                </ul>
+                <hr>
+
                 <h1 class="display-4">Help My Menu</h1>
                 <p class="lead">냉장고에 있는 재료로 맛있는 요리를 만들어보아요.</p>
                 <hr class="my-4">
@@ -325,6 +461,7 @@
             </div>
 
             <div id="recipe-list" class="card-columns"></div>
+            <div id="recipe-liked-list" class="card-columns" style="display: none;""></div>
         </div>
 
         <!-- 레시피 상세보기 화면 내용 -->
