@@ -18,7 +18,7 @@ def ingredient_listing():
     recipe_ingredient_sauce = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM":"양념"}))
     return jsonify({'recipe_ingredient_main':recipe_ingredient_main, 'recipe_ingredient_sauce' : recipe_ingredient_sauce})
 
-# 레시피 상세정보 받아오기                       #################수정필요
+# 레시피 상세정보 받아오기
 @app.route('/recipe/post', methods=['POST'])
 def post_recipe_info():
     global DATA_WE_WANT

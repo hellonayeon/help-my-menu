@@ -277,7 +277,7 @@
             })
         }
 
-        // 전체 레시피 불러오기                           ##############수정필요
+        // 선택된 레시피 불러오기
         function getRecipeList() {
             $.ajax({
                 type: "GET",
@@ -479,7 +479,6 @@
         // 좋아요 해제
         function setUnLike(recipe_id) {
             $('#after-like_' + recipe_id).hide();
-            $('#after-like_' + recipe_id).text();
             $('#before-like_' + recipe_id).show();
             $('#after-like_detail_' + recipe_id).hide();
             $('#before-like_detail_' + recipe_id).show();
@@ -516,7 +515,7 @@
             })
         }
 
-        // 좋아요탭의 좋아요한 레시피 표시                                     ##############수정필요
+        // 좋아요탭의 좋아요한 레시피 표시
         function makeRecipesLikedList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
             let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">
                                 <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
