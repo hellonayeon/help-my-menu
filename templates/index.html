@@ -259,7 +259,6 @@
                 }
             }
             postRecipeInfo();
-            getRecipeList(); 
             showControl(RECIPE_LIST_DISPLAY);
         }
 
@@ -273,7 +272,7 @@
                 dataType : 'json',
                 data : JSON.stringify(recipe_info),
                 success : function(response) {
-                    console.log(response["msg"])
+                    getRecipeList(); 
                 }
             })
         }
@@ -282,7 +281,7 @@
         function getRecipeList() {
             $.ajax({
                 type: "GET",
-                url: "/recipe",
+                url: "/recipe/get",
                 data: {},
                 success: function (response) {
                     $('#recipe-list').empty();
