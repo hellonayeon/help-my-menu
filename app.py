@@ -11,11 +11,67 @@ from datetime import datetime
 def home():
     return render_template('index.html')
 
-# 전체 레시피 리스트
+# 첫 화면 재료 항목 불러오기
+@app.route('/ingredient', methods=['GET'])
+def ingredient_listing():
+    recipe_ingredient_main = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM":{"$ne":"양념"}}))
+    recipe_ingredient_sauce = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM":"양념"}))
+    return jsonify({'recipe_ingredient_main':recipe_ingredient_main, 'recipe_ingredient_sauce' : recipe_ingredient_sauce})
+
+# 레시피 상세정보 받아오기                       #################수정필요
+@app.route('/recipe/post', methods=['POST'])
+def post_recipe_info():
+    global DATA_WE_WANT
+    DATA_WE_WANT = []
+    recipe_info = request.get_json()
+    IRDNT_NM = recipe_info['IRDNT_NM']
+    NATION_NM = recipe_info['NATION_NM']
+    LEVEL_NM = recipe_info['LEVEL_NM']
+    COOKING_TIME = recipe_info['COOKING_TIME']
+    
+    COOKING_TIME_LIST = []
+    for i in COOKING_TIME:
+        COOKING_TIME_LIST.append({"COOKING_TIME":i})
+    selected_by_basic = list(db.recipe_basic.find({"$and":[{"LEVEL_NM":LEVEL_NM[0]}, {"NATION_NM":NATION_NM[0]}, {"$or":COOKING_TIME_LIST}]}))
+    print(selected_by_basic)
+
+
+    RECIPE_IDs = []
+    for selected in selected_by_basic:
+        RECIPE_IDs.append(selected["RECIPE_ID"])
+    print(RECIPE_IDs)
+
+    INGREDIENT_LIST = []
+    for ingredient in IRDNT_NM:
+        INGREDIENT_LIST.append({"IRDNT_NM":ingredient})
+    print(INGREDIENT_LIST)
+
+    DATA_WE_WANT = []
+    for ids in RECIPE_IDs:
+        candidate = list(db.recipe_ingredient.find({"RECIPE_ID":ids}))
+        print(candidate)
+        count = 0
+        for detail in candidate :
+            if detail["IRDNT_NM"] in INGREDIENT_LIST:
+                print(detail["IRDNT_NM"])
+                print(INGREDIENT_LIST)
+                count += 1
+        print(count)
+        if count == len(INGREDIENT_LIST):
+            DATA_WE_WANT.append(ids)
+    print(DATA_WE_WANT)
+    return jsonify({'msg':'success'})
+
+# 레시피 검색정보 API
 @app.route('/recipe', methods=['GET'])
-def recipe_list():
-    recipe_list = list(db.recipe_basic.find({},{'_id':False}))[:5] # 테스트용 상위 5개 데이터
-    return jsonify({'recipe_list':recipe_list})
+def get_recipe_list() :
+    projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
+                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}    
+    DATA_WE_GET = []
+    for data in DATA_WE_WANT:
+        DATA_WE_GET.append(list(db.recipe_basic.find_one({"RECIPE_ID":data}, projection)))
+    print(DATA_WE_GET)
+    return jsonify({"DATA_WE_GET":DATA_WE_GET})
 
 # 레시피 상세정보 API
 @app.route('/recipe/detail', methods=['GET'])
