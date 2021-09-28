@@ -264,15 +264,39 @@ function getComment(recipe_id) {
     })
 }
 
+/* 사용자 닉네임, 비밀번호 입력 체크 함수 */
+function checkCommentUserInfo(nick_nm, pw, text) {
+    if(text == "") {
+        alert("내용을 입력해주세요!")
+        return false
+    }
+    if(nick_nm == "") {
+        alert("닉네임을 입력해주세요!")
+        return false
+    }
+    if(pw == "") {
+        alert("비밀번호를 입력해주세요!")
+        return false
+    }
+    return true
+}
+
 /* 댓글 저장 요청 함수 */
 function saveComment(recipe_id) {
+    let nick_nm = $('#comment-nick').val()
+    let pw = $('#comment-pw').val()
     let text = $('#comment-text-area').val()
     let img_src = $('#file')[0].files[0]
+
+    // 아이디 또는 비밀번호, 댓글 내용을 입력 안한 경우
+    if(!checkCommentUserInfo(nick_nm, pw, text)) return
 
     let form_data = new FormData()
     form_data.append("recipe_id", recipe_id)
     form_data.append("text", text)
     form_data.append("img_src", img_src)
+    form_data.append("nick_nm", nick_nm)
+    form_data.append("pw", pw)
 
     $.ajax({
         type: "POST",
@@ -282,17 +306,30 @@ function saveComment(recipe_id) {
         contentType: false,
         processData: false,
         success: function (response) {
-            getComment(recipe_id)
+            if(response['result'] == "success") {
+                // 업로드된 파일, 댓글내용, 닉네임, 비밀번호 지우기
+                $('#file').val("")
+                $('#img-src-label').empty()
+                $('#comment-text-area').val("")
+                $('#comment-nick').val("")
+                $('#comment-pw').val("")
+
+                getComment(recipe_id)
+            }
+            else {
+                // 중복된 닉네임일 경우, 닉네임이랑 비밀번호만 지우기
+                $('#comment-nick').val("")
+                $('#comment-pw').val("")
+
+                alert(response['msg'])
+                return
+            }
         }
     })
 }
 
 /* 작성한 댓글을 댓글 리스트에 출력하는 함수 */
 function makeComment(comments) {
-    // 업로드된 파일, 댓글창 지우기
-    $('#file').val("")
-    $('#img-src-label').empty()
-    $('#comment-text-area').val("")
     // 댓글 리스트 다시 출력
     $('#comment-list').empty()
 
@@ -300,22 +337,96 @@ function makeComment(comments) {
     comments.forEach(function (comment) {
         // 이미지가 있는 경우
         if (comment["IMG_SRC"] != "") {
-            comment_html += `<div class="row">
+            comment_html += `<div class="row justify-content-between">
+                                <div class="col"><img src="../static/chun_sik.png" style="width: 80px; height: 80px"></div>
+                                <div class="col">
+                                    <div class="row"><div class="col"><span>${comment["NICK_NM"]}</span></div></div>
+                                    <div class="row"><div class="col"><span>${comment["DATE"]}</span></div></div>
+                                </div>
+                                <div class="col">
+                                     <span class="comment-delete-span" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, ${comment["NICK_NM"]})">삭제</span>
+                                </div>
+                             </div>
+                             <br>
+                             <div class="row">
                                 <div class="col-12"><img src="../static/images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"></div>
                                 <div class="col-12">${comment["TEXT"]}</div>
-                                <div class="col-12">${comment["DATE"]}</div>
-                            </div>`
+                             </div>
+                             <hr>`
         }
         // 이미지가 없는 경우
         else {
-            comment_html += `<div class="row">
+            comment_html += `<div class="row justify-content-between">
+                                <div class="col"><img src="../static/chun_sik.png" style="width: 80px; height: 80px"></div>
+                                <div class="col">
+                                    <div class="row"><div class="col"><span>${comment["NICK_NM"]}</span></div></div>
+                                    <div class="row"><div class="col"><span>${comment["DATE"]}</span></div></div>
+                                </div>
+                                <div class="col">
+                                     <span class="comment-delete-span" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, ${comment["NICK_NM"]})">삭제</span>
+                                </div>
+                             </div>
+                             <br>
+                             <div class="row">
                                 <div class="col-12">${comment["TEXT"]}</div>
-                                <div class="col-12">${comment["DATE"]}</div>
-                             </div>`
+                             </div>
+                             <hr>`
         }
     })
 
     $('#comment-list').append(comment_html)
+}
+
+function deleteComment(recipe_id, nick_nm, pw) {
+    $.ajax({
+        type: "POST",
+        url: "/recipe/comment/delete",
+        data: {"nick_nm": nick_nm, "pw": pw},
+        success: function(response) {
+            if(response["result"] == "success") {
+                // 댓글 다시 출력: 삭제된 댓글 반영
+                getComment(recipe_id)
+            }
+            else {
+                alert(response["msg"])
+                return
+            }
+        }
+    })
+}
+
+/* 비밀번호 입력 다이얼로그 출력 함수 */
+function showPasswordDialog(recipe_id, nick_nm) {
+    $('#comment-pw-confirm-dialog').dialog({
+        buttons: [
+                    {
+                        text: "취소",
+                        click: function() {
+                            $( this ).dialog( "close" );
+                        }
+                    },
+                    {
+                        text: "확인",
+                        click: function() {
+                            pw = $('#comment-pw-confirm-input').val()
+                            if(pw == "") {
+                                $('#comment-pw-confirm-input').css('border-color', 'red')
+                                $('#comment-pw-confirm-input').attr('placeholder', '비밀번호를 입력해주세요!')
+                            }
+                            else {
+                                deleteComment(recipe_id, nick_nm, pw)
+                                $( this ).dialog( "close" );
+                            }
+                        }
+                    }
+                  ],
+        // 다이얼로그가 닫히기 직전에 호출되는 함수
+        beforeClose: function( event, ui ) {
+            $('#comment-pw-confirm-input').val('')
+            $('#comment-pw-confirm-input').css('border-color', '')
+            $('#comment-pw-confirm-input').attr('placeholder', '')
+        }
+    })
 }
 
 // 더 보기 닫기

@@ -5,6 +5,7 @@
 .wrap {
     width: 900px;
     margin: auto;
+    padding-bottom: 80px;
 }
 
 .title-text {
@@ -48,12 +49,28 @@
     margin-top: 30px;
 }
 
-.comment-upload-box {
+.comment-img-upload-box {
     margin-top: 20px;
+    margin-bottom: 20px;
 }
+
 
 .comment-text-area {
     height: 150px;
+}
+
+.comment-delete-btn {
+    padding: 0;
+    border: none;
+    background: none;
+    text-decoration:underline;
+    display:inline-block;
+}
+
+.comment-delete-btn:focus{
+    text-decoration:underline;
+    display:inline-block;
+    outline:none !important;
 }
 
 .ingredient-tag {
@@ -67,9 +84,6 @@
     overflow: auto;
 
     margin-bottom: 20px;
-
-    border: 1px solid gray;
-    border-radius: 10px;
 }
 
 #comment-list > div {
