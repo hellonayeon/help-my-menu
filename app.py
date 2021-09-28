@@ -54,11 +54,13 @@ def post_recipe_info():
         COOKING_TIME_LIST.append({"COOKING_TIME":i})
 
     NATION_NM_LIST = []
+    if "서양, 이탈리아" in NATION_NM :
+        NATION_NM.append('서양')
+        NATION_NM.append('이탈리아')
+        NATION_NM.remove('서양, 이탈리아')
     for i in NATION_NM:
         NATION_NM_LIST.append({"NATION_NM":i})
-
     selected_by_basic = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
-
 
     RECIPE_IDs = []
     for selected in selected_by_basic:
@@ -105,7 +107,6 @@ def get_recipe_detail():
     # 재료정보
     projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
     ingredients = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
-    print(ingredients)
 
     return jsonify({"info":info, "detail": detail, "ingredients":ingredients})
 

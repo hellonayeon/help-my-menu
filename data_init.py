@@ -7,7 +7,7 @@ client = MongoClient('localhost', 27017)
 # client = MongoClient('mongodb://test:test@localhost', 27017) # EC2 업로드용
 db = client.dbrecipe
 
-with open('recipe_ingredient_map.json') as file:
+with open('recipe_ingredient_map.json', 'r', encoding='UTF8') as file:
   data = json.load(file)
   file.close()
 
