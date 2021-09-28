@@ -87,7 +87,12 @@ def get_recipe_detail():
     projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
     detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection).sort("Liked",-1))
 
-    return jsonify({"info":info, "detail": detail})
+    # 재료정보
+    projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
+    ingredients = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
+    print(ingredients)
+
+    return jsonify({"info":info, "detail": detail, "ingredients":ingredients})
 
 # 댓글 목록 API
 @app.route('/recipe/comment', methods=['GET'])
