@@ -28,11 +28,22 @@ def post_recipe_info():
     NATION_NM = recipe_info['NATION_NM']
     LEVEL_NM = recipe_info['LEVEL_NM']
     COOKING_TIME = recipe_info['COOKING_TIME']
+
+    
+    LEVEL_NM_LIST = []
+    for i in LEVEL_NM:
+        LEVEL_NM_LIST.append({"LEVEL_NM":i})
     
     COOKING_TIME_LIST = []
     for i in COOKING_TIME:
         COOKING_TIME_LIST.append({"COOKING_TIME":i})
-    selected_by_basic = list(db.recipe_basic.find({"$and":[{"LEVEL_NM":LEVEL_NM[0]}, {"NATION_NM":NATION_NM[0]}, {"$or":COOKING_TIME_LIST}]}))
+
+    NATION_NM_LIST = []
+    for i in NATION_NM:
+        NATION_NM_LIST.append({"NATION_NM":i})
+
+    selected_by_basic = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or":COOKING_TIME_LIST}, {"$or":COOKING_TIME_LIST}]}))
+
 
     RECIPE_IDs = []
     for selected in selected_by_basic:
@@ -41,7 +52,6 @@ def post_recipe_info():
     INGREDIENT_LIST = []
     for ingredient in IRDNT_NM:
         INGREDIENT_LIST.append(ingredient)
-    print(INGREDIENT_LIST,"1번")
 
     for ids in RECIPE_IDs:
         candidate = list(db.recipe_ingredient.find({"RECIPE_ID":ids}))
@@ -51,7 +61,6 @@ def post_recipe_info():
                 count += 1
         if count == len(INGREDIENT_LIST):
             DATA_WE_WANT.append(ids)
-    print(DATA_WE_WANT,"2번")
     return jsonify({'msg':'success'})
 
 # 레시피 검색정보 API
@@ -60,10 +69,8 @@ def get_recipe_list() :
     projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
                   "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}    
     DATA_WE_GET = []
-    print(DATA_WE_WANT,"3번")
     for data in DATA_WE_WANT:
         DATA_WE_GET.append(db.recipe_basic.find_one({"RECIPE_ID":int(data)}, projection))
-    print(DATA_WE_GET,"4번")
     return jsonify({"DATA_WE_GET":DATA_WE_GET})
 
 # 레시피 상세정보 API

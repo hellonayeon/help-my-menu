@@ -215,7 +215,7 @@
 
         // "레시피 보기" 버튼 누르기
         function selectedRecipeNation() {
-            if (IRDNT_NM.length < 3) {
+            if (IRDNT_NM.length < 1) { // 원하는 개수만큼 조건에 맞게 숫자 수정 가능
                 alert("재료를 선택해주세요!")
                 return 0
             }
@@ -637,7 +637,7 @@
                 <select class="custom-select" id="inputGroupSelect04">
                     <option selected>바로...</option>
                     <option value="한식">한식!</option>
-                    <option value="서양">양식!</option>
+                    <option value="서양, 이탈리아">양식!</option>
                     <option value="중국">중식!</option>
                     <option value="일본">일식!</option>
                     <option value="동남아시아">동남아!</option>
