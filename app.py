@@ -11,11 +11,82 @@ from datetime import datetime
 def home():
     return render_template('index.html')
 
-# 전체 레시피 리스트
-@app.route('/recipe', methods=['GET'])
-def recipe_list():
-    recipe_list = list(db.recipe_basic.find({},{'_id':False}))[:5] # 테스트용 상위 5개 데이터
-    return jsonify({'recipe_list':recipe_list})
+# 첫 화면 재료 항목 불러오기
+@app.route('/ingredient', methods=['GET'])
+def ingredient_listing():
+    # 중복 제거
+    main_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "주재료"}))
+    sub_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "부재료"}))
+    union_irdnt = list(set(main_irdnt) | set(sub_irdnt))
+
+    sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
+
+    # TODO: 부주재료 - 양념, 양념 - 부주재료 하면 추천 레시피 선택지가 좁아짐 => 집합 연산 안하면 부주재료-후추 로 들어있음
+    # main_irdnt = list(set(main_irdnt) - set(sauce_irdnt))  # '주재료'와 '양념'의 차집합
+    # sub_irdnt = list(set(sub_irdnt) - set(sauce_irdnt))  # '부재료'와 '양념'의 차집합
+    # union_irdnt = list(set(main_irdnt) | set(sub_irdnt))  # '주재료'와 부재료'의 합집합
+    print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(sauce_irdnt)}")
+
+    # 가나다순 정렬
+    union_irdnt.sort()
+    sauce_irdnt.sort()
+
+    return jsonify({'recipe_ingredient_main':union_irdnt, 'recipe_ingredient_sauce' : sauce_irdnt})
+
+# 레시피 상세정보 받아오기
+@app.route('/recipe/post', methods=['POST'])
+def post_recipe_info():
+    global DATA_WE_WANT
+    DATA_WE_WANT = []
+    recipe_info = request.get_json()
+    IRDNT_NM = recipe_info['IRDNT_NM']
+    NATION_NM = recipe_info['NATION_NM']
+    LEVEL_NM = recipe_info['LEVEL_NM']
+    COOKING_TIME = recipe_info['COOKING_TIME']
+
+    
+    LEVEL_NM_LIST = []
+    for i in LEVEL_NM:
+        LEVEL_NM_LIST.append({"LEVEL_NM":i})
+    
+    COOKING_TIME_LIST = []
+    for i in COOKING_TIME:
+        COOKING_TIME_LIST.append({"COOKING_TIME":i})
+
+    NATION_NM_LIST = []
+    for i in NATION_NM:
+        NATION_NM_LIST.append({"NATION_NM":i})
+
+    selected_by_basic = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
+
+
+    RECIPE_IDs = []
+    for selected in selected_by_basic:
+        RECIPE_IDs.append(selected["RECIPE_ID"])
+
+    INGREDIENT_LIST = []
+    for ingredient in IRDNT_NM:
+        INGREDIENT_LIST.append(ingredient)
+
+    for ids in RECIPE_IDs:
+        candidate = list(db.recipe_ingredient.find({"RECIPE_ID":ids}))
+        count = 0
+        for detail in candidate :
+            if detail["IRDNT_NM"] in INGREDIENT_LIST:
+                count += 1
+        if count == len(INGREDIENT_LIST):
+            DATA_WE_WANT.append(ids)
+    return jsonify({'msg':'success'})
+
+# 레시피 검색정보 API
+@app.route('/recipe/get', methods=['GET'])
+def get_recipe_list() :
+    projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
+                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}    
+    DATA_WE_GET = []
+    for data in DATA_WE_WANT:
+        DATA_WE_GET.append(db.recipe_basic.find_one({"RECIPE_ID":int(data)}, projection))
+    return jsonify({"DATA_WE_GET":DATA_WE_GET})
 
 # 레시피 상세정보 API
 @app.route('/recipe/detail', methods=['GET'])
@@ -31,7 +102,12 @@ def get_recipe_detail():
     projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
     detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection).sort("Liked",-1))
 
-    return jsonify({"info":info, "detail": detail})
+    # 재료정보
+    projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
+    ingredients = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
+    print(ingredients)
+
+    return jsonify({"info":info, "detail": detail, "ingredients":ingredients})
 
 # 댓글 목록 API
 @app.route('/recipe/comment', methods=['GET'])

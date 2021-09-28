@@ -68,18 +68,6 @@ def data_preprocessing():
 
         db.recipe_ingredient.update_many({"IRDNT_NM": irdnt_nm}, {"$set": {"IRDNT_NM": new_irdnt_nm}})
 
-    # TODO: 이 부분은 첫 화면 요청에 대한 응답
-    # 중복 제거
-    main_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "주재료"}))
-    sub_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "부재료"}))
-    source_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
-
-    tmp_source_irdnt = source_irdnt
-    union_irdnt = list(set(main_irdnt) | set(sub_irdnt))  # '주재료'와 '부재료' 합집합
-    source_irdnt = list(set(source_irdnt) - set(union_irdnt)) # '양념'과 '부재료+주재료'의 차집합
-    union_irdnt = list(set(union_irdnt) - set(tmp_source_irdnt)) # '주재료+부재료'와 '양념'의 차집합
-    print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(source_irdnt)}")
-
 
 database_del()
 database_init()

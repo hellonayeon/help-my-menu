@@ -32,7 +32,7 @@
             crossorigin="anonymous"></script>
 
 
-    <title></title>
+    <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
     <style>
         * {
@@ -40,7 +40,7 @@
         }
 
         .wrap {
-            width: 1000px;
+            width: 900px;
             margin: auto;
         }
 
@@ -108,50 +108,184 @@
             margin-bottom: 10px;
         }
 
+        #ImageByLikes {
+            margin: auto;
+            height: 400px;
+            width: 400px;
+        }
+
 
     </style>
 
     <script>
         let recipe_id
+        let IRDNT_NM=[]
+        let NATION_NM=[]
+        let LEVEL_NM=[]
+        let COOKING_TIME=[]
 
         // 화면 출력 제어 플래그
         const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
         const RECIPE_DETAIL_DISPLAY = "RECIPE_DETAIL_DISPLAY"
+        const RECIPE_CHOICE_DISPLAY = "RECIPE_CHOICE_DISPLAY"
 
         $(document).ready(function () {
-            getRecipeList();
+            ingredientListing();
 
             // 사진 업로드
             bsCustomFileInput.init()
 
-            // 화면 출력 내용: 초기에는 "레시피 리스트"로 설정
-            showControl(RECIPE_LIST_DISPLAY)
+            // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
+            showControl(RECIPE_CHOICE_DISPLAY)
         });
 
         /* 화면에 보여지는 내용 보이기, 숨기기 */
         function showControl(display) {
             switch (display) {
-                case RECIPE_LIST_DISPLAY:
+                case RECIPE_CHOICE_DISPLAY:
+                    $("#recipe-choice-container").show()
                     $("#recipe-detail-container").hide()
+                    $("#recipe-list-container").hide()
+                    break
+                case RECIPE_LIST_DISPLAY:
+                    $("#recipe-choice-container").hide()
                     $("#recipe-list-container").show()
+                    $("#recipe-detail-container").hide()
                     break
                 case RECIPE_DETAIL_DISPLAY:
+                    $("#recipe-choice-container").hide()
                     $("#recipe-list-container").hide()
                     $("#recipe-detail-container").show()
                     break
             }
         }
+        
+        //첫 화면 재료 선택 데이터 가져오기
+        function ingredientListing() {
+            $.ajax({
+                type: "GET",
+                url: "/ingredient",
+                data: {},
+                success: function (response) {
+                    let recipe_ingredient_main = response['recipe_ingredient_main']
+                    let recipe_ingredient_sauce = response['recipe_ingredient_sauce']
 
-        // 전체 레시피 불러오기
+                    for (let i = 0; i < recipe_ingredient_main.length; i++) {
+                        let ingredient = recipe_ingredient_main[i]
+                        let temp_html = `<option value="main">${ingredient}</option>`
+                        $('#ingre1').append(temp_html)
+                    }
+                    for (let i = 0; i < recipe_ingredient_sauce.length; i++) {
+                        let ingredient = recipe_ingredient_sauce[i]
+                        let temp_html = `<option value="sauce">${ingredient}</option>`
+                        $('#ingre2').append(temp_html)
+                    }
+                }
+            })
+        }
 
+        // 선택한 재료 표시하기 & 선택 재료 데이터 저장
+        let index = 1
+        function ingredientDisplay(ingredient) {
+            if (ingredient.value == "main" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
+                let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin-right:5px" onclick="cancleSelectingIngredientAdded(this)"/>`
+                $('#selected-ingredient-display-main').append(temp_html)
+                let temp = 'selected-ingredient-button-'+index
+                document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
+                index += 1;
+                IRDNT_NM.push(document.getElementById(temp).value);
+
+            } else if (ingredient.value == "sauce" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
+                let temp_html = `<input type="button" class="btn btn-outline-danger" id="selected-ingredient-button-${index}" value="" style="margin:5px 5px 0px 0px" onclick="cancleSelectingIngredientAdded(this)"/>`
+                $('#selected-ingredient-display-sauce').append(temp_html)
+                let temp = 'selected-ingredient-button-'+index
+                document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
+                index += 1;
+                IRDNT_NM.push(document.getElementById(temp).value)
+
+            } 
+        }
+        // 선택한 재료 취소하기 & 선택 재료 데이터 삭제
+        function cancleSelectingIngredientAdded(ingredient) {
+            for_remove_button = document.getElementById(ingredient.closest("input").id);
+            for_remove_button.parentNode.removeChild(for_remove_button);
+            idx = IRDNT_NM.indexOf(ingredient.closest("input").value)
+            IRDNT_NM.splice(idx, 1)
+        }
+
+        // "레시피 보기" 버튼 누르기
+        function selectedRecipeNation() {
+            if (IRDNT_NM.length < 1) { // 원하는 개수만큼 조건에 맞게 숫자 수정 가능
+                alert("재료를 선택해주세요!")
+                return 0
+            }
+            // 식사 유형 데이터 저장
+            if (document.getElementById('inputGroupSelect04').value != "바로...") {
+                NATION_NM.push(document.getElementById('inputGroupSelect04').value)
+            } else {
+                alert("식사 유형을 선택해주세요.")
+                return 0
+            }
+            
+            // 식사 난이도 데이터 저장
+            if ($("input[id='level1']:checked").val() == undefined && $("input[id='level2']:checked").val() == undefined && $("input[id='level3']:checked").val() == undefined) {
+                alert("난이도를 선택해주세요.")
+                return 0
+            } else {
+                if ($("input[id='level1']:checked").val() == 'on') {
+                    LEVEL_NM.push('초보환영')
+                }
+                if ($("input[id='level2']:checked").val() == 'on') {
+                    LEVEL_NM.push('보통')
+                }  
+                if ($("input[id='level3']:checked").val() == 'on') {
+                    LEVEL_NM.push('어려움')
+                }
+            }
+
+            // 조리시간 데이터 저장
+            if ($("input[id='short']:checked").val() == undefined && $("input[id='medium']:checked").val() == undefined && $("input[id='long']:checked").val() == undefined) {
+                alert("조리시간을 선택해주세요.")
+                return 0
+            } else {
+                if ($("input[id='short']:checked").val() == 'on') {
+                    COOKING_TIME.push('5분', '10분', '15분', '20분', '25분', '30분', '35분', '40분', '50분', '60분')
+                }
+                if ($("input[id='medium']:checked").val() == 'on') {
+                    COOKING_TIME.push('70분', '80분', '90분', '120분')
+                }  
+                if ($("input[id='long']:checked").val() == 'on') {
+                    COOKING_TIME.push('140분', '175분', '180분')
+                }
+            }
+            postRecipeInfo();
+            showControl(RECIPE_LIST_DISPLAY);
+        }
+
+        // 레시피 조건 보내기 POST
+        function postRecipeInfo() {
+            var recipe_info = {"IRDNT_NM":IRDNT_NM, "NATION_NM":NATION_NM, "LEVEL_NM":LEVEL_NM, "COOKING_TIME":COOKING_TIME} 
+            $.ajax({
+                type : "POST",
+                contentType: 'application/json',
+                url: "/recipe/post",
+                dataType : 'json',
+                data : JSON.stringify(recipe_info),
+                success : function(response) {
+                    getRecipeList(); 
+                }
+            })
+        }
+
+        // 선택된 레시피 불러오기
         function getRecipeList() {
             $.ajax({
                 type: "GET",
-                url: "/recipe",
+                url: "/recipe/get",
                 data: {},
                 success: function (response) {
                     $('#recipe-list').empty();
-                    let recipe = response['recipe_list']
+                    let recipe = response['DATA_WE_GET']
                     for (let i = 0; i < recipe.length; i++) {
                         let recipe_url = recipe[i]['IMG_URL']
                         let recipe_name = recipe[i]['RECIPE_NM_KO']
@@ -166,21 +300,22 @@
         }
 
         // 레시피 리스트 html
-
         function makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
-            let tempHtml = `<div  id="recipe${recipe_id}" class="card">
-                                <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
+            let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
                                 <div class="card-body">
                                     <h5 class="card-title">${recipe_name}</h5>
-                                    <p class="card-text">${recipe_desc}</p>
-                                    <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
+                                    <p class="card-text" style="min-height: 100px; max-height: 100px;">${recipe_desc}</p>
+                                    <div class="card-footer">
+                                        <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
             if (recipe_liked >= 1) {
                 tempHtml += `<a id="before-like_${recipe_id}" style="color:black; float:right; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_${recipe_id}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a>
                                 </div>
+                            </div>
                             </div>`
             } else {
                 tempHtml += `<a id="before-like_${recipe_id}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_${recipe_id}" style="color:red; float:right; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a>
                                 </div>
+                            </div>
                             </div>`
             }
 
@@ -200,26 +335,30 @@
                 type: "GET",
                 url: `/recipe/detail?recipe_id=${recipe_id}`,
                 success: function (response) {
-                    makeRecipeDetail(response["info"], response["detail"])
+                    makeRecipeDetail(response["info"], response["detail"], response["ingredients"])
                 }
             })
         }
 
-        /* 레시피 상세정보 출력 함수 */
-        function makeRecipeDetail(info, detail) {
+        /* 레시피 상세정보 출력 함수 */ 
+        function makeRecipeDetail(info, detail, ingredients) {
             console.log("called 'makeRecipeDetail' func.")
-
             let info_html = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                              <span class="detail-info">${info["COOKING_TIME"]}</span>
-                             <span class="detail-info">${info["QNT"]}</span>` 
+                             <span class="detail-info">${info["QNT"]}</span>`
             if (info['Liked'] >= 1) {
                 info_html += `<a id="before-like_detail_${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like_detail_${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
                             
                             <h4>${info["SUMRY"]}</h4>`
             } else {
-                `<a id="before-like_detail_${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like_detail_${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
+                info_html += `<a id="before-like_detail_${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like_detail_${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
                             
                             <h4>${info["SUMRY"]}</h4>`
+            }
+
+            /* FIXME: 이 부분 잘 편집해주시면 됩니다. */
+            for (let i = 0; i < ingredients.length; i++) { 
+                info_html += `<span class="detail-ingre">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
             }
 
             let detail_html = ``
@@ -324,12 +463,12 @@
 
         // 좋아요 버튼 눌렀을 때
         function setLike(recipe_id) {
-            $('#before-like_'+recipe_id).hide();            
-            $('#after-like_'+recipe_id).show();
-            $('#before-like_detail_'+recipe_id).hide();            
-            $('#after-like_detail_'+recipe_id).show();
-            $('#before-like_liked_'+recipe_id).hide();            
-            $('#after-like_liked_'+recipe_id).show();
+            $('#before-like_' + recipe_id).hide();
+            $('#after-like_' + recipe_id).show();
+            $('#before-like_detail_' + recipe_id).hide();
+            $('#after-like_detail_' + recipe_id).show();
+            $('#before-like_liked_' + recipe_id).hide();
+            $('#after-like_liked_' + recipe_id).show();
             $.ajax({
                 type: "PUT",
                 url: `/recipe/like?recipe-id=${recipe_id}`,
@@ -341,17 +480,16 @@
         }
 
         // 좋아요 해제
-        function setUnLike(recipe_id) { 
-            $('#after-like_'+recipe_id).hide();
-            $('#after-like_'+recipe_id).text();
-            $('#before-like_'+recipe_id).show();
-            $('#after-like_detail_'+recipe_id).hide();   
-            $('#before-like_detail_'+recipe_id).show();         
-            $('#after-like_liked_'+recipe_id).hide();   
-            $('#before-like_liked_'+recipe_id).show();         
+        function setUnLike(recipe_id) {
+            $('#after-like_' + recipe_id).hide();
+            $('#before-like_' + recipe_id).show();
+            $('#after-like_detail_' + recipe_id).hide();
+            $('#before-like_detail_' + recipe_id).show();
+            $('#after-like_liked_' + recipe_id).hide();
+            $('#before-like_liked_' + recipe_id).show();
             $.ajax({
                 type: "PUT",
-                url:  `/recipe/unlike?recipe-id=${recipe_id}`,
+                url: `/recipe/unlike?recipe-id=${recipe_id}`,
                 data: {recipe_id: recipe_id},
                 success: function (response) {
                     alert(response["msg"]);
@@ -382,24 +520,27 @@
 
         // 좋아요탭의 좋아요한 레시피 표시
         function makeRecipesLikedList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
-            let tempHtml = `<div  id="recipe${recipe_id}" class="card">
+            let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">
                                 <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
                                 <div class="card-body">
                                     <h5 class="card-title">${recipe_name}</h5>
-                                    <p class="card-text">${recipe_desc}</p>
-                                    <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
+                                    <p class="card-text" style="min-height: 100px; max-height: 100px;">${recipe_desc}</p>
+                                    <div class="card-footer">
+                                        <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
             if (recipe_liked >= 1) {
                 tempHtml += `<a id="before-like_liked_${recipe_id}" style="color:black; float:right; display:none;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_liked_${recipe_id}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a>
                                 </div>
+                            </div>
                             </div>`
 
             } else {
                 tempHtml += `<a id="before-like_liked_${recipe_id}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_liked_${recipe_id}" style="color:red; float:right; display:none;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a>
                                 </div>
+                            </div>
                             </div>`
             }
             $('#recipe-liked-list').append(tempHtml)
-        }        
+        }
 
         function changePart(part) { // 좋아요 탭 눌렀을 경우 OK
             if (part == 'rec') {
@@ -428,80 +569,199 @@
                 }
             }
         }
-        </script>
+    </script>
 </head>
 
 <body>
-    <div class="wrap">
+<div class="wrap">
+    <div class="container" id="recipe-choice-container">
+        <div class="jumbotron">
+            <h1 class="display-4">헤얿 마이 메뉴!</h1>
+            <p class="lead">여러분의 냉장고에 있는 재료들로 만들 수 있는 요리를 추천 받고, 훌륭한 레시피를 친구들과 공유해보세요.</p>
 
-        <!-- 레시피 리스트 화면 내용 -->
-        <!----------------------->
-        <div class="container" id="recipe-list-container">
-            <div class="jumbotron">
-                <!-- [추천, 좋아요] 페이지 네비게이션 -->
-                <!-- 상세정보 페이지에서는 네비게이션 숨김 -->
-                <!-- FIXME: 최종적인 페이지 구성에 따라 변경 필요 -->
-                <ul class="nav" style="margin: -40px 0px 0px 0px">
-                    <li class="nav-item" id="part-rec">
-                        <a class="nav-link active" aria-current="page" href="#" onclick="changePart('rec')">추천</a>
-                    </li>
-                    <li class="nav-item" id="part-like">
-                        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true" onclick="changePart('like')">즐겨찾기</a>
-                    </li>
-                </ul>
-                <hr>
-
-                <h1 class="display-4">Help My Menu</h1>
-                <p class="lead">냉장고에 있는 재료로 맛있는 요리를 만들어보아요.</p>
-                <hr class="my-4">
-                <p id="tag"></p>
-                <p class="lead">
-                    <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
-                </p>
+            <div id="ImageByLikes" class="carousel slide" data-ride="carousel">
+                <ol class="carousel-indicators">
+                    <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+                    <li data-target="#carouselExampleIndicators" data-slide-to="1" class="active"></li>
+                    <li data-target="#carouselExampleIndicators" data-slide-to="2" class="active"></li>
+                </ol>
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img class="d-block w-100"
+                             src="https://www.chf.or.kr/jnrepo/namo/img/images/000011/20210603102121300_ZGF1B85E.png"
+                             alt="좋아요 1등 사진">
+                    </div>
+                    <div class="carousel-item">
+                        <img class="d-block w-100"
+                             src="https://rimage.gnst.jp/livejapan.com/public/article/detail/a/00/03/a0003075/img/basic/a0003075_main.jpg"
+                             alt="좋아요 2등 사진">
+                    </div>
+                    <div class="carousel-item">
+                        <img class="d-block w-100" src="https://i.ytimg.com/vi/yd1WYXyl5_w/maxresdefault.jpg"
+                             alt="좋아요 3등 사진">
+                    </div>
+                </div>
+                <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
             </div>
 
-            <div id="recipe-list" class="card-columns"></div>
-            <div id="recipe-liked-list" class="card-columns" style="display: none;""></div>
+            <hr class="my-4">
+
+            <!--최소 3개 or 5개 선택 필수 / custom-select 에서 선택한 값들 태그로 출력 필요-->
+            🍳 왓츠 인 마이 냉장고? :
+            <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <label class="input-group-text">재료 및 양념 선택</label>
+            </div>
+            <select class="custom-select" onchange="ingredientDisplay(this)">
+                <option selected hidden>재료를 골라보세요! (3개 이상!)</option>
+                <optgroup label="재료" id="ingre1">
+                </optgroup>
+            </select>
+            <select class="custom-select" onchange="ingredientDisplay(this)">
+                <option selected hidden>양념을 골라보세요! (3개 이상!)</option>
+                <optgroup label="양념" id="ingre2">
+                </optgroup>
+            </select>
+            </div>
+            <div id="selected-ingredient-display-main">
+                <input type="button" class="btn btn-primary" id="selected-ingredient-button-exam1" value="주재료를 선택해주세요! (최소 2개)"/>
+            </div>
+            <div id="selected-ingredient-display-sauce">
+                <input type="button" class="btn btn-danger" id="selected-ingredient-button-exam2" value="양념을 선택해주세요! (최소 1개)" style="margin-top:5px"/>
+            </div>
+        <br><br>
+
+            💭 지금 땡기는 건
+            <div class="input-group">
+                <select class="custom-select" id="inputGroupSelect04">
+                    <option selected>바로...</option>
+                    <option value="한식">한식!</option>
+                    <option value="서양, 이탈리아">양식!</option>
+                    <option value="중국">중식!</option>
+                    <option value="일본">일식!</option>
+                    <option value="동남아시아">동남아!</option>
+                    <option value="퓨전">그 외</option>
+                </select>
+            </div>
+            <br>
+
+            🔥 난이도 선택
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="level1">
+                <label class="form-check-label" for="level1">⭐</label>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="checkbox" class="form-check-input" id="level2">
+                <label class="form-check-label" for="level2">⭐⭐</label>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="checkbox" class="form-check-input" id="level3">
+                <label class="form-check-label" for="level3">⭐⭐⭐</label>
+            </div>
+            <br>
+
+            ⏱ 소요 시간
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="short">
+                <label class="form-check-label" for="short">30분~1시간</label>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="checkbox" class="form-check-input" id="medium">
+                <label class="form-check-label" for="medium">1~2시간</label>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="checkbox" class="form-check-input" id="long">
+                <label class="form-check-label" for="long">2~3시간</label>
+            </div>
+
         </div>
 
-        <!-- 레시피 상세보기 화면 내용 -->
-        <!----------------------->
-        <!-- 레시피 상세 정보 영역 -->
-        <div class="container" id="recipe-detail-container">
-            <div class="container" id="detail-box">
-                <div class="row">
-                    <div class="col" class="detail-img-container"><img id="detail-img" src=""></div>
-                    <div class="col" id="detail-info"></div>
-                </div>
-                <div class="row" id="detail-step"></div>
-            </div>
-            <!-- 댓글 영역 -->
-            <div class="container" id="comment-box">
-                <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>
-                <!-- 등록된 댓글 리스트 -->
-                <div class="container" id="comment-list"></div>
-                <!-- 댓글 입력 [텍스트, 사진, 확인] -->
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12 form-floating">
-                          <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요" id="comment-text-area"></textarea>
-                        </div>
-                    </div>
-                    <div class="row comment-upload-box justify-content-end" id="comment-upload-box">
-                        <div class="col-4 custom-file">
-                            <input type="file" class="custom-file-input" id="file">
-                            <label class="custom-file-label" for="file" placeholder="사진 업로드" id="img-src-label"></label>
-                        </div>
-                        <div class="col-1" id="comment-upload-btn-div">
-                            <!-- 댓글 작성 버튼: (레시피 아이디를 기반으로 한 버튼 아이디 값 부여하기 위해 동적으로 생성 -->
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!--  위 값들 모두 포함한 결과 불러오기 기능 추가  -->
+        <p class="lead">
+            <button onclick="selectedRecipeNation();" id="btn-post-box" type="button" class="btn btn-primary">
+                레시피 보기
+            </button>
+        </p>
 
-            <div class="row"><button type="button" class="btn btn-primary" onclick="showControl(RECIPE_LIST_DISPLAY)">닫기</button></div>
+    </div>
+
+
+    <!-- 레시피 리스트 화면 내용 -->
+    <!----------------------->
+    <div class="container" id="recipe-list-container">
+        <div class="jumbotron" style="padding-bottom: 10px">
+            <!-- [추천, 좋아요] 페이지 네비게이션 -->
+            <!-- 상세정보 페이지에서는 네비게이션 숨김 -->
+            <!-- FIXME: 최종적인 페이지 구성에 따라 변경 필요 -->
+            <ul class="nav" style="margin: -40px 0px 0px 0px">
+                <li class="nav-item" id="part-rec">
+                    <a class="nav-link active" aria-current="page" href="#" onclick="changePart('rec')">추천</a>
+                </li>
+                <li class="nav-item" id="part-like">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true"
+                       onclick="changePart('like')">즐겨찾기</a>
+                </li>
+            </ul>
+            <hr>
+
+
+            <h1 class="display-4">헤얿 마이 메뉴!</h1>
+            <p class="lead">여러분의 냉장고에 있는 재료들로 만들 수 있는 요리를 추천 받고, 훌륭한 레시피를 친구들과 공유해보세요.</p>
+            <hr class="my-4">
+            <p id="tag"></p>
+            <p class="lead">
+                <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
+            </p>
+        </div>
+
+        <div id="recipe-list" class="card-deck"></div>
+        <div id="recipe-liked-list" class="card-deck" style="display: none;"></div>
+    </div>
+
+    <!-- 레시피 상세보기 화면 내용 -->
+    <!----------------------->
+    <!-- 레시피 상세 정보 영역 -->
+    <div class="container" id="recipe-detail-container">
+        <div class="container" id="detail-box">
+            <div class="row">
+                <div class="col" class="detail-img-container"><img id="detail-img" src=""></div>
+                <div class="col" id="detail-info"></div>
+            </div>
+            <div class="row" id="detail-step"></div>
+        </div>
+        <!-- 댓글 영역 -->
+        <div class="container" id="comment-box">
+            <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>
+            <!-- 등록된 댓글 리스트 -->
+            <div class="container" id="comment-list"></div>
+            <!-- 댓글 입력 [텍스트, 사진, 확인] -->
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 form-floating">
+                            <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요"
+                                      id="comment-text-area"></textarea>
+                    </div>
+                </div>
+                <div class="row comment-upload-box justify-content-end" id="comment-upload-box">
+                    <div class="col-4 custom-file">
+                        <input type="file" class="custom-file-input" id="file">
+                        <label class="custom-file-label" for="file" placeholder="사진 업로드" id="img-src-label"></label>
+                    </div>
+                    <div class="col-1" id="comment-upload-btn-div">
+                        <!-- 댓글 작성 버튼: (레시피 아이디를 기반으로 한 버튼 아이디 값 부여하기 위해 동적으로 생성 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <button type="button" class="btn btn-primary" onclick="showControl(RECIPE_LIST_DISPLAY)">닫기</button>
         </div>
     </div>
+</div>
 
 </body>
 </html>
