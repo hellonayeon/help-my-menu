@@ -21,6 +21,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 
+    <!-- google Font: Noto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap" rel="stylesheet">
+
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -93,6 +98,12 @@
             height: 150px;
         }
 
+        .ingredient-tag {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 10px;
+            margin-right: 3px;
+        }
+
         #comment-list {
             height: 400px;
             overflow: auto;
@@ -159,7 +170,7 @@
                     break
             }
         }
-        
+
         //첫 화면 재료 선택 데이터 가져오기
         function ingredientListing() {
             $.ajax({
@@ -184,8 +195,8 @@
             })
         }
 
-        // 선택한 재료 표시하기 & 선택 재료 데이터 저장
         let index = 1
+        // 선택한 재료 표시하기 & 선택 재료 데이터 저장
         function ingredientDisplay(ingredient) {
             if (ingredient.value == "main" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
                 let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin-right:5px" onclick="cancleSelectingIngredientAdded(this)"/>`
@@ -203,7 +214,7 @@
                 index += 1;
                 IRDNT_NM.push(document.getElementById(temp).value)
 
-            } 
+            }
         }
         // 선택한 재료 취소하기 & 선택 재료 데이터 삭제
         function cancleSelectingIngredientAdded(ingredient) {
@@ -226,7 +237,7 @@
                 alert("식사 유형을 선택해주세요.")
                 return 0
             }
-            
+
             // 식사 난이도 데이터 저장
             if ($("input[id='level1']:checked").val() == undefined && $("input[id='level2']:checked").val() == undefined && $("input[id='level3']:checked").val() == undefined) {
                 alert("난이도를 선택해주세요.")
@@ -237,7 +248,7 @@
                 }
                 if ($("input[id='level2']:checked").val() == 'on') {
                     LEVEL_NM.push('보통')
-                }  
+                }
                 if ($("input[id='level3']:checked").val() == 'on') {
                     LEVEL_NM.push('어려움')
                 }
@@ -253,7 +264,7 @@
                 }
                 if ($("input[id='medium']:checked").val() == 'on') {
                     COOKING_TIME.push('70분', '80분', '90분', '120분')
-                }  
+                }
                 if ($("input[id='long']:checked").val() == 'on') {
                     COOKING_TIME.push('140분', '175분', '180분')
                 }
@@ -264,7 +275,7 @@
 
         // 레시피 조건 보내기 POST
         function postRecipeInfo() {
-            var recipe_info = {"IRDNT_NM":IRDNT_NM, "NATION_NM":NATION_NM, "LEVEL_NM":LEVEL_NM, "COOKING_TIME":COOKING_TIME} 
+            var recipe_info = {"IRDNT_NM":IRDNT_NM, "NATION_NM":NATION_NM, "LEVEL_NM":LEVEL_NM, "COOKING_TIME":COOKING_TIME}
             $.ajax({
                 type : "POST",
                 contentType: 'application/json',
@@ -272,7 +283,7 @@
                 dataType : 'json',
                 data : JSON.stringify(recipe_info),
                 success : function(response) {
-                    getRecipeList(); 
+                    getRecipeList();
                 }
             })
         }
@@ -324,13 +335,6 @@
 
         /* 레시피 상세정보 요청 함수 */
         function getRecipeDetail(recipe_id) {
-            /* 추가(광훈) - 자세히 누르면 기본레시피 숨김, 세부페이지 보임 -> (나연) 'showControl()' 함수로 분리했습니다!*/
-            // $('#recipe-list').hide();
-            // $('#detail-box').show();
-            // $('#comment-box').show();
-            // $('#closeBtn').show();
-            console.log("called 'getRecipeDetail' func.")
-
             $.ajax({
                 type: "GET",
                 url: `/recipe/detail?recipe_id=${recipe_id}`,
@@ -340,9 +344,8 @@
             })
         }
 
-        /* 레시피 상세정보 출력 함수 */ 
+        /* 레시피 상세정보 출력 함수 */
         function makeRecipeDetail(info, detail, ingredients) {
-            console.log("called 'makeRecipeDetail' func.")
             let info_html = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                              <span class="detail-info">${info["COOKING_TIME"]}</span>
                              <span class="detail-info">${info["QNT"]}</span>`
@@ -357,8 +360,8 @@
             }
 
             /* FIXME: 이 부분 잘 편집해주시면 됩니다. */
-            for (let i = 0; i < ingredients.length; i++) { 
-                info_html += `<span class="detail-ingre">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
+            for (let i = 0; i < ingredients.length; i++) {
+                info_html +=`<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
             }
 
             let detail_html = ``
@@ -383,7 +386,6 @@
 
         /* 댓글 리스트 요청 함수 */
         function getComment(recipe_id) {
-            console.log("called 'getComment' func. recipe_id=" + recipe_id)
             $.ajax({
                 type: "GET",
                 url: `/recipe/comment?recipe_id=${recipe_id}`,
@@ -395,8 +397,6 @@
 
         /* 댓글 저장 요청 함수 */
         function saveComment(recipe_id) {
-            console.log("called 'saveComment' func.")
-
             let text = $('#comment-text-area').val()
             let img_src = $('#file')[0].files[0]
 
@@ -420,8 +420,6 @@
 
         /* 작성한 댓글을 댓글 리스트에 출력하는 함수 */
         function makeComment(comments) {
-            console.log("called 'makeComment' func.")
-
             // 업로드된 파일, 댓글창 지우기
             $('#file').val("")
             $('#img-src-label').empty()
@@ -497,14 +495,13 @@
             })
         }
 
-        function getRecipesLikedList() { // 좋아요 탭 
+        function getRecipesLikedList() { // 좋아요 탭
             $.ajax({
                 type: "GET",
                 url: "/recipe/liked",
                 success: function (response) {
                     $('#recipe-liked-list').empty();
                     let recipe = response['recipe_liked'];
-                    console.log(response['recipe_liked'])
                     for (let i = 0; i < recipe.length; i++) {
                         let recipe_url = recipe[i]['IMG_URL']
                         let recipe_name = recipe[i]['RECIPE_NM_KO']
@@ -620,12 +617,12 @@
                 <label class="input-group-text">재료 및 양념 선택</label>
             </div>
             <select class="custom-select" onchange="ingredientDisplay(this)">
-                <option selected hidden>재료를 골라보세요! (3개 이상!)</option>
+                <option selected hidden>재료를 골라보세요! (2개 이상!)</option>
                 <optgroup label="재료" id="ingre1">
                 </optgroup>
             </select>
             <select class="custom-select" onchange="ingredientDisplay(this)">
-                <option selected hidden>양념을 골라보세요! (3개 이상!)</option>
+                <option selected hidden>양념을 골라보세요! (1개 이상!)</option>
                 <optgroup label="양념" id="ingre2">
                 </optgroup>
             </select>
@@ -688,7 +685,6 @@
 
     </div>
 
-
     <!-- 레시피 리스트 화면 내용 -->
     <!----------------------->
     <div class="container" id="recipe-list-container">
@@ -716,7 +712,6 @@
                 <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
             </p>
         </div>
-
         <div id="recipe-list" class="card-deck"></div>
         <div id="recipe-liked-list" class="card-deck" style="display: none;"></div>
     </div>
