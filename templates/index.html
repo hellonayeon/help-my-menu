@@ -146,7 +146,7 @@
             // 사진 업로드
             bsCustomFileInput.init()
 
-            // 화면 출력 내용: 초기에는 "레시피 리스트"로 설정
+            // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
             showControl(RECIPE_CHOICE_DISPLAY)
         });
 
@@ -311,7 +311,6 @@
         }
 
         // 레시피 리스트 html
-
         function makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
             let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
                                 <div class="card-body">
@@ -336,13 +335,6 @@
 
         /* 레시피 상세정보 요청 함수 */
         function getRecipeDetail(recipe_id) {
-            /* 추가(광훈) - 자세히 누르면 기본레시피 숨김, 세부페이지 보임 -> (나연) 'showControl()' 함수로 분리했습니다!*/
-            // $('#recipe-list').hide();
-            // $('#detail-box').show();
-            // $('#comment-box').show();
-            // $('#closeBtn').show();
-            console.log("called 'getRecipeDetail' func.")
-
             $.ajax({
                 type: "GET",
                 url: `/recipe/detail?recipe_id=${recipe_id}`,
@@ -354,8 +346,6 @@
 
         /* 레시피 상세정보 출력 함수 */
         function makeRecipeDetail(info, detail, ingredients) {
-            console.log("called 'makeRecipeDetail' func.")
-            console.log(ingredients)
             let info_html = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                              <span class="detail-info">${info["COOKING_TIME"]}</span>
                              <span class="detail-info">${info["QNT"]}</span>`
@@ -369,16 +359,9 @@
                             <h4>${info["SUMRY"]}</h4>`
             }
 
-            // 이 부분 잘 편집해주시면 됩니다.                          ################
+            /* FIXME: 이 부분 잘 편집해주시면 됩니다. */
             for (let i = 0; i < ingredients.length; i++) {
                 info_html +=`<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
-
-                            {#<span class="ingredient-tag">#}
-                            {#    <input type="button" class="btn btn-primary" value="${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}"/>#}
-                            {#</span>#}
-
-                {#<optgroup label="${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}"></optgroup>#}
-                {#<span class="detail-ingre">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>#}
             }
 
             let detail_html = ``
@@ -403,7 +386,6 @@
 
         /* 댓글 리스트 요청 함수 */
         function getComment(recipe_id) {
-            console.log("called 'getComment' func. recipe_id=" + recipe_id)
             $.ajax({
                 type: "GET",
                 url: `/recipe/comment?recipe_id=${recipe_id}`,
@@ -415,8 +397,6 @@
 
         /* 댓글 저장 요청 함수 */
         function saveComment(recipe_id) {
-            console.log("called 'saveComment' func.")
-
             let text = $('#comment-text-area').val()
             let img_src = $('#file')[0].files[0]
 
@@ -440,8 +420,6 @@
 
         /* 작성한 댓글을 댓글 리스트에 출력하는 함수 */
         function makeComment(comments) {
-            console.log("called 'makeComment' func.")
-
             // 업로드된 파일, 댓글창 지우기
             $('#file').val("")
             $('#img-src-label').empty()
@@ -524,7 +502,6 @@
                 success: function (response) {
                     $('#recipe-liked-list').empty();
                     let recipe = response['recipe_liked'];
-                    console.log(response['recipe_liked'])
                     for (let i = 0; i < recipe.length; i++) {
                         let recipe_url = recipe[i]['IMG_URL']
                         let recipe_name = recipe[i]['RECIPE_NM_KO']
@@ -637,22 +614,25 @@
             🍳 왓츠 인 마이 냉장고? :
             <div class="input-group mb-3">
             <div class="input-group-prepend">
-                <label class="input-group-text" for="IngredientSelect">재료 및 양념 선택</label>
+                <label class="input-group-text">재료 및 양념 선택</label>
             </div>
-            <select class="custom-select" id="IngredientSelectOption" onchange="ingredientDisplay(this)">
-                <option id="select-box-default" selected hidden>재료와 양념을 골라보세요! (3개 이상!)</option>
+            <select class="custom-select" onchange="ingredientDisplay(this)">
+                <option selected hidden>재료를 골라보세요! (2개 이상!)</option>
                 <optgroup label="재료" id="ingre1">
                 </optgroup>
+            </select>
+            <select class="custom-select" onchange="ingredientDisplay(this)">
+                <option selected hidden>양념을 골라보세요! (1개 이상!)</option>
                 <optgroup label="양념" id="ingre2">
                 </optgroup>
             </select>
-        </div>
-        <div id="selected-ingredient-display-main">
-            <input type="button" class="btn btn-primary" id="selected-ingredient-button-exam1" value="주재료를 선택해주세요! (최소 2개)"/>
-        </div>
-        <div id="selected-ingredient-display-sauce">
-            <input type="button" class="btn btn-danger" id="selected-ingredient-button-exam2" value="양념을 선택해주세요! (최소 1개)" style="margin-top:5px"/>
-        </div>
+            </div>
+            <div id="selected-ingredient-display-main">
+                <input type="button" class="btn btn-primary" id="selected-ingredient-button-exam1" value="주재료를 선택해주세요! (최소 2개)"/>
+            </div>
+            <div id="selected-ingredient-display-sauce">
+                <input type="button" class="btn btn-danger" id="selected-ingredient-button-exam2" value="양념을 선택해주세요! (최소 1개)" style="margin-top:5px"/>
+            </div>
         <br><br>
 
             💭 지금 땡기는 건
@@ -705,7 +685,6 @@
 
     </div>
 
-
     <!-- 레시피 리스트 화면 내용 -->
     <!----------------------->
     <div class="container" id="recipe-list-container">
@@ -733,7 +712,6 @@
                 <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
             </p>
         </div>
-
         <div id="recipe-list" class="card-deck"></div>
         <div id="recipe-liked-list" class="card-deck" style="display: none;"></div>
     </div>
