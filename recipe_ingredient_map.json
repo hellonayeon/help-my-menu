@@ -1,0 +1,632 @@
+[
+  {
+    "IRDNT_NM": "후춧가루",
+    "NEW_IRDNT_NM": "후추",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "노란 파프리카",
+    "NEW_IRDNT_NM": "파프리카",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "노랑/빨강 파프리카",
+    "NEW_IRDNT_NM": "파프리카",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "달걀",
+    "NEW_IRDNT_NM": "달걀",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "대파 대",
+    "NEW_IRDNT_NM": "대파",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "물(쇠고기육수)",
+    "NEW_IRDNT_NM": "쇠고기육수",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "배춧잎",
+    "NEW_IRDNT_NM": "배추잎",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "붉은 파프리카",
+    "NEW_IRDNT_NM": "파프리카",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "브로코리",
+    "NEW_IRDNT_NM": "브로콜리",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "브로코리",
+    "NEW_IRDNT_NM": "브로콜리",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "상추잎",
+    "NEW_IRDNT_NM": "상추",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "빨강파프리카·노랑 파프리카·청피망",
+    "NEW_IRDNT_NM": "파프리카",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "생수 또는 분유물(모유)",
+    "NEW_IRDNT_NM": "생수",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "생수 반컵",
+    "NEW_IRDNT_NM": "생수",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "소금, 후추",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "시금치나물",
+    "NEW_IRDNT_NM": "시금치",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "스파게티",
+    "NEW_IRDNT_NM": "스파게티면",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "아가용치즈",
+    "NEW_IRDNT_NM": "아가용 치즈",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "아구",
+    "NEW_IRDNT_NM": "아귀",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "애호박(속살)",
+    "NEW_IRDNT_NM": "애호박",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "양배추잎",
+    "NEW_IRDNT_NM": "양배추",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "양송이",
+    "NEW_IRDNT_NM": "양송이버섯",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "적당량의 물",
+    "NEW_IRDNT_NM": "물",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "정수물 또는 닭육수",
+    "NEW_IRDNT_NM": "닭육수",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "정제수(생수)",
+    "NEW_IRDNT_NM": "물",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "조개살",
+    "NEW_IRDNT_NM": "조갯살",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "정수물(쇠고기육수)",
+    "NEW_IRDNT_NM": "쇠고기육수",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "조개살",
+    "NEW_IRDNT_NM": "조갯살",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "진밥(멥쌀+찹쌀)",
+    "NEW_IRDNT_NM": "밥",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "참치캔",
+    "NEW_IRDNT_NM": "참치통조림",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "채썬쇠고기",
+    "NEW_IRDNT_NM": "쇠고기",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "흰살생선",
+    "NEW_IRDNT_NM": "흰살 생선",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "[멸치장국] 국멸치",
+    "NEW_IRDNT_NM": "국물용 멸치",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "[배합초] 소금",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "[불고기양념] 간장",
+    "NEW_IRDNT_NM": "간장",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "게맛살",
+    "NEW_IRDNT_NM": "게살",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "계란노른자",
+    "NEW_IRDNT_NM": "계란",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "계란흰자",
+    "NEW_IRDNT_NM": "계란",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "고운소금",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "국물용멸치",
+    "NEW_IRDNT_NM": "국물용 멸치",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "굵은소금",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "다시마 우린 물",
+    "NEW_IRDNT_NM": "다시마 국물",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "다시물",
+    "NEW_IRDNT_NM": "다시마 국물",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "달걀",
+    "NEW_IRDNT_NM": "계란",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "다짐육(소고기)",
+    "NEW_IRDNT_NM": "다짐육",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "다짐육(돼지고기)",
+    "NEW_IRDNT_NM": "다짐육",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "돼기고기",
+    "NEW_IRDNT_NM": "돼지고기",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "말린표고버섯",
+    "NEW_IRDNT_NM": "말린 표고버섯",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "맛살",
+    "NEW_IRDNT_NM": "게살",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "볶은 흑임자(검은깨)",
+    "NEW_IRDNT_NM": "검은깨",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "사라다나",
+    "NEW_IRDNT_NM": "샐러드 야채",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "육수용 대파",
+    "NEW_IRDNT_NM": "대파",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "육수용 무",
+    "NEW_IRDNT_NM": "무",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "육수용 물",
+    "NEW_IRDNT_NM": "물",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "참쌀",
+    "NEW_IRDNT_NM": "찹쌀",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "치자",
+    "NEW_IRDNT_NM": "치즈",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "트레비스",
+    "NEW_IRDNT_NM": "트레비소",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "홍피망, 청피망 각각",
+    "NEW_IRDNT_NM": "피망",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "홍피망",
+    "NEW_IRDNT_NM": "피망",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "황파프리카",
+    "NEW_IRDNT_NM": "파프리카",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "후춧가루",
+    "NEW_IRDNT_NM": "후추",
+    "IRDNT_TY_NM": "부재료"
+  },
+  {
+    "IRDNT_NM": "[국물용 소금물] 소금",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[비빔양념] 간장",
+    "NEW_IRDNT_NM": "간장",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[쇠고기양념] 간장",
+    "NEW_IRDNT_NM": "간장",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[쇠고기양념] 다진파",
+    "NEW_IRDNT_NM": "다진파",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[양념장] 고춧가루",
+    "NEW_IRDNT_NM": "고춧가루",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[양념장] 다진파",
+    "NEW_IRDNT_NM": "다진파",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[육수] 시판용장국",
+    "NEW_IRDNT_NM": "장국",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[절임간장] 진간장",
+    "NEW_IRDNT_NM": "진간장",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[절임용 소금물] 물",
+    "NEW_IRDNT_NM": "물",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[절임용 소금물] 소금",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[절임용소금물] 소금",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[초고추장] 고추장",
+    "NEW_IRDNT_NM": "초고추장",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "가쓰오브시",
+    "NEW_IRDNT_NM": "가다랑어포",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "가쓰오브시국물",
+    "NEW_IRDNT_NM": "가다랑어포",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "가쯔오브시",
+    "NEW_IRDNT_NM": "가다랑어포",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "계란노른자",
+    "NEW_IRDNT_NM": "계란",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "계란흰자",
+    "NEW_IRDNT_NM": "계란",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "고운고춧가루",
+    "NEW_IRDNT_NM": "고춧가루",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "고추가루",
+    "NEW_IRDNT_NM": "고춧가루",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "고춧기름",
+    "NEW_IRDNT_NM": "고추기름",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "국멸치",
+    "NEW_IRDNT_NM": "국물용 멸치",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "국물용멸치",
+    "NEW_IRDNT_NM": "국물용 멸치",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "굵은고춧가루",
+    "NEW_IRDNT_NM": "고춧가루",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "굵은소금",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "다시마국물",
+    "NEW_IRDNT_NM": "다시마 국물",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "다시물",
+    "NEW_IRDNT_NM": "다시마 국물",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "다진 마늘",
+    "NEW_IRDNT_NM": "다진마늘",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "다진생각",
+    "NEW_IRDNT_NM": "다진생강",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "마요네스",
+    "NEW_IRDNT_NM": "마요네즈",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "머드터드",
+    "NEW_IRDNT_NM": "머스터드",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "머스타드",
+    "NEW_IRDNT_NM": "머스터드",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "소금, 후추",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "소급",
+    "NEW_IRDNT_NM": "소금",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "와사비",
+    "NEW_IRDNT_NM": "와사비소스",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "월계수 잎",
+    "NEW_IRDNT_NM": "월계수잎",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "육수용멸치",
+    "NEW_IRDNT_NM": "국물용 멸치",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "토마토케찹",
+    "NEW_IRDNT_NM": "케첩",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "토마토케첩",
+    "NEW_IRDNT_NM": "케첩",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "토마토페스트",
+    "NEW_IRDNT_NM": "토마토페이스트",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "파마르산치즈",
+    "NEW_IRDNT_NM": "파마산치즈",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "파마산치즈가루",
+    "NEW_IRDNT_NM": "파마산치즈",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "허니머스타드",
+    "NEW_IRDNT_NM": "머스터드",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "허니머스터드",
+    "NEW_IRDNT_NM": "머스터드",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "후춧가루",
+    "NEW_IRDNT_NM": "후추",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "흑설탕",
+    "NEW_IRDNT_NM": "설탕",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "흰설탕",
+    "NEW_IRDNT_NM": "설탕",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "흰후춧가루",
+    "NEW_IRDNT_NM": "흰후추",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "가다랑이포",
+    "NEW_IRDNT_NM": "가다랑어포",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "피쉬소스",
+    "NEW_IRDNT_NM": "피시소스",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "햇살담은간장",
+    "NEW_IRDNT_NM": "간장",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "들깨가루",
+    "NEW_IRDNT_NM": "들깻가루",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "식물성기름",
+    "NEW_IRDNT_NM": "식용유",
+    "IRDNT_TY_NM": "양념"
+  },
+  {
+    "IRDNT_NM": "[쇠고기육수] 쇠뼈",
+    "NEW_IRDNT_NM": "쇠고기육수",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "모짜렐라치즈",
+    "NEW_IRDNT_NM": "치즈",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "불린 멥쌀",
+    "NEW_IRDNT_NM": "쌀",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "불린 쌀",
+    "NEW_IRDNT_NM": "쌀",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "불린 찹쌀",
+    "NEW_IRDNT_NM": "쌀",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "불린 흑미",
+    "NEW_IRDNT_NM": "흑미",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "불린쌀",
+    "NEW_IRDNT_NM": "쌀",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "불린미역",
+    "NEW_IRDNT_NM": "미역",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "붉은 고추",
+    "NEW_IRDNT_NM": "고추",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "쇠고기(안심 또는 등심)",
+    "NEW_IRDNT_NM": "쇠고기",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "쇠고기(힘줄없는부위)",
+    "NEW_IRDNT_NM": "쇠고기",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "슈레드 치즈(모짜렐라치즈)",
+    "NEW_IRDNT_NM": "치즈",
+    "IRDNT_TY_NM": "주재료"
+  },
+  {
+    "IRDNT_NM": "네모난햄",
+    "NEW_IRDNT_NM": "햄",
+    "IRDNT_TY_NM": "부재료"
+  }
+]
