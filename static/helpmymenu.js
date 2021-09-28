@@ -1,8 +1,8 @@
 let recipe_id
-let IRDNT_NM=[]
-let NATION_NM=[]
-let LEVEL_NM=[]
-let COOKING_TIME=[]
+let IRDNT_NM = []
+let NATION_NM = []
+let LEVEL_NM = []
+let COOKING_TIME = []
 
 // 화면 출력 제어 플래그
 const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
@@ -65,12 +65,13 @@ function ingredientListing() {
 }
 
 let index = 1
+
 // 선택한 재료 표시하기 & 선택 재료 데이터 저장
 function ingredientDisplay(ingredient) {
     if (ingredient.value == "main" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
         let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin-right:5px" onclick="cancleSelectingIngredientAdded(this)"/>`
         $('#selected-ingredient-display-main').append(temp_html)
-        let temp = 'selected-ingredient-button-'+index
+        let temp = 'selected-ingredient-button-' + index
         document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
         index += 1;
         IRDNT_NM.push(document.getElementById(temp).value);
@@ -78,13 +79,14 @@ function ingredientDisplay(ingredient) {
     } else if (ingredient.value == "sauce" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
         let temp_html = `<input type="button" class="btn btn-outline-danger" id="selected-ingredient-button-${index}" value="" style="margin:5px 5px 0px 0px" onclick="cancleSelectingIngredientAdded(this)"/>`
         $('#selected-ingredient-display-sauce').append(temp_html)
-        let temp = 'selected-ingredient-button-'+index
+        let temp = 'selected-ingredient-button-' + index
         document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
         index += 1;
         IRDNT_NM.push(document.getElementById(temp).value)
 
     }
 }
+
 // 선택한 재료 취소하기 & 선택 재료 데이터 삭제
 function cancleSelectingIngredientAdded(ingredient) {
     for_remove_button = document.getElementById(ingredient.closest("input").id);
@@ -144,14 +146,14 @@ function selectedRecipeNation() {
 
 // 레시피 조건 보내기 POST
 function postRecipeInfo() {
-    var recipe_info = {"IRDNT_NM":IRDNT_NM, "NATION_NM":NATION_NM, "LEVEL_NM":LEVEL_NM, "COOKING_TIME":COOKING_TIME}
+    var recipe_info = {"IRDNT_NM": IRDNT_NM, "NATION_NM": NATION_NM, "LEVEL_NM": LEVEL_NM, "COOKING_TIME": COOKING_TIME}
     $.ajax({
-        type : "POST",
+        type: "POST",
         contentType: 'application/json',
         url: "/recipe/post",
-        dataType : 'json',
-        data : JSON.stringify(recipe_info),
-        success : function(response) {
+        dataType: 'json',
+        data: JSON.stringify(recipe_info),
+        success: function (response) {
             getRecipeList();
         }
     })
@@ -181,10 +183,11 @@ function getRecipeList() {
 
 // 레시피 리스트 html
 function makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
-    let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
+    let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                
+                        <img class="card-img-top img-fix" src="${recipe_url}" alt="Card image cap">
                         <div class="card-body">
                             <h5 class="card-title">${recipe_name}</h5>
-                            <p class="card-text" style="min-height: 100px; max-height: 100px;">${recipe_desc}</p>
+                            <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipe_desc}</p>
                             <div class="card-footer">
                                 <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
     if (recipe_liked >= 1) {
@@ -228,9 +231,8 @@ function makeRecipeDetail(info, detail, ingredients) {
                     <h4>${info["SUMRY"]}</h4>`
     }
 
-    /* FIXME: 이 부분 잘 편집해주시면 됩니다. */
     for (let i = 0; i < ingredients.length; i++) {
-        info_html +=`<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
+        info_html += `<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
     }
 
     let detail_html = ``
@@ -387,10 +389,10 @@ function getRecipesLikedList() { // 좋아요 탭
 // 좋아요탭의 좋아요한 레시피 표시
 function makeRecipesLikedList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
     let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">
-                        <img class="card-img-top" src="${recipe_url}" alt="Card image cap">
+                        <img class="card-img-top img-fix" src="${recipe_url}" alt="Card image cap">
                         <div class="card-body">
                             <h5 class="card-title">${recipe_name}</h5>
-                            <p class="card-text" style="min-height: 100px; max-height: 100px;">${recipe_desc}</p>
+                            <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipe_desc}</p>
                             <div class="card-footer">
                                 <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
     if (recipe_liked >= 1) {
