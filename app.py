@@ -13,26 +13,14 @@ from datetime import datetime
 def home():
     return render_template('index.html')
 
-# 자동 검색 리스트 불러오기
-@app.route('/search', methods=['GET'])
-def ingredient_search_listing():
+# 첫 화면 재료 항목 불러오기
+@app.route('/research', methods=['GET'])
+def research_listing():
     # 중복 제거
-    research_list = []
+    resarch_ingr = list(db.recipe_ingredient.distinct("IRDNT_NM"))
 
-    projection = {"ROW_NUM": False, "RECIPE_ID": False, "IRDNT_SN": False,
-                  "IRDNT_CPCTY": False, "IRDNT_TY_CODE": False, "_id": False}
 
-    resarch_ingr = list(db.recipe_ingredient.find({}, projection))
-
-    for i in resarch_ingr:
-        if (i['IRDNT_TY_NM'] == '부재료'):
-            i['IRDNT_TY_NM'] = '주재료'
-        research_list.append(i)
-
-    overlap_remove_list = list({v['IRDNT_NM']: v for v in research_list}.values())
-
-    return jsonify(overlap_remove_list)
-
+    return jsonify({'resarch_ingr' : resarch_ingr})
 
 # 첫 화면 재료 항목 불러오기
 @app.route('/ingredient', methods=['GET'])
@@ -44,6 +32,11 @@ def ingredient_listing():
 
     sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
 
+    # projection = {"ROW_NUM": False, "RECIPE_ID": False, "IRDNT_SN": False, "IRDNT_TY_NM": False,
+    #               "IRDNT_CPCTY": False, "IRDNT_TY_CODE": False, "_id": False}
+
+    resarch_ingr = list(db.recipe_ingredient.distinct("IRDNT_NM"))
+
     # TODO: 부주재료 - 양념, 양념 - 부주재료 하면 추천 레시피 선택지가 좁아짐 => 집합 연산 안하면 부주재료-후추 로 들어있음
     # main_irdnt = list(set(main_irdnt) - set(sauce_irdnt))  # '주재료'와 '양념'의 차집합
     # sub_irdnt = list(set(sub_irdnt) - set(sauce_irdnt))  # '부재료'와 '양념'의 차집합
@@ -54,7 +47,8 @@ def ingredient_listing():
     union_irdnt.sort()
     sauce_irdnt.sort()
 
-    return jsonify({'recipe_ingredient_main':union_irdnt, 'recipe_ingredient_sauce' : sauce_irdnt})
+
+    return jsonify({'recipe_ingredient_main':union_irdnt, 'recipe_ingredient_sauce' : sauce_irdnt, 'resarch_ingr' : resarch_ingr})
 
 # 레시피 상세정보 받아오기
 @app.route('/recipe/post', methods=['POST'])

@@ -3,7 +3,7 @@ let IRDNT_NM = []
 let NATION_NM = []
 let LEVEL_NM = []
 let COOKING_TIME = []
-let list = []
+let ingre_list = []
 
 // 화면 출력 제어 플래그
 const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
@@ -13,6 +13,7 @@ const RECIPE_LOADING_DISPLAY = "RECIPE_LOADING_DISPLAY"
 
 $(document).ready(function () {
     ingredientListing();
+
 
     // 사진 업로드
     bsCustomFileInput.init()
@@ -60,6 +61,7 @@ function ingredientListing() {
         data: {},
         success: function (response) {
             let temp = {}
+            ingre_list = response["resarch_ingr"]
             let recipe_ingredient_main = response['recipe_ingredient_main']
             let recipe_ingredient_sauce = response['recipe_ingredient_sauce']
 
@@ -77,59 +79,49 @@ function ingredientListing() {
     })
 }
 
+
 //검색 자동완성 기능
 $(function autosearch() {
-    $("#searchInput").autocomplete({
-        source: function (request, response) {
-            $.ajax({
-                type: "GET",
-                url: "/search",
-                dataTye : 'json',
-                success: function (data) {
-                    // 서버에서 json 데이터 response 후 목록 추가
-                    response(
-                        $.map(data, function(item) {
-                            return {
-                                label : item["IRDNT_NM"],
-                                value : item["IRDNT_NM"],
-                                main_sauce : item["IRDNT_TY_NM"]
-                            }
-                        })
-                    )
-                }
-            })
-        },
-        select: function (event, ui) {
-            let ingredient = ui.item.label
-            let main_or_sauce = ui.item.main_sauce
-            console.log(ingredient)
-            console.log(main_or_sauce)
+    $.ajax({
+        type: "GET",
+        url: "/research",
+        data: {},
+        success: function (response) {
+            ingre_list = response["resarch_ingr"]
+            search_show()
 
-            if (main_or_sauce == "주재료" && IRDNT_NM.indexOf(ingredient) == -1) {
+        }
+    })
+});
+
+function search_show() {
+    console.log(ingre_list)
+    $("#searchInput").autocomplete({
+        autoFocus: true,
+        source: ingre_list,
+        select: function (event, ui) {
+            let ingredient = ui.item.value
+
+            if (IRDNT_NM.indexOf(ingredient) == -1) {
                 let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin-right:5px" onclick="cancleSelectingIngredientAdded(this)"/>`
                 $('#selected-ingredient-display-main').append(temp_html)
                 let temp = 'selected-ingredient-button-' + index
                 document.getElementById(temp).value = ingredient;
                 index += 1;
                 IRDNT_NM.push(ingredient);
-
-            } else if (main_or_sauce == "양념" && IRDNT_NM.indexOf(ingredient) == -1) {
-                let temp_html = `<input type="button" class="btn btn-outline-danger" id="selected-ingredient-button-${index}" value="" style="margin:5px 5px 0px 0px" onclick="cancleSelectingIngredientAdded(this)"/>`
-                $('#selected-ingredient-display-sauce').append(temp_html)
-                let temp = 'selected-ingredient-button-' + index
-                document.getElementById(temp).value = ingredient;
-                index += 1;
-                IRDNT_NM.push(ingredient)
             }
         },
         focus: function (event, ui) {
             return false;
         },
+        close: function() {
+            $("#searchInput").val('')
+        },
         minLength: 1,
         delay: 100,
         disabled: false
     });
-});
+};
 
 
 let index = 1
