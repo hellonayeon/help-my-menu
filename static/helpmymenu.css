@@ -23,6 +23,29 @@
     color: lightgray;
 }
 
+.text-overflow {
+    display: inline-block;
+    width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    white-space: normal;
+    line-height: 1.5;
+    height: 6em;
+    text-align: left;
+    word-wrap: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+}
+
+.img-fix {
+    width: 200px;
+    min-height: 200px;
+    max-height: 200px;
+}
+
 #detail-box > div {
     margin-top: 50px;
     margin-bottom: 50px;
