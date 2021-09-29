@@ -54,6 +54,13 @@
     margin-bottom: 20px;
 }
 
+.comment-profile {
+    margin-top: 10px;
+}
+
+.comment-profile > div {
+    margin-top: 5px;
+}
 
 .comment-text-area {
     height: 150px;

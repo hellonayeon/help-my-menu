@@ -17,6 +17,12 @@ $(document).ready(function () {
 
     // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
     showControl(RECIPE_CHOICE_DISPLAY)
+
+    /* FIXME: 깃 업로드 전에 삭제필요 */
+    showControl(RECIPE_DETAIL_DISPLAY)
+    getRecipeDetail(1)
+    getComment(1)
+    /* FIXME END */
 });
 
 /* 화면에 보여지는 내용 보이기, 숨기기 */
@@ -333,48 +339,38 @@ function makeComment(comments) {
     // 댓글 리스트 다시 출력
     $('#comment-list').empty()
 
-    let comment_html = ``
-    comments.forEach(function (comment) {
-        // 이미지가 있는 경우
-        if (comment["IMG_SRC"] != "") {
-            comment_html += `<div class="row justify-content-between">
-                                <div class="col"><img src="../static/chun_sik.png" style="width: 80px; height: 80px"></div>
-                                <div class="col">
-                                    <div class="row"><div class="col"><span>${comment["NICK_NM"]}</span></div></div>
-                                    <div class="row"><div class="col"><span>${comment["DATE"]}</span></div></div>
+    comments.forEach(function (comment, idx, arr) {
+        let comment_html = `<div class="row justify-content-between">
+                                <div class="col-4">
+                                    <div class="row">
+                                        <div class="col-6"><a href=""><img src="../static/chun_sik.png" style="width: 80px; height: 80px"></a></div>
+                                        <div class="col-6 comment-profile">
+                                        <div class="row"><span>${comment["NICK_NM"]}</span></div>
+                                        <div class="row"><span>${comment["DATE"]}</span></div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col">
+                                <div class="col-1">
                                      <span class="comment-delete-span" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, ${comment["NICK_NM"]})">삭제</span>
                                 </div>
                              </div>
                              <br>
-                             <div class="row">
-                                <div class="col-12"><img src="../static/images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"></div>
-                                <div class="col-12">${comment["TEXT"]}</div>
+                             <div class="row" id="comment-content-${idx}">
+                                <!-- Dynamic contents -->
                              </div>
                              <hr>`
-        }
-        // 이미지가 없는 경우
-        else {
-            comment_html += `<div class="row justify-content-between">
-                                <div class="col"><img src="../static/chun_sik.png" style="width: 80px; height: 80px"></div>
-                                <div class="col">
-                                    <div class="row"><div class="col"><span>${comment["NICK_NM"]}</span></div></div>
-                                    <div class="row"><div class="col"><span>${comment["DATE"]}</span></div></div>
-                                </div>
-                                <div class="col">
-                                     <span class="comment-delete-span" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, ${comment["NICK_NM"]})">삭제</span>
-                                </div>
-                             </div>
-                             <br>
-                             <div class="row">
-                                <div class="col-12">${comment["TEXT"]}</div>
-                             </div>
-                             <hr>`
-        }
-    })
 
-    $('#comment-list').append(comment_html)
+        $('#comment-list').append(comment_html)
+
+        // 이미지가 있는 경우 댓글 내용에 이미지 출력
+        if(comment["IMG_SRC"] != "") {
+            let img_html = `<div class="col-12"><img src="../static/images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"></div>`
+            $(`#comment-content-${idx}`).append(img_html)
+        }
+
+        let txt_html = `<div class="col-12">${comment["TEXT"]}</div>`
+        $(`#comment-content-${idx}`).append(txt_html)
+    })
 }
 
 function deleteComment(recipe_id, nick_nm, pw) {

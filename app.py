@@ -5,7 +5,6 @@ from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 db = client.dbrecipe
 
-from bson.objectid import ObjectId # 댓글 검색 ID
 from datetime import datetime
 
 
