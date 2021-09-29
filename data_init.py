@@ -1,6 +1,5 @@
 import requests
 from pymongo import MongoClient
-from bson.objectid import ObjectId
 import json
 
 client = MongoClient('localhost', 27017)
