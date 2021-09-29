@@ -7,6 +7,8 @@ db = client.dbrecipe
 
 from datetime import datetime
 
+# import timeit # 연산 속도를 재기 위한 import
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -36,6 +38,7 @@ def ingredient_listing():
 # 레시피 상세정보 받아오기
 @app.route('/recipe/post', methods=['POST'])
 def post_recipe_info():
+    # start_time = timeit.default_timer() # 시작 시간 기록
     global DATA_WE_WANT
     DATA_WE_WANT = []
     recipe_info = request.get_json()
@@ -44,7 +47,6 @@ def post_recipe_info():
     LEVEL_NM = recipe_info['LEVEL_NM']
     COOKING_TIME = recipe_info['COOKING_TIME']
 
-    
     LEVEL_NM_LIST = []
     for i in LEVEL_NM:
         LEVEL_NM_LIST.append({"LEVEL_NM":i})
@@ -55,29 +57,31 @@ def post_recipe_info():
 
     NATION_NM_LIST = []
     if "서양, 이탈리아" in NATION_NM :
-        NATION_NM.append('서양')
-        NATION_NM.append('이탈리아')
+        NATION_NM_LIST.append({"NATION_NM":'서양'})
+        NATION_NM_LIST.append({"NATION_NM":'이탈리아'})
         NATION_NM.remove('서양, 이탈리아')
     for i in NATION_NM:
         NATION_NM_LIST.append({"NATION_NM":i})
-    selected_by_basic = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
+    selected_by_condition = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
 
-    RECIPE_IDs = []
-    for selected in selected_by_basic:
-        RECIPE_IDs.append(selected["RECIPE_ID"])
+    RECIPE_IDs = set()
+    for selected in selected_by_condition:
+        RECIPE_IDs.add(selected["RECIPE_ID"])
 
-    INGREDIENT_LIST = []
+    INGREDIENT_LIST = set()
     for ingredient in IRDNT_NM:
-        INGREDIENT_LIST.append(ingredient)
+        INGREDIENT_LIST.add(ingredient)
 
-    for ids in RECIPE_IDs:
-        candidate = list(db.recipe_ingredient.find({"RECIPE_ID":ids}))
-        count = 0
+    for IDs in RECIPE_IDs:
+        candidate = list(db.recipe_ingredient.find({"RECIPE_ID":IDs}))
+        RECIPE_IRDNTs = set()
         for detail in candidate :
-            if detail["IRDNT_NM"] in INGREDIENT_LIST:
-                count += 1
-        if count == len(INGREDIENT_LIST):
-            DATA_WE_WANT.append(ids)
+            RECIPE_IRDNTs.add(detail["IRDNT_NM"])
+        if INGREDIENT_LIST - RECIPE_IRDNTs == set() :
+            DATA_WE_WANT.append(IDs)
+    # terminate_time = timeit.default_timer() # 종료시간 기록
+    # print(terminate_time - start_time, "4번") # 연산 시간 출력
+    # print(DATA_WE_WANT, "5번") # 결과 확인용
     return jsonify({'msg':'success'})
 
 # 레시피 검색정보 API
