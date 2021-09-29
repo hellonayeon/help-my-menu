@@ -35,8 +35,14 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
             integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
             crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> <!-- jQuery UI -->
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!-- 'Help My Menu' Javascript, CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='helpmymenu.css') }}">
     <script type="text/javascript" src="{{ url_for('static', filename='helpmymenu.js') }}"></script>
+
+
 
     <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
@@ -212,19 +218,38 @@
             <!-- 등록된 댓글 리스트 -->
             <div class="container" id="comment-list"></div>
             <!-- 댓글 입력 [텍스트, 사진, 확인] -->
-            <div class="container">
+            <div class=".container-fluid">
                 <div class="row">
-                    <div class="col-12 form-floating">
+                    <div class="col-sm form-floating">
                             <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요"
                                       id="comment-text-area"></textarea>
                     </div>
                 </div>
-                <div class="row comment-upload-box justify-content-end" id="comment-upload-box">
-                    <div class="col-4 custom-file">
-                        <input type="file" class="custom-file-input" id="file">
-                        <label class="custom-file-label" for="file" placeholder="사진 업로드" id="img-src-label"></label>
+                <div class="row comment-img-upload-box justify-content-end" id="comment-img-upload-box">
+                    <div class="col-sm-6 input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">사진 업로드</span>
+                      </div>
+                      <div class="custom-file">
+                          <input type="file" class="custom-file-input" id="file">
+                          <label class="custom-file-label" for="file" id="img-src-label">사진을 선택하세요</label>
+                      </div>
                     </div>
-                    <div class="col-1" id="comment-upload-btn-div">
+                </div>
+                <div class="row justify-content-end" id="comment-save-box">
+                    <div class="col-sm-4 input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">닉네임</span>
+                        </div>
+                        <input type="text" class="form-control" id="comment-nick" aria-label="Default" aria-describedby="inputGroup-sizing-default">
+                    </div>
+                    <div class="col-sm-4 input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">비밀번호</span>
+                        </div>
+                        <input type="password" class="form-control" id="comment-pw" aria-label="Default" aria-describedby="inputGroup-sizing-default">
+                    </div>
+                    <div class="col-sm-2" id="comment-upload-btn-div">
                         <!-- 댓글 작성 버튼: (레시피 아이디를 기반으로 한 버튼 아이디 값 부여하기 위해 동적으로 생성 -->
                     </div>
                 </div>
@@ -234,6 +259,17 @@
         <div class="row">
             <button type="button" class="btn btn-primary" onclick="showControl(RECIPE_LIST_DISPLAY)">닫기</button>
         </div>
+    </div>
+</div>
+
+<!-- 댓글 삭제 시 띄우는 다이얼로그 -->
+<div id="comment-pw-confirm-dialog" style="display: none">
+    <p>댓글 작성시 사용한 비밀번호를 입력해주세요!</p>
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">비밀번호</span>
+        </div>
+        <input type="password" class="form-control" id="comment-pw-confirm-input" aria-label="Default" aria-describedby="inputGroup-sizing-default">
     </div>
 </div>
 
