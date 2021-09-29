@@ -17,12 +17,6 @@ $(document).ready(function () {
 
     // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
     showControl(RECIPE_CHOICE_DISPLAY)
-
-    /* FIXME: 깃 업로드 전에 삭제필요 */
-    showControl(RECIPE_DETAIL_DISPLAY)
-    getRecipeDetail(1)
-    getComment(1)
-    /* FIXME END */
 });
 
 /* 화면에 보여지는 내용 보이기, 숨기기 */
@@ -340,7 +334,8 @@ function makeComment(comments) {
     $('#comment-list').empty()
 
     comments.forEach(function (comment, idx, arr) {
-        let comment_html = `<div class="row justify-content-between">
+        let comment_html = `<div class="container">
+                                <div class="row justify-content-between">
                                 <div class="col-4">
                                     <div class="row">
                                         <div class="col-6"><a href=""><img src="../static/chun_sik.png" style="width: 80px; height: 80px"></a></div>
@@ -351,12 +346,13 @@ function makeComment(comments) {
                                     </div>
                                 </div>
                                 <div class="col-1">
-                                     <span class="comment-delete-span" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, ${comment["NICK_NM"]})">삭제</span>
+                                     <button class="comment-delete-btn" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, ${comment["NICK_NM"]})">삭제</button>
                                 </div>
                              </div>
                              <br>
-                             <div class="row" id="comment-content-${idx}">
+                             <div class="row comment-content" id="comment-content-${idx}">
                                 <!-- Dynamic contents -->
+                             </div>
                              </div>
                              <hr>`
 

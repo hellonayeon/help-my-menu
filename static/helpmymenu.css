@@ -67,17 +67,31 @@
 }
 
 .comment-delete-btn {
+    margin-top: 15px;
+
+    /* 버튼 테두리 제거 */
     padding: 0;
     border: none;
     background: none;
     text-decoration:underline;
     display:inline-block;
+    color: lightgray;
 }
 
+.comment-delete-btn:hover {
+    color: lightcoral;
+    cursor:pointer;
+}
+
+/* 버튼 클릭시 생성되는 테두리 제거 */
 .comment-delete-btn:focus{
     text-decoration:underline;
     display:inline-block;
     outline:none !important;
+}
+
+.comment-content {
+    word-wrap: break-word;
 }
 
 .ingredient-tag {
@@ -87,9 +101,6 @@
 }
 
 #comment-list {
-    height: 400px;
-    overflow: auto;
-
     margin-bottom: 20px;
 }
 
