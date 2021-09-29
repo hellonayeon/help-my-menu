@@ -166,6 +166,7 @@ function postRecipeInfo() {
         success: function (response) {
             if (response['msg'] == 'success') {
                 getRecipeList();
+                showControl(RECIPE_LIST_DISPLAY);
             }
             else {
                 alert("조건에 해당 되는 레시피가 없습니다.😥")
