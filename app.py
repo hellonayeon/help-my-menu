@@ -21,11 +21,8 @@ def ingredient_listing():
     union_irdnt = list(set(main_irdnt) | set(sub_irdnt))
 
     sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
+    union_irdnt = list(set(union_irdnt) - set(sauce_irdnt))
 
-    # TODO: 부주재료 - 양념, 양념 - 부주재료 하면 추천 레시피 선택지가 좁아짐 => 집합 연산 안하면 부주재료-후추 로 들어있음
-    # main_irdnt = list(set(main_irdnt) - set(sauce_irdnt))  # '주재료'와 '양념'의 차집합
-    # sub_irdnt = list(set(sub_irdnt) - set(sauce_irdnt))  # '부재료'와 '양념'의 차집합
-    # union_irdnt = list(set(main_irdnt) | set(sub_irdnt))  # '주재료'와 부재료'의 합집합
     print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(sauce_irdnt)}")
 
     # 가나다순 정렬
