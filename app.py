@@ -7,7 +7,7 @@ db = client.dbrecipe
 
 from datetime import datetime
 
-import timeit # 연산 속도를 재기 위한 import
+# import timeit # 연산 속도를 재기 위한 import
 
 @app.route('/')
 def home():
@@ -38,7 +38,6 @@ def ingredient_listing():
 # 레시피 상세정보 받아오기
 @app.route('/recipe/post', methods=['POST'])
 def post_recipe_info():
-    start_time = timeit.default_timer() # 시작 시간 기록
     global DATA_WE_WANT
     DATA_WE_WANT = []
     TMP_DATA_WE_WANT = []
@@ -65,8 +64,7 @@ def post_recipe_info():
         NATION_NM_LIST.append({"NATION_NM":i})
     selected_by_condition = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
 
-    # FIXME 나연
-    start_time = timeit.default_timer()  # 시작 시간 기록
+    # start_time = timeit.default_timer()  # 시작 시간 기록
 
     RECIPE_IDs = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
@@ -76,46 +74,13 @@ def post_recipe_info():
         irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": IRDNT_NM[i]}, {"_id": False, "RECIPE_ID": True}))
         tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
         INGREDIENT_SET = INGREDIENT_SET & tmp_set
-        print(INGREDIENT_SET)
 
-    TMP_DATA_WE_WANT = list(RECIPE_IDs & INGREDIENT_SET)
-    TMP_DATA_WE_WANT.sort()
+    DATA_WE_WANT = list(RECIPE_IDs & INGREDIENT_SET)
 
-    terminate_time = timeit.default_timer()  # 종료시간 기록
-    print(terminate_time - start_time, "4번")  # 연산 시간 출력
-    print(TMP_DATA_WE_WANT, "5번")  # 결과 확인용
-
-
-    # FIXME 해준
-    start_time = timeit.default_timer()  # 시작 시간 기록
-
-    RECIPE_IDs = set()
-    for selected in selected_by_condition:
-        RECIPE_IDs.add(selected["RECIPE_ID"])
-
-    INGREDIENT_LIST = set()
-    for ingredient in IRDNT_NM:
-        INGREDIENT_LIST.add(ingredient)
-
-    for IDs in RECIPE_IDs:
-        candidate = list(db.recipe_ingredient.find({"RECIPE_ID":IDs}))
-        RECIPE_IRDNTs = set()
-        for detail in candidate :
-            RECIPE_IRDNTs.add(detail["IRDNT_NM"])
-        if INGREDIENT_LIST - RECIPE_IRDNTs == set() :
-            DATA_WE_WANT.append(IDs)
-
-    DATA_WE_WANT.sort()
-
-    # 시간측정
-    terminate_time = timeit.default_timer()  # 종료시간 기록
-    print(terminate_time - start_time, "4번")  # 연산 시간 출력
-    print(DATA_WE_WANT, "5번")  # 결과 확인용
-
-    # 결과
-    print(f"TMP_DATA_WE_WANT LEN = {len(TMP_DATA_WE_WANT)}")
-    print(f"DATA_WE_WANT LEN = {len(DATA_WE_WANT)}")
-    print(f"결과: {DATA_WE_WANT == TMP_DATA_WE_WANT}")
+    # # 시간측정
+    # terminate_time = timeit.default_timer()  # 종료시간 기록
+    # print(terminate_time - start_time, "4번")  # 연산 시간 출력
+    # print(DATA_WE_WANT, "5번")  # 결과 확인용
 
     if DATA_WE_WANT != [] :
         return jsonify({'msg':'success'})
