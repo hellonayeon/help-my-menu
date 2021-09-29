@@ -7,8 +7,6 @@ db = client.dbrecipe
 
 from datetime import datetime
 
-# import timeit # 연산 속도를 재기 위한 import
-
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -61,8 +59,6 @@ def post_recipe_info():
         NATION_NM_LIST.append({"NATION_NM":i})
     selected_by_condition = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
 
-    # start_time = timeit.default_timer()  # 시작 시간 기록
-
     RECIPE_IDs = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
     first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": IRDNT_NM[0]}, {"_id": False, "RECIPE_ID": True}))
@@ -73,11 +69,6 @@ def post_recipe_info():
         INGREDIENT_SET = INGREDIENT_SET & tmp_set
 
     DATA_WE_WANT = list(RECIPE_IDs & INGREDIENT_SET)
-
-    # # 시간측정
-    # terminate_time = timeit.default_timer()  # 종료시간 기록
-    # print(terminate_time - start_time, "4번")  # 연산 시간 출력
-    # print(DATA_WE_WANT, "5번")  # 결과 확인용
 
     if DATA_WE_WANT != [] :
         return jsonify({'msg':'success'})
