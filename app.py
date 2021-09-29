@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, json, render_template, jsonify, request
 app = Flask(__name__)
 
 from pymongo import MongoClient
@@ -82,7 +82,10 @@ def post_recipe_info():
     # terminate_time = timeit.default_timer() # 종료시간 기록
     # print(terminate_time - start_time, "4번") # 연산 시간 출력
     # print(DATA_WE_WANT, "5번") # 결과 확인용
-    return jsonify({'msg':'success'})
+    if DATA_WE_WANT != [] :
+        return jsonify({'msg':'success'})
+    else :
+        return jsonify({'msg':'nothing'})
 
 # 레시피 검색정보 API
 @app.route('/recipe/get', methods=['GET'])
