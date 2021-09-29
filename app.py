@@ -13,6 +13,27 @@ from datetime import datetime
 def home():
     return render_template('index.html')
 
+# 자동 검색 리스트 불러오기
+@app.route('/search', methods=['GET'])
+def ingredient_search_listing():
+    # 중복 제거
+    research_list = []
+
+    projection = {"ROW_NUM": False, "RECIPE_ID": False, "IRDNT_SN": False,
+                  "IRDNT_CPCTY": False, "IRDNT_TY_CODE": False, "_id": False}
+
+    resarch_ingr = list(db.recipe_ingredient.find({}, projection))
+
+    for i in resarch_ingr:
+        if (i['IRDNT_TY_NM'] == '부재료'):
+            i['IRDNT_TY_NM'] = '주재료'
+        research_list.append(i)
+
+    overlap_remove_list = list({v['IRDNT_NM']: v for v in research_list}.values())
+
+    return jsonify(overlap_remove_list)
+
+
 # 첫 화면 재료 항목 불러오기
 @app.route('/ingredient', methods=['GET'])
 def ingredient_listing():
