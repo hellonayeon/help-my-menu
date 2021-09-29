@@ -123,7 +123,6 @@ def get_comments():
     recipe_id = int(request.args.get("recipe_id"))
     print(recipe_id)
     comments = list(db.comment.find({"RECIPE_ID": recipe_id}, {"_id": False}))
-    print(f'comments = {comments}')
 
     return jsonify(comments)
 
@@ -133,6 +132,16 @@ def get_comments():
 def save_comment():
     recipe_id = int(request.form["recipe_id"])
     text = request.form["text"]
+
+    nick_nm = request.form["nick_nm"]
+    pw = request.form["pw"]
+
+    # 이미 있는 닉네임인 경우 해당 레코드 반환
+    used_nick_nm = db.comment.find_one({"NICK_NM": {"$in": [nick_nm]}})
+    print(f"receive nick = {nick_nm}")
+    print(f"db nick = {used_nick_nm}")
+    if used_nick_nm != None:
+        return jsonify({'result': 'failure', 'msg': '이미 있는 닉네임입니다. 다른 닉네임을 입력해주세요!'})
 
     # [업로드 이미지 처리]
     # 클라이언트가 업로드한 파일을 서버에 저장
@@ -144,7 +153,7 @@ def save_comment():
 
         # 이미지 확장자
         # 가장 마지막 문자열 가져오기 [-1]
-        ### 아이폰 heic 확장자 이미지 예외처리 필요
+        # FIXME: 아이폰 heic 확장자 이미지 예외처리 필요
         extension = file.filename.split('.')[-1]
 
         today = datetime.now()  # 현재 시각 가져오기
@@ -164,12 +173,31 @@ def save_comment():
         'RECIPE_ID': recipe_id,
         'TEXT': text,
         'IMG_SRC': fname,
-        'DATE': date
+        'DATE': date,
+        'NICK_NM': nick_nm,
+        'PW': pw
     }
 
     db.comment.insert_one(doc)
 
     return jsonify({'result': 'success'})
+
+# 댓글 삭제 API
+@app.route('/recipe/comment/delete', methods=['POST'])
+def delete_comment():
+    nick_nm = request.form["nick_nm"]
+    pw = request.form["pw"]
+    comment = db.comment.find_one({"NICK_NM": nick_nm}, {"_id": False})
+
+    # 닉네임에 해당되는 비밀번호가 일치하지 않을 경우
+    if(pw != comment["PW"]):
+        return jsonify({'result': 'failure', 'msg': '비밀번호가 일치하지 않습니다!'})
+
+    # 일치하는 경우 삭제
+    db.comment.delete_one(comment)
+
+    return jsonify({'result': 'success'})
+
 
 # 좋아요 누르기
 @app.route('/recipe/like', methods=['PUT'])
