@@ -103,14 +103,23 @@ function search_show() {
         focus: function (event, ui) {
             return false;
         },
-        close: function () {
-            $("#searchInput").val('')
-        },
         minLength: 1,
         delay: 100,
         disabled: false
     });
 };
+
+function ingredientDisplay(ingredient) {
+    if (IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
+        let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
+        $('#selected-ingredient-display-main').append(temp_html)
+        let temp = 'selected-ingredient-button-' + index
+        document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
+        index += 1;
+        IRDNT_NM.push(document.getElementById(temp).value);
+
+    }
+}
 
 // 선택한 재료 취소하기 & 선택 재료 데이터 삭제
 function cancleSelectingIngredientAdded(ingredient) {
