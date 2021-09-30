@@ -35,7 +35,6 @@ def ingredient_listing():
 def post_recipe_info():
     global DATA_WE_WANT
     DATA_WE_WANT = []
-    TMP_DATA_WE_WANT = []
     recipe_info = request.get_json()
     IRDNT_NM = recipe_info['IRDNT_NM']
     NATION_NM = recipe_info['NATION_NM']
