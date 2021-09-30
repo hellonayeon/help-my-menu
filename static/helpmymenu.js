@@ -3,6 +3,7 @@ let IRDNT_NM = []
 let NATION_NM = []
 let LEVEL_NM = []
 let COOKING_TIME = []
+let ingre_list = []
 
 // 화면 출력 제어 플래그
 const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
@@ -12,6 +13,7 @@ const RECIPE_LOADING_DISPLAY = "RECIPE_LOADING_DISPLAY"
 
 $(document).ready(function () {
     ingredientListing();
+
 
     // 사진 업로드
     bsCustomFileInput.init()
@@ -50,6 +52,7 @@ function showControl(display) {
     }
 }
 
+
 //첫 화면 재료 선택 데이터 가져오기
 function ingredientListing() {
     $.ajax({
@@ -57,42 +60,73 @@ function ingredientListing() {
         url: "/ingredient",
         data: {},
         success: function (response) {
-            let recipe_ingredient_main = response['recipe_ingredient_main']
-            let recipe_ingredient_sauce = response['recipe_ingredient_sauce']
+            let recipe_ingredient = response['recipe_ingredient']
 
-            for (let i = 0; i < recipe_ingredient_main.length; i++) {
-                let ingredient = recipe_ingredient_main[i]
+            for (let i = 0; i < recipe_ingredient.length; i++) {
+                let ingredient = recipe_ingredient[i]
                 let temp_html = `<option value="main">${ingredient}</option>`
                 $('#ingre1').append(temp_html)
-            }
-            for (let i = 0; i < recipe_ingredient_sauce.length; i++) {
-                let ingredient = recipe_ingredient_sauce[i]
-                let temp_html = `<option value="sauce">${ingredient}</option>`
-                $('#ingre2').append(temp_html)
             }
         }
     })
 }
 
+
+//검색 자동완성 기능
+$(function autosearch() {
+    $.ajax({
+        type: "GET",
+        url: "/research",
+        data: {},
+        success: function (response) {
+            ingre_list = response["resarch_ingr"]
+            search_show()
+
+        }
+    })
+});
+
+function search_show() {
+    console.log(ingre_list)
+    $("#searchInput").autocomplete({
+        autoFocus: true,
+        source: ingre_list,
+        select: function (event, ui) {
+            let ingredient = ui.item.value
+
+            if (IRDNT_NM.indexOf(ingredient) == -1) {
+                let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
+                $('#selected-ingredient-display-main').append(temp_html)
+                let temp = 'selected-ingredient-button-' + index
+                document.getElementById(temp).value = ingredient;
+                index += 1;
+                IRDNT_NM.push(ingredient);
+            }
+        },
+        focus: function (event, ui) {
+            return false;
+        },
+        close: function () {
+            $("#searchInput").val('')
+        },
+        minLength: 1,
+        delay: 100,
+        disabled: false
+    });
+};
+
+
 let index = 1
 
 // 선택한 재료 표시하기 & 선택 재료 데이터 저장
 function ingredientDisplay(ingredient) {
-    if (ingredient.value == "main" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
-        let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin-right:5px" onclick="cancleSelectingIngredientAdded(this)"/>`
+    if (IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
+        let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
         $('#selected-ingredient-display-main').append(temp_html)
         let temp = 'selected-ingredient-button-' + index
         document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
         index += 1;
         IRDNT_NM.push(document.getElementById(temp).value);
-
-    } else if (ingredient.value == "sauce" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
-        let temp_html = `<input type="button" class="btn btn-outline-danger" id="selected-ingredient-button-${index}" value="" style="margin:5px 5px 0px 0px" onclick="cancleSelectingIngredientAdded(this)"/>`
-        $('#selected-ingredient-display-sauce').append(temp_html)
-        let temp = 'selected-ingredient-button-' + index
-        document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
-        index += 1;
-        IRDNT_NM.push(document.getElementById(temp).value)
 
     }
 }
@@ -167,8 +201,7 @@ function postRecipeInfo() {
             if (response['msg'] == 'success') {
                 getRecipeList();
                 showControl(RECIPE_LIST_DISPLAY);
-            }
-            else {
+            } else {
                 alert("조건에 해당 되는 레시피가 없습니다.😥")
                 showControl(RECIPE_CHOICE_DISPLAY);
             }
@@ -285,15 +318,15 @@ function getComment(recipe_id) {
 
 /* 사용자 닉네임, 비밀번호 입력 체크 함수 */
 function checkCommentUserInfo(nick_nm, pw, text) {
-    if(text == "") {
+    if (text == "") {
         alert("내용을 입력해주세요!")
         return false
     }
-    if(nick_nm == "") {
+    if (nick_nm == "") {
         alert("닉네임을 입력해주세요!")
         return false
     }
-    if(pw == "") {
+    if (pw == "") {
         alert("비밀번호를 입력해주세요!")
         return false
     }
@@ -308,7 +341,7 @@ function saveComment(recipe_id) {
     let img_src = $('#file')[0].files[0]
 
     // 아이디 또는 비밀번호, 댓글 내용을 입력 안한 경우
-    if(!checkCommentUserInfo(nick_nm, pw, text)) return
+    if (!checkCommentUserInfo(nick_nm, pw, text)) return
 
     let form_data = new FormData()
     form_data.append("recipe_id", recipe_id)
@@ -325,7 +358,7 @@ function saveComment(recipe_id) {
         contentType: false,
         processData: false,
         success: function (response) {
-            if(response['result'] == "success") {
+            if (response['result'] == "success") {
                 // 업로드된 파일, 댓글내용, 닉네임, 비밀번호 지우기
                 $('#file').val("")
                 $('#img-src-label').empty()
@@ -334,8 +367,7 @@ function saveComment(recipe_id) {
                 $('#comment-pw').val("")
 
                 getComment(recipe_id)
-            }
-            else {
+            } else {
                 // 중복된 닉네임일 경우, 닉네임이랑 비밀번호만 지우기
                 $('#comment-nick').val("")
                 $('#comment-pw').val("")
@@ -378,7 +410,7 @@ function makeComment(comments) {
         $('#comment-list').append(comment_html)
 
         // 이미지가 있는 경우 댓글 내용에 이미지 출력
-        if(comment["IMG_SRC"] != "") {
+        if (comment["IMG_SRC"] != "") {
             let img_html = `<div class="col-12"><img src="../static/images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"></div>`
             $(`#comment-content-${idx}`).append(img_html)
         }
@@ -393,12 +425,11 @@ function deleteComment(recipe_id, nick_nm, pw) {
         type: "POST",
         url: "/recipe/comment/delete",
         data: {"nick_nm": nick_nm, "pw": pw},
-        success: function(response) {
-            if(response["result"] == "success") {
+        success: function (response) {
+            if (response["result"] == "success") {
                 // 댓글 다시 출력: 삭제된 댓글 반영
                 getComment(recipe_id)
-            }
-            else {
+            } else {
                 alert(response["msg"])
                 return
             }
@@ -410,29 +441,28 @@ function deleteComment(recipe_id, nick_nm, pw) {
 function showPasswordDialog(recipe_id, nick_nm) {
     $('#comment-pw-confirm-dialog').dialog({
         buttons: [
-                    {
-                        text: "취소",
-                        click: function() {
-                            $( this ).dialog( "close" );
-                        }
-                    },
-                    {
-                        text: "확인",
-                        click: function() {
-                            pw = $('#comment-pw-confirm-input').val()
-                            if(pw == "") {
-                                $('#comment-pw-confirm-input').css('border-color', 'red')
-                                $('#comment-pw-confirm-input').attr('placeholder', '비밀번호를 입력해주세요!')
-                            }
-                            else {
-                                deleteComment(recipe_id, nick_nm, pw)
-                                $( this ).dialog( "close" );
-                            }
-                        }
+            {
+                text: "취소",
+                click: function () {
+                    $(this).dialog("close");
+                }
+            },
+            {
+                text: "확인",
+                click: function () {
+                    pw = $('#comment-pw-confirm-input').val()
+                    if (pw == "") {
+                        $('#comment-pw-confirm-input').css('border-color', 'red')
+                        $('#comment-pw-confirm-input').attr('placeholder', '비밀번호를 입력해주세요!')
+                    } else {
+                        deleteComment(recipe_id, nick_nm, pw)
+                        $(this).dialog("close");
                     }
-                  ],
+                }
+            }
+        ],
         // 다이얼로그가 닫히기 직전에 호출되는 함수
-        beforeClose: function( event, ui ) {
+        beforeClose: function (event, ui) {
             $('#comment-pw-confirm-input').val('')
             $('#comment-pw-confirm-input').css('border-color', '')
             $('#comment-pw-confirm-input').attr('placeholder', '')

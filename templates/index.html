@@ -42,15 +42,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='helpmymenu.css') }}">
     <script type="text/javascript" src="{{ url_for('static', filename='helpmymenu.js') }}"></script>
 
-
-
     <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
     <style>
 
     </style>
     <script>
-        
+
     </script>
 </head>
 
@@ -58,11 +56,11 @@
 <div class="wrap">
     <!-- 레시피 선택 화면 (첫 화면) -->
     <div class="container" id="recipe-choice-container">
-        <div class="jumbotron">
+        <div class="jumbotron" style="margin-bottom: auto; padding-bottom: 10px;">
             <h1 class="display-4">헤얿 마이 메뉴!</h1>
             <p class="lead">여러분의 냉장고에 있는 재료들로 만들 수 있는 요리를 추천 받고, 훌륭한 레시피를 친구들과 공유해보세요.</p>
 
-            <div id="ImageByLikes" class="carousel slide" data-ride="carousel">
+            <div id="ImageByLikes" class="carousel slide" data-ride="carousel" style="height: 300px;">
                 <ol class="carousel-indicators">
                     <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
                     <li data-target="#carouselExampleIndicators" data-slide-to="1" class="active"></li>
@@ -80,7 +78,8 @@
                              alt="좋아요 2등 사진">
                     </div>
                     <div class="carousel-item">
-                        <img class="d-block w-100" src="https://i.ytimg.com/vi/yd1WYXyl5_w/maxresdefault.jpg"
+                        <img class="d-block w-100"
+                             src="https://i.ytimg.com/vi/yd1WYXyl5_w/maxresdefault.jpg"
                              alt="좋아요 3등 사진">
                     </div>
                 </div>
@@ -94,32 +93,28 @@
                 </a>
             </div>
 
+            <!--재료, 장르, 난이도, 시간 선택한 값들 태그로 출력 _ Project2에 추가할 예정 -->
+            <div id="selected-ingredient-display-main"">
+            </div>
+
             <hr class="my-4">
 
             <!--최소 3개 or 5개 선택 필수 / custom-select 에서 선택한 값들 태그로 출력 필요-->
             🍳 왓츠 인 마이 냉장고? :
-            <div class="input-group mb-3">
-            <div class="input-group-prepend">
-                <label class="input-group-text">재료 및 양념 선택</label>
+
+            <div class="input-group" style="height: 50px;">
+                <input id="searchInput" type="text" class="form-control" placeholder="재료를 입력해주세요" aria-label="Text input with dropdown button">
+                <div class="input-group-append">
+                    <select class="btn btn-outline-secondary dropdown-toggle" type="select" onchange="ingredientDisplay(this)" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        <option selected hidden>재료 리스트</option>
+                        <optgroup label="재료" id="ingre1">
+                        </optgroup>
+                    </select>
+                </div>
             </div>
-            <select class="custom-select" onchange="ingredientDisplay(this)">
-                <option selected hidden>재료를 골라보세요! (2개 이상!)</option>
-                <optgroup label="재료" id="ingre1">
-                </optgroup>
-            </select>
-            <select class="custom-select" onchange="ingredientDisplay(this)">
-                <option selected hidden>양념을 골라보세요! (1개 이상!)</option>
-                <optgroup label="양념" id="ingre2">
-                </optgroup>
-            </select>
-            </div>
-            <div id="selected-ingredient-display-main">
-                <input type="button" class="btn btn-primary" id="selected-ingredient-button-exam1" value="주재료를 선택해주세요! (최소 2개)"/>
-            </div>
-            <div id="selected-ingredient-display-sauce">
-                <input type="button" class="btn btn-danger" id="selected-ingredient-button-exam2" value="양념을 선택해주세요! (최소 1개)" style="margin-top:5px"/>
-            </div>
-        <br><br>
+
+            <br><br>
 
             💭 지금 땡기는 건
             <div class="input-group">
@@ -149,7 +144,7 @@
             <br>
 
             ⏱ 소요 시간
-            <div class="form-check">
+            <div class="form-check" >
                 <input type="checkbox" class="form-check-input" id="short">
                 <label class="form-check-label" for="short">30분~1시간</label>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -163,13 +158,14 @@
         </div>
 
         <!--  위 값들 모두 포함한 결과 불러오기 기능 추가  -->
-        <p class="lead">
+        <p class="lead" style="margin-left: 20px;">
             <button onclick="selectedRecipeNation();" id="btn-post-box" type="button" class="btn btn-primary">
                 레시피 보기
             </button>
         </p>
 
     </div>
+
 
     <!-- 레시피 로딩 화면 -->
     <div class="container" id="recipe-loading-container">
@@ -234,11 +230,11 @@
                     <div class="col-sm-6 input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text">사진 업로드</span>
-                      </div>
-                      <div class="custom-file">
-                          <input type="file" class="custom-file-input" id="file">
-                          <label class="custom-file-label" for="file" id="img-src-label">사진을 선택하세요</label>
-                      </div>
+                        </div>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="file">
+                            <label class="custom-file-label" for="file" id="img-src-label">사진을 선택하세요</label>
+                        </div>
                     </div>
                 </div>
                 <div class="row justify-content-end" id="comment-save-box">
@@ -246,13 +242,15 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">닉네임</span>
                         </div>
-                        <input type="text" class="form-control" id="comment-nick" aria-label="Default" aria-describedby="inputGroup-sizing-default">
+                        <input type="text" class="form-control" id="comment-nick" aria-label="Default"
+                               aria-describedby="inputGroup-sizing-default">
                     </div>
                     <div class="col-sm-4 input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text">비밀번호</span>
                         </div>
-                        <input type="password" class="form-control" id="comment-pw" aria-label="Default" aria-describedby="inputGroup-sizing-default">
+                        <input type="password" class="form-control" id="comment-pw" aria-label="Default"
+                               aria-describedby="inputGroup-sizing-default">
                     </div>
                     <div class="col-sm-2" id="comment-upload-btn-div">
                         <!-- 댓글 작성 버튼: (레시피 아이디를 기반으로 한 버튼 아이디 값 부여하기 위해 동적으로 생성 -->
@@ -277,7 +275,8 @@
         <div class="input-group-prepend">
             <span class="input-group-text">비밀번호</span>
         </div>
-        <input type="password" class="form-control" id="comment-pw-confirm-input" aria-label="Default" aria-describedby="inputGroup-sizing-default">
+        <input type="password" class="form-control" id="comment-pw-confirm-input" aria-label="Default"
+               aria-describedby="inputGroup-sizing-default">
     </div>
 </div>
 
