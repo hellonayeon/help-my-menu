@@ -365,7 +365,7 @@ function makeComment(comments) {
                                     </div>
                                 </div>
                                 <div class="col-1">
-                                     <button class="comment-delete-btn" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, ${comment["NICK_NM"]})">삭제</button>
+                                     <button class="comment-delete-btn" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, '${comment["NICK_NM"]}')">삭제</button>
                                 </div>
                              </div>
                              <br>
