@@ -37,7 +37,7 @@ def ingredient_listing():
     # union_irdnt = list(set(union_irdnt) - set(sauce_irdnt))
 
 
-    print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(sauce_irdnt)}")
+    # print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(sauce_irdnt)}")
 
     # 가나다순 정렬
     # union_irdnt.sort()
