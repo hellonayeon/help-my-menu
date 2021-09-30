@@ -4,6 +4,7 @@ let NATION_NM = []
 let LEVEL_NM = []
 let COOKING_TIME = []
 let ingre_list = []
+let index = 1
 
 // 화면 출력 제어 플래그
 const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
@@ -13,7 +14,6 @@ const RECIPE_LOADING_DISPLAY = "RECIPE_LOADING_DISPLAY"
 
 $(document).ready(function () {
     ingredientListing();
-
 
     // 사진 업로드
     bsCustomFileInput.init()
@@ -52,7 +52,6 @@ function showControl(display) {
     }
 }
 
-
 //첫 화면 재료 선택 데이터 가져오기
 function ingredientListing() {
     $.ajax({
@@ -71,7 +70,6 @@ function ingredientListing() {
     })
 }
 
-
 //검색 자동완성 기능
 $(function autosearch() {
     $.ajax({
@@ -81,13 +79,12 @@ $(function autosearch() {
         success: function (response) {
             ingre_list = response["resarch_ingr"]
             search_show()
-
         }
     })
 });
 
+// 선택한 재료 표시하기 & 선택 재료 데이터 저장
 function search_show() {
-    console.log(ingre_list)
     $("#searchInput").autocomplete({
         autoFocus: true,
         source: ingre_list,
@@ -114,22 +111,6 @@ function search_show() {
         disabled: false
     });
 };
-
-
-let index = 1
-
-// 선택한 재료 표시하기 & 선택 재료 데이터 저장
-function ingredientDisplay(ingredient) {
-    if (IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
-        let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
-        $('#selected-ingredient-display-main').append(temp_html)
-        let temp = 'selected-ingredient-button-' + index
-        document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
-        index += 1;
-        IRDNT_NM.push(document.getElementById(temp).value);
-
-    }
-}
 
 // 선택한 재료 취소하기 & 선택 재료 데이터 삭제
 function cancleSelectingIngredientAdded(ingredient) {
