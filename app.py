@@ -16,8 +16,6 @@ def home():
 def research_listing():
     # 중복 제거
     resarch_ingr = list(db.recipe_ingredient.distinct("IRDNT_NM"))
-
-
     return jsonify({'resarch_ingr' : resarch_ingr})
 
 # 첫 화면 재료 항목 불러오기
@@ -25,25 +23,6 @@ def research_listing():
 def ingredient_listing():
     # 재료, 양념 통일
     irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM"))
-
-    # 재료, 양념 구분하는 코드
-    # main_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "주재료"}))
-    # sub_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "부재료"}))
-    # union_irdnt = list(set(main_irdnt) | set(sub_irdnt))
-    
-    # sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
-    
-    # sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
-    # union_irdnt = list(set(union_irdnt) - set(sauce_irdnt))
-
-
-    print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(sauce_irdnt)}")
-
-    # 가나다순 정렬
-    # union_irdnt.sort()
-    # sauce_irdnt.sort()
-
-
     return jsonify({'recipe_ingredient':irdnt})
 
 # 레시피 상세정보 받아오기
