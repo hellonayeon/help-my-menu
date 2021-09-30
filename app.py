@@ -25,17 +25,15 @@ def research_listing():
 # 첫 화면 재료 항목 불러오기
 @app.route('/ingredient', methods=['GET'])
 def ingredient_listing():
-    # 중복 제거
-    main_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "주재료"}))
-    sub_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "부재료"}))
-    union_irdnt = list(set(main_irdnt) | set(sub_irdnt))
+    # 재료, 양념 통일
+    irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM"))
 
-    sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
-
-    # projection = {"ROW_NUM": False, "RECIPE_ID": False, "IRDNT_SN": False, "IRDNT_TY_NM": False,
-    #               "IRDNT_CPCTY": False, "IRDNT_TY_CODE": False, "_id": False}
-
-    resarch_ingr = list(db.recipe_ingredient.distinct("IRDNT_NM"))
+    # 재료, 양념 구분하는 코드
+    # main_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "주재료"}))
+    # sub_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "부재료"}))
+    # union_irdnt = list(set(main_irdnt) | set(sub_irdnt))
+    #
+    # sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
 
     # TODO: 부주재료 - 양념, 양념 - 부주재료 하면 추천 레시피 선택지가 좁아짐 => 집합 연산 안하면 부주재료-후추 로 들어있음
     # main_irdnt = list(set(main_irdnt) - set(sauce_irdnt))  # '주재료'와 '양념'의 차집합
@@ -44,11 +42,11 @@ def ingredient_listing():
     # print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(sauce_irdnt)}")
 
     # 가나다순 정렬
-    union_irdnt.sort()
-    sauce_irdnt.sort()
+    # union_irdnt.sort()
+    # sauce_irdnt.sort()
 
 
-    return jsonify({'recipe_ingredient_main':union_irdnt, 'recipe_ingredient_sauce' : sauce_irdnt, 'resarch_ingr' : resarch_ingr})
+    return jsonify({'recipe_ingredient':irdnt})
 
 # 레시피 상세정보 받아오기
 @app.route('/recipe/post', methods=['POST'])

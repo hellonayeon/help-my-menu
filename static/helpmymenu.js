@@ -60,20 +60,12 @@ function ingredientListing() {
         url: "/ingredient",
         data: {},
         success: function (response) {
-            let temp = {}
-            ingre_list = response["resarch_ingr"]
-            let recipe_ingredient_main = response['recipe_ingredient_main']
-            let recipe_ingredient_sauce = response['recipe_ingredient_sauce']
+            let recipe_ingredient = response['recipe_ingredient']
 
-            for (let i = 0; i < recipe_ingredient_main.length; i++) {
-                let ingredient = recipe_ingredient_main[i]
+            for (let i = 0; i < recipe_ingredient.length; i++) {
+                let ingredient = recipe_ingredient[i]
                 let temp_html = `<option value="main">${ingredient}</option>`
                 $('#ingre1').append(temp_html)
-            }
-            for (let i = 0; i < recipe_ingredient_sauce.length; i++) {
-                let ingredient = recipe_ingredient_sauce[i]
-                let temp_html = `<option value="sauce">${ingredient}</option>`
-                $('#ingre2').append(temp_html)
             }
         }
     })
@@ -103,7 +95,7 @@ function search_show() {
             let ingredient = ui.item.value
 
             if (IRDNT_NM.indexOf(ingredient) == -1) {
-                let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin-right:5px" onclick="cancleSelectingIngredientAdded(this)"/>`
+                let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
                 $('#selected-ingredient-display-main').append(temp_html)
                 let temp = 'selected-ingredient-button-' + index
                 document.getElementById(temp).value = ingredient;
@@ -114,7 +106,7 @@ function search_show() {
         focus: function (event, ui) {
             return false;
         },
-        close: function() {
+        close: function () {
             $("#searchInput").val('')
         },
         minLength: 1,
@@ -128,24 +120,13 @@ let index = 1
 
 // 선택한 재료 표시하기 & 선택 재료 데이터 저장
 function ingredientDisplay(ingredient) {
-    if (ingredient.value == "main" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
-        let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin-right:5px" onclick="cancleSelectingIngredientAdded(this)"/>`
-        console.log(ingredient.value)
-        console.log(ingredient.selectedIndex)
-        console.log(ingredient.options[ingredient.selectedIndex])
+    if (IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
+        let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
         $('#selected-ingredient-display-main').append(temp_html)
         let temp = 'selected-ingredient-button-' + index
         document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
         index += 1;
         IRDNT_NM.push(document.getElementById(temp).value);
-
-    } else if (ingredient.value == "sauce" && IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
-        let temp_html = `<input type="button" class="btn btn-outline-danger" id="selected-ingredient-button-${index}" value="" style="margin:5px 5px 0px 0px" onclick="cancleSelectingIngredientAdded(this)"/>`
-        $('#selected-ingredient-display-sauce').append(temp_html)
-        let temp = 'selected-ingredient-button-' + index
-        document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
-        index += 1;
-        IRDNT_NM.push(document.getElementById(temp).value)
 
     }
 }
