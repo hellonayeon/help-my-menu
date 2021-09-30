@@ -3,4 +3,4 @@
 **/.idea
 
 # Image files
-/static/images
+/static/images/*

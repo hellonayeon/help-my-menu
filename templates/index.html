@@ -54,6 +54,7 @@
 
 <body>
 <div class="wrap">
+    <!-- 레시피 선택 화면 (첫 화면) -->
     <div class="container" id="recipe-choice-container">
         <div class="jumbotron" style="margin-bottom: auto; padding-bottom: 10px;">
             <h1 class="display-4">헤얿 마이 메뉴!</h1>
@@ -165,14 +166,16 @@
 
     </div>
 
-    <!-- FIXME: 레시피 로딩 화면 -->
-    <!---------------------->
+
+    <!-- 레시피 로딩 화면 -->
     <div class="container" id="recipe-loading-container">
-        <div>Loading...</div>
+        <div id="loading">
+            <p>레시피 가져오는 중...🔍</p>
+            <img src="{{ url_for('static', filename='LoadingImg.gif') }}" alt="Loading...">
+        </div>
     </div>
 
     <!-- 레시피 리스트 화면 내용 -->
-    <!----------------------->
     <div class="container" id="recipe-list-container">
         <div class="jumbotron" style="padding-bottom: 10px">
             <!-- [추천, 좋아요] 페이지 네비게이션 -->
@@ -203,7 +206,6 @@
     </div>
 
     <!-- 레시피 상세보기 화면 내용 -->
-    <!----------------------->
     <!-- 레시피 상세 정보 영역 -->
     <div class="container" id="recipe-detail-container">
         <div class="container" id="detail-box">

@@ -7,8 +7,6 @@ db = client.dbrecipe
 
 from datetime import datetime
 
-# import timeit # 연산 속도를 재기 위한 import
-
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -32,14 +30,14 @@ def ingredient_listing():
     # main_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "주재료"}))
     # sub_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "부재료"}))
     # union_irdnt = list(set(main_irdnt) | set(sub_irdnt))
-    #
+    
     # sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
+    
+    # sauce_irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM", {"IRDNT_TY_NM": "양념"}))
+    # union_irdnt = list(set(union_irdnt) - set(sauce_irdnt))
 
-    # TODO: 부주재료 - 양념, 양념 - 부주재료 하면 추천 레시피 선택지가 좁아짐 => 집합 연산 안하면 부주재료-후추 로 들어있음
-    # main_irdnt = list(set(main_irdnt) - set(sauce_irdnt))  # '주재료'와 '양념'의 차집합
-    # sub_irdnt = list(set(sub_irdnt) - set(sauce_irdnt))  # '부재료'와 '양념'의 차집합
-    # union_irdnt = list(set(main_irdnt) | set(sub_irdnt))  # '주재료'와 부재료'의 합집합
-    # print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(sauce_irdnt)}")
+
+    print(f"total = 주재료+부재료: {len(union_irdnt)}, 양념: {len(sauce_irdnt)}")
 
     # 가나다순 정렬
     # union_irdnt.sort()
@@ -51,7 +49,6 @@ def ingredient_listing():
 # 레시피 상세정보 받아오기
 @app.route('/recipe/post', methods=['POST'])
 def post_recipe_info():
-    # start_time = timeit.default_timer() # 시작 시간 기록
     global DATA_WE_WANT
     DATA_WE_WANT = []
     recipe_info = request.get_json()
@@ -77,24 +74,17 @@ def post_recipe_info():
         NATION_NM_LIST.append({"NATION_NM":i})
     selected_by_condition = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
 
-    RECIPE_IDs = set()
-    for selected in selected_by_condition:
-        RECIPE_IDs.add(selected["RECIPE_ID"])
+    RECIPE_IDs = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
-    INGREDIENT_LIST = set()
-    for ingredient in IRDNT_NM:
-        INGREDIENT_LIST.add(ingredient)
+    first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": IRDNT_NM[0]}, {"_id": False, "RECIPE_ID": True}))
+    INGREDIENT_SET = set([irdnt['RECIPE_ID'] for irdnt in first_irdnt_ids])
+    for i in range(1, len(IRDNT_NM)):
+        irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": IRDNT_NM[i]}, {"_id": False, "RECIPE_ID": True}))
+        tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
+        INGREDIENT_SET = INGREDIENT_SET & tmp_set
 
-    for IDs in RECIPE_IDs:
-        candidate = list(db.recipe_ingredient.find({"RECIPE_ID":IDs}))
-        RECIPE_IRDNTs = set()
-        for detail in candidate :
-            RECIPE_IRDNTs.add(detail["IRDNT_NM"])
-        if INGREDIENT_LIST - RECIPE_IRDNTs == set() :
-            DATA_WE_WANT.append(IDs)
-    # terminate_time = timeit.default_timer() # 종료시간 기록
-    # print(terminate_time - start_time, "4번") # 연산 시간 출력
-    # print(DATA_WE_WANT, "5번") # 결과 확인용
+    DATA_WE_WANT = list(RECIPE_IDs & INGREDIENT_SET)
+
     if DATA_WE_WANT != [] :
         return jsonify({'msg':'success'})
     else :
