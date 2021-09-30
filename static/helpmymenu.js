@@ -8,6 +8,7 @@ let COOKING_TIME = []
 const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
 const RECIPE_DETAIL_DISPLAY = "RECIPE_DETAIL_DISPLAY"
 const RECIPE_CHOICE_DISPLAY = "RECIPE_CHOICE_DISPLAY"
+const RECIPE_LOADING_DISPLAY = "RECIPE_LOADING_DISPLAY"
 
 $(document).ready(function () {
     ingredientListing();
@@ -24,16 +25,25 @@ function showControl(display) {
     switch (display) {
         case RECIPE_CHOICE_DISPLAY:
             $("#recipe-choice-container").show()
+            $("#recipe-loading-container").hide()
             $("#recipe-detail-container").hide()
             $("#recipe-list-container").hide()
             break
+        case RECIPE_LOADING_DISPLAY:
+            $("#recipe-choice-container").hide()
+            $("#recipe-loading-container").show()
+            $("#recipe-list-container").hide()
+            $("#recipe-detail-container").hide()
+            break
         case RECIPE_LIST_DISPLAY:
             $("#recipe-choice-container").hide()
+            $("#recipe-loading-container").hide()
             $("#recipe-list-container").show()
             $("#recipe-detail-container").hide()
             break
         case RECIPE_DETAIL_DISPLAY:
             $("#recipe-choice-container").hide()
+            $("#recipe-loading-container").hide()
             $("#recipe-list-container").hide()
             $("#recipe-detail-container").show()
             break
@@ -141,7 +151,7 @@ function selectedRecipeNation() {
         }
     }
     postRecipeInfo();
-    showControl(RECIPE_LIST_DISPLAY);
+    showControl(RECIPE_LOADING_DISPLAY);
 }
 
 // 레시피 조건 보내기 POST
@@ -154,7 +164,14 @@ function postRecipeInfo() {
         dataType: 'json',
         data: JSON.stringify(recipe_info),
         success: function (response) {
-            getRecipeList();
+            if (response['msg'] == 'success') {
+                getRecipeList();
+                showControl(RECIPE_LIST_DISPLAY);
+            }
+            else {
+                alert("조건에 해당 되는 레시피가 없습니다.😥")
+                showControl(RECIPE_CHOICE_DISPLAY);
+            }
         }
     })
 }
@@ -348,7 +365,7 @@ function makeComment(comments) {
                                     </div>
                                 </div>
                                 <div class="col-1">
-                                     <button class="comment-delete-btn" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, ${comment["NICK_NM"]})">삭제</button>
+                                     <button class="comment-delete-btn" onclick="showPasswordDialog(${comment["RECIPE_ID"]}, '${comment["NICK_NM"]}')">삭제</button>
                                 </div>
                              </div>
                              <br>

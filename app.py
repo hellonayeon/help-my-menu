@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, json, render_template, jsonify, request
 app = Flask(__name__)
 
 from pymongo import MongoClient
@@ -6,7 +6,6 @@ client = MongoClient('localhost', 27017)
 db = client.dbrecipe
 
 from datetime import datetime
-
 
 @app.route('/')
 def home():
@@ -42,7 +41,6 @@ def post_recipe_info():
     LEVEL_NM = recipe_info['LEVEL_NM']
     COOKING_TIME = recipe_info['COOKING_TIME']
 
-    
     LEVEL_NM_LIST = []
     for i in LEVEL_NM:
         LEVEL_NM_LIST.append({"LEVEL_NM":i})
@@ -53,30 +51,28 @@ def post_recipe_info():
 
     NATION_NM_LIST = []
     if "서양, 이탈리아" in NATION_NM :
-        NATION_NM.append('서양')
-        NATION_NM.append('이탈리아')
+        NATION_NM_LIST.append({"NATION_NM":'서양'})
+        NATION_NM_LIST.append({"NATION_NM":'이탈리아'})
         NATION_NM.remove('서양, 이탈리아')
     for i in NATION_NM:
         NATION_NM_LIST.append({"NATION_NM":i})
-    selected_by_basic = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
+    selected_by_condition = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
 
-    RECIPE_IDs = []
-    for selected in selected_by_basic:
-        RECIPE_IDs.append(selected["RECIPE_ID"])
+    RECIPE_IDs = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
-    INGREDIENT_LIST = []
-    for ingredient in IRDNT_NM:
-        INGREDIENT_LIST.append(ingredient)
+    first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": IRDNT_NM[0]}, {"_id": False, "RECIPE_ID": True}))
+    INGREDIENT_SET = set([irdnt['RECIPE_ID'] for irdnt in first_irdnt_ids])
+    for i in range(1, len(IRDNT_NM)):
+        irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": IRDNT_NM[i]}, {"_id": False, "RECIPE_ID": True}))
+        tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
+        INGREDIENT_SET = INGREDIENT_SET & tmp_set
 
-    for ids in RECIPE_IDs:
-        candidate = list(db.recipe_ingredient.find({"RECIPE_ID":ids}))
-        count = 0
-        for detail in candidate :
-            if detail["IRDNT_NM"] in INGREDIENT_LIST:
-                count += 1
-        if count == len(INGREDIENT_LIST):
-            DATA_WE_WANT.append(ids)
-    return jsonify({'msg':'success'})
+    DATA_WE_WANT = list(RECIPE_IDs & INGREDIENT_SET)
+
+    if DATA_WE_WANT != [] :
+        return jsonify({'msg':'success'})
+    else :
+        return jsonify({'msg':'nothing'})
 
 # 레시피 검색정보 API
 @app.route('/recipe/get', methods=['GET'])
