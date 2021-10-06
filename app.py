@@ -1,88 +1,81 @@
 from flask import Flask, json, render_template, jsonify, request
+from pymongo import MongoClient
+from datetime import datetime
+
+# Flask 초기화
 app = Flask(__name__)
 
-from pymongo import MongoClient
+# MongoDB 초기화
 client = MongoClient('localhost', 27017)
 db = client.dbrecipe
 
-from datetime import datetime
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
 # 첫 화면 재료 항목 불러오기
-@app.route('/research', methods=['GET'])
-def research_listing():
-    # 중복 제거
-    resarch_ingr = list(db.recipe_ingredient.distinct("IRDNT_NM"))
-    return jsonify({'resarch_ingr' : resarch_ingr})
-
-# 첫 화면 재료 항목 불러오기
 @app.route('/ingredient', methods=['GET'])
 def ingredient_listing():
-    # 재료, 양념 통일
+    # 중복 제거
     irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM"))
     return jsonify({'recipe_ingredient':irdnt})
 
-# 레시피 상세정보 받아오기
-@app.route('/recipe/post', methods=['POST'])
+
+# 레시피 검색정보 받아오기
+@app.route('/recipe/detail-info', methods=['POST'])
 def post_recipe_info():
-    global DATA_WE_WANT
-    DATA_WE_WANT = []
+    data_we_want = []
     recipe_info = request.get_json()
-    IRDNT_NM = recipe_info['IRDNT_NM']
-    NATION_NM = recipe_info['NATION_NM']
-    LEVEL_NM = recipe_info['LEVEL_NM']
-    COOKING_TIME = recipe_info['COOKING_TIME']
+    irdnt_nm = recipe_info['IRDNT_NM']
+    nation_nm = recipe_info['NATION_NM']
+    level_nm = recipe_info['LEVEL_NM']
+    cooking_time = recipe_info['COOKING_TIME']
 
-    LEVEL_NM_LIST = []
-    for i in LEVEL_NM:
-        LEVEL_NM_LIST.append({"LEVEL_NM":i})
-    
-    COOKING_TIME_LIST = []
-    for i in COOKING_TIME:
-        COOKING_TIME_LIST.append({"COOKING_TIME":i})
+    level_nm_list = []
+    for i in level_nm:
+        level_nm_list.append({"LEVEL_NM": i})
 
-    NATION_NM_LIST = []
-    if "서양, 이탈리아" in NATION_NM :
-        NATION_NM_LIST.append({"NATION_NM":'서양'})
-        NATION_NM_LIST.append({"NATION_NM":'이탈리아'})
-        NATION_NM.remove('서양, 이탈리아')
-    for i in NATION_NM:
-        NATION_NM_LIST.append({"NATION_NM":i})
-    selected_by_condition = list(db.recipe_basic.find({"$and":[{"$or":LEVEL_NM_LIST}, {"$or": NATION_NM_LIST}, {"$or":COOKING_TIME_LIST}]}))
+    cooking_time_list = []
+    for i in cooking_time:
+        cooking_time_list.append({"COOKING_TIME": i})
 
-    RECIPE_IDs = set([selected['RECIPE_ID'] for selected in selected_by_condition])
+    nation_nm_list = []
+    if "서양, 이탈리아" in nation_nm:
+        nation_nm_list.append({"NATION_NM": '서양'})
+        nation_nm_list.append({"NATION_NM": '이탈리아'})
+        nation_nm.remove('서양, 이탈리아')
+    for i in nation_nm:
+        nation_nm_list.append({"NATION_NM": i})
+    selected_by_condition = list(db.recipe_basic.find(
+        {"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
 
-    first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": IRDNT_NM[0]}, {"_id": False, "RECIPE_ID": True}))
-    INGREDIENT_SET = set([irdnt['RECIPE_ID'] for irdnt in first_irdnt_ids])
-    for i in range(1, len(IRDNT_NM)):
-        irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": IRDNT_NM[i]}, {"_id": False, "RECIPE_ID": True}))
+    recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
+
+    first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[0]}, {"_id": False, "RECIPE_ID": True}))
+    ingredient_set = set([irdnt['RECIPE_ID'] for irdnt in first_irdnt_ids])
+    for i in range(1, len(irdnt_nm)):
+        irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[i]}, {"_id": False, "RECIPE_ID": True}))
         tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
-        INGREDIENT_SET = INGREDIENT_SET & tmp_set
+        ingredient_set = ingredient_set & tmp_set
 
-    DATA_WE_WANT = list(RECIPE_IDs & INGREDIENT_SET)
+    data_we_want = list(recipe_ids & ingredient_set)
 
-    if DATA_WE_WANT != [] :
-        return jsonify({'msg':'success'})
-    else :
-        return jsonify({'msg':'nothing'})
+    if data_we_want != []:
+        projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
+                      "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
+        data_we_get = []
+        for data in data_we_want:
+            data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID":int(data)}, projection))
+        return jsonify({'msg': 'success', "data_we_get": data_we_get})
+    else:
+        return jsonify({'msg': 'nothing'})
 
-# 레시피 검색정보 API
-@app.route('/recipe/get', methods=['GET'])
-def get_recipe_list() :
-    projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}    
-    DATA_WE_GET = []
-    for data in DATA_WE_WANT:
-        DATA_WE_GET.append(db.recipe_basic.find_one({"RECIPE_ID":int(data)}, projection))
-    return jsonify({"DATA_WE_GET":DATA_WE_GET})
 
 # 레시피 상세정보 API
 @app.route('/recipe/detail', methods=['GET'])
 def get_recipe_detail():
-    recipe_id = int(request.args.get("recipe_id"))
+    recipe_id = int(request.args.get("recipe-id"))
 
     # 레시피 정보
     projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
@@ -99,11 +92,11 @@ def get_recipe_detail():
 
     return jsonify({"info":info, "detail": detail, "ingredients":ingredients})
 
+
 # 댓글 목록 API
 @app.route('/recipe/comment', methods=['GET'])
 def get_comments():
-    recipe_id = int(request.args.get("recipe_id"))
-    print(recipe_id)
+    recipe_id = int(request.args.get("recipe-id"))
     comments = list(db.comment.find({"RECIPE_ID": recipe_id}, {"_id": False}))
 
     return jsonify(comments)
@@ -120,8 +113,6 @@ def save_comment():
 
     # 이미 있는 닉네임인 경우 해당 레코드 반환
     used_nick_nm = db.comment.find_one({"NICK_NM": {"$in": [nick_nm]}})
-    print(f"receive nick = {nick_nm}")
-    print(f"db nick = {used_nick_nm}")
     if used_nick_nm != None:
         return jsonify({'result': 'failure', 'msg': '이미 있는 닉네임입니다. 다른 닉네임을 입력해주세요!'})
 
@@ -145,8 +136,6 @@ def save_comment():
         save_to = f'static/images/{fname}'  # python f-string
         file.save(save_to)  # 날짜 기반 새로운 파일 이름 생성 후 프로젝트 static/images/ 폴더에 저장
 
-        print(recipe_id, text, file)
-
     # 업데이트 날짜 표시
     date = today.strftime('%Y.%m.%d')
 
@@ -164,8 +153,9 @@ def save_comment():
 
     return jsonify({'result': 'success'})
 
+
 # 댓글 삭제 API
-@app.route('/recipe/comment/delete', methods=['POST'])
+@app.route('/recipe/comment', methods=['DELETE'])
 def delete_comment():
     nick_nm = request.form["nick_nm"]
     pw = request.form["pw"]
@@ -189,7 +179,8 @@ def set_like():
     current_like = target_recipe[0]["Liked"]
     new_like = current_like + 1
     db.recipe_basic.update_one({"RECIPE_ID": int(recipe_id)}, {'$set': {"Liked": int(new_like)}})
-    return jsonify({"msg":"좋아요가 추가되었습니다."}) 
+    return jsonify({"msg":"좋아요가 추가되었습니다."})
+
 
 # 좋아요 해제
 @app.route('/recipe/unlike', methods=['PUT'])
@@ -199,15 +190,17 @@ def set_unlike():
     current_like = target_recipe[0]["Liked"]
     new_like = current_like - 1
     db.recipe_basic.update_one({"RECIPE_ID": int(recipe_id)}, {'$set': {"Liked": int(new_like)}})
-    return jsonify({"msg":"좋아요가 해제되었습니다."}) 
+    return jsonify({"msg":"좋아요가 해제되었습니다."})
+
 
 # 좋아요 탭
 @app.route('/recipe/liked', methods=['GET'])
 def get_recipe_liked():
     projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-            "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
+                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
     recipe_liked_list = list(db.recipe_basic.find({"Liked": {"$gte":1}}, projection).sort("Liked",-1))
     return jsonify({'recipe_liked':recipe_liked_list})
+
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
