@@ -1,6 +1,3 @@
-<!--To do - 안쓰는 전역변수입니다 확인해주세요. -->
-let RECIPE_NM
-
 let gIrdntNm = []
 let gNationNm = []
 let gLevelNm = []
@@ -62,25 +59,25 @@ function ingredientListing() {
         url: "/ingredient",
         data: {},
         success: function (response) {
-            let recipeIngredient = response['recipe_ingredient']
+            let ingreList = response['recipe_ingredient']
 
-            for (let i = 0; i < recipeIngredient.length; i++) {
-                let ingredient = recipeIngredient[i]
+            for (let i = 0; i < ingreList.length; i++) {
+                let ingredient = ingreList[i]
                 let tempHtml = `<option value="main">${ingredient}</option>`
                 $('#ingre1').append(tempHtml)
             }
         }
-    })
+    });
 }
 
 //검색 자동완성 기능
 $(function autoSearch() {
     $.ajax({
         type: "GET",
-        url: "/research",
+        url: "/ingredient",
         data: {},
         success: function (response) {
-            gIngreList = response["resarch_ingr"]
+            gIngreList = response["recipe_ingredient"]
             searchShow()
         }
     })
@@ -187,30 +184,13 @@ function postRecipeInfo() {
     $.ajax({
         type: "POST",
         contentType: 'application/json',
-        url: "/recipe/post",
+        url: "/recipe/detail-info",
         dataType: 'json',
         data: JSON.stringify(recipeInfo),
         success: function (response) {
             if (response['msg'] == 'success') {
-                getRecipeList();
-                showControl(recipeListDisplay);
-            } else {
-                alert("조건에 해당 되는 레시피가 없습니다.😥")
-                showControl(recipeChoiceDisplay);
-            }
-        }
-    })
-}
-
-// 선택된 레시피 불러오기
-function getRecipeList() {
-    $.ajax({
-        type: "GET",
-        url: "/recipe/get",
-        data: {},
-        success: function (response) {
             $('#recipe-list').empty();
-            let recipe = response['DATA_WE_GET']
+            let recipe = response['data_we_get']
             for (let i = 0; i < recipe.length; i++) {
                 let recipeUrl = recipe[i]['IMG_URL']
                 let recipeName = recipe[i]['RECIPE_NM_KO']
@@ -220,8 +200,13 @@ function getRecipeList() {
 
                 makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked)
             }
+            showControl(recipeListDisplay);
+        } else if (response['msg'] == 'nothing') {
+                alert("조건에 해당 되는 레시피가 없습니다.😥")
+                showControl(recipeChoiceDisplay);
+            }
         }
-    })
+    });
 }
 
 // 레시피 리스트 html
@@ -252,7 +237,7 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked
 function getRecipeDetail(recipeId) {
     $.ajax({
         type: "GET",
-        url: `/recipe/detail?recipe_id=${recipeId}`,
+        url: `/recipe/detail?recipe-id=${recipeId}`,
         success: function (response) {
             makeRecipeDetail(response["info"], response["detail"], response["ingredients"])
         }
@@ -346,7 +331,7 @@ function saveComment(recipeId) {
     $.ajax({
         type: "POST",
         url: "/recipe/comment",
-        data: form_data,
+        data: formData,
         cache: false,
         contentType: false,
         processData: false,
@@ -415,8 +400,8 @@ function makeComment(comments) {
 
 function deleteComment(recipeId, nickNm, pw) {
     $.ajax({
-        type: "POST",
-        url: "/recipe/comment/delete",
+        type: "DELETE",
+        url: "/recipe/comment",
         data: {"nick_nm": nickNm, "pw": pw},
         success: function (response) {
             if (response["result"] == "success") {
@@ -483,7 +468,7 @@ function setLike(recipeId) {
     $('#after-like-liked-' + recipeId).show();
     $.ajax({
         type: "PUT",
-        url: `/recipe/like?recipe-id=${recipeId}`,
+        url: `/recipe/like`,
         data: {recipe_id: recipeId},
         success: function (response) {
             alert(response["msg"]);
@@ -501,7 +486,7 @@ function setUnLike(recipeId) {
     $('#before-like-liked-' + recipeId).show();
     $.ajax({
         type: "PUT",
-        url: `/recipe/unlike?recipe-id=${recipeId}`,
+        url: `/recipe/unlike`,
         data: {recipe_id: recipeId},
         success: function (response) {
             alert(response["msg"]);
@@ -553,11 +538,10 @@ function makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recip
     $('#recipe-liked-list').append(tempHtml)
 }
 
-function changePart(part) { // 좋아요 탭 눌렀을 경우 OK
+function changePart(part) { // 좋아요 탭 눌렀을 경우
     if (part == 'rec') {
         $('#recipe-liked-list').hide();
         $('#recipe-list').show();
-        getRecipeList();
         if ($('#part-rec').children("a").hasClass("disabled")) {
             $('#part-rec').children("a").removeClass("disabled")
             $('#part-rec').children("a").addClass("active")
