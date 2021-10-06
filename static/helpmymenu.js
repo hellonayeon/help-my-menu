@@ -1,16 +1,19 @@
-let recipe_id
-let IRDNT_NM = []
-let NATION_NM = []
-let LEVEL_NM = []
-let COOKING_TIME = []
-let ingre_list = []
-let index = 1
+<!--To do - 안쓰는 전역변수입니다 확인해주세요. -->
+let RECIPE_NM
+
+let gIrdntNm = []
+let gNationNm = []
+let gLevelNm = []
+let gCookingTime = []
+let gIngreList = []
+let gIndex = 1
+
 
 // 화면 출력 제어 플래그
-const RECIPE_LIST_DISPLAY = "RECIPE_LIST_DISPLAY"
-const RECIPE_DETAIL_DISPLAY = "RECIPE_DETAIL_DISPLAY"
-const RECIPE_CHOICE_DISPLAY = "RECIPE_CHOICE_DISPLAY"
-const RECIPE_LOADING_DISPLAY = "RECIPE_LOADING_DISPLAY"
+const recipeListDisplay = "recipeListDisplay"
+const recipeDetailDisplay = "recipeDetailDisplay"
+const recipeChoiceDisplay = "recipeChoiceDisplay"
+const recipeLoadingDisplay = "recipeLoadingDisplay"
 
 $(document).ready(function () {
     ingredientListing();
@@ -19,31 +22,31 @@ $(document).ready(function () {
     bsCustomFileInput.init()
 
     // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
-    showControl(RECIPE_CHOICE_DISPLAY)
+    showControl(recipeChoiceDisplay)
 });
 
 /* 화면에 보여지는 내용 보이기, 숨기기 */
 function showControl(display) {
     switch (display) {
-        case RECIPE_CHOICE_DISPLAY:
+        case recipeChoiceDisplay:
             $("#recipe-choice-container").show()
             $("#recipe-loading-container").hide()
             $("#recipe-detail-container").hide()
             $("#recipe-list-container").hide()
             break
-        case RECIPE_LOADING_DISPLAY:
+        case recipeLoadingDisplay:
             $("#recipe-choice-container").hide()
             $("#recipe-loading-container").show()
             $("#recipe-list-container").hide()
             $("#recipe-detail-container").hide()
             break
-        case RECIPE_LIST_DISPLAY:
+        case recipeListDisplay:
             $("#recipe-choice-container").hide()
             $("#recipe-loading-container").hide()
             $("#recipe-list-container").show()
             $("#recipe-detail-container").hide()
             break
-        case RECIPE_DETAIL_DISPLAY:
+        case recipeDetailDisplay:
             $("#recipe-choice-container").hide()
             $("#recipe-loading-container").hide()
             $("#recipe-list-container").hide()
@@ -59,45 +62,45 @@ function ingredientListing() {
         url: "/ingredient",
         data: {},
         success: function (response) {
-            let recipe_ingredient = response['recipe_ingredient']
+            let recipeIngredient = response['recipe_ingredient']
 
-            for (let i = 0; i < recipe_ingredient.length; i++) {
-                let ingredient = recipe_ingredient[i]
-                let temp_html = `<option value="main">${ingredient}</option>`
-                $('#ingre1').append(temp_html)
+            for (let i = 0; i < recipeIngredient.length; i++) {
+                let ingredient = recipeIngredient[i]
+                let tempHtml = `<option value="main">${ingredient}</option>`
+                $('#ingre1').append(tempHtml)
             }
         }
     })
 }
 
 //검색 자동완성 기능
-$(function autosearch() {
+$(function autoSearch() {
     $.ajax({
         type: "GET",
         url: "/research",
         data: {},
         success: function (response) {
-            ingre_list = response["resarch_ingr"]
-            search_show()
+            gIngreList = response["resarch_ingr"]
+            searchShow()
         }
     })
 });
 
 // 선택한 재료 표시하기 & 선택 재료 데이터 저장
-function search_show() {
+function searchShow() {
     $("#searchInput").autocomplete({
         autoFocus: true,
-        source: ingre_list,
+        source: gIngreList,
         select: function (event, ui) {
             let ingredient = ui.item.value
 
-            if (IRDNT_NM.indexOf(ingredient) == -1) {
-                let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
-                $('#selected-ingredient-display-main').append(temp_html)
-                let temp = 'selected-ingredient-button-' + index
+            if (gIrdntNm.indexOf(ingredient) == -1) {
+                let tempHtml = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${gIndex}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
+                $('#selected-ingredient-display-main').append(tempHtml)
+                let temp = 'selected-ingredient-button-' + gIndex
                 document.getElementById(temp).value = ingredient;
-                index += 1;
-                IRDNT_NM.push(ingredient);
+                gIndex += 1;
+                gIrdntNm.push(ingredient);
             }
         },
         focus: function (event, ui) {
@@ -110,34 +113,34 @@ function search_show() {
 };
 
 function ingredientDisplay(ingredient) {
-    if (IRDNT_NM.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
-        let temp_html = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${index}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
-        $('#selected-ingredient-display-main').append(temp_html)
-        let temp = 'selected-ingredient-button-' + index
+    if (gIrdntNm.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
+        let tempHtml = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${gIndex}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
+        $('#selected-ingredient-display-main').append(tempHtml)
+        let temp = 'selected-ingredient-button-' + gIndex
         document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
-        index += 1;
-        IRDNT_NM.push(document.getElementById(temp).value);
+        gIndex += 1;
+        gIrdntNm.push(document.getElementById(temp).value);
 
     }
 }
 
 // 선택한 재료 취소하기 & 선택 재료 데이터 삭제
 function cancleSelectingIngredientAdded(ingredient) {
-    for_remove_button = document.getElementById(ingredient.closest("input").id);
-    for_remove_button.parentNode.removeChild(for_remove_button);
-    idx = IRDNT_NM.indexOf(ingredient.closest("input").value)
-    IRDNT_NM.splice(idx, 1)
+    forRemoveButton = document.getElementById(ingredient.closest("input").id);
+    forRemoveButton.parentNode.removeChild(forRemoveButton);
+    idx = gIrdntNm.indexOf(ingredient.closest("input").value)
+    gIrdntNm.splice(idx, 1)
 }
 
 // "레시피 보기" 버튼 누르기
 function selectedRecipeNation() {
-    if (IRDNT_NM.length < 1) { // 원하는 개수만큼 조건에 맞게 숫자 수정 가능
+    if (gIrdntNm.length < 1) { // 원하는 개수만큼 조건에 맞게 숫자 수정 가능
         alert("재료를 선택해주세요!")
         return 0
     }
     // 식사 유형 데이터 저장
     if (document.getElementById('inputGroupSelect04').value != "바로...") {
-        NATION_NM.push(document.getElementById('inputGroupSelect04').value)
+        gNationNm.push(document.getElementById('inputGroupSelect04').value)
     } else {
         alert("식사 유형을 선택해주세요.")
         return 0
@@ -149,13 +152,13 @@ function selectedRecipeNation() {
         return 0
     } else {
         if ($("input[id='level1']:checked").val() == 'on') {
-            LEVEL_NM.push('초보환영')
+            gLevelNm.push('초보환영')
         }
         if ($("input[id='level2']:checked").val() == 'on') {
-            LEVEL_NM.push('보통')
+            gLevelNm.push('보통')
         }
         if ($("input[id='level3']:checked").val() == 'on') {
-            LEVEL_NM.push('어려움')
+            gLevelNm.push('어려움')
         }
     }
 
@@ -165,35 +168,35 @@ function selectedRecipeNation() {
         return 0
     } else {
         if ($("input[id='short']:checked").val() == 'on') {
-            COOKING_TIME.push('5분', '10분', '15분', '20분', '25분', '30분', '35분', '40분', '50분', '60분')
+            gCookingTime.push('5분', '10분', '15분', '20분', '25분', '30분', '35분', '40분', '50분', '60분')
         }
         if ($("input[id='medium']:checked").val() == 'on') {
-            COOKING_TIME.push('70분', '80분', '90분', '120분')
+            gCookingTime.push('70분', '80분', '90분', '120분')
         }
         if ($("input[id='long']:checked").val() == 'on') {
-            COOKING_TIME.push('140분', '175분', '180분')
+            gCookingTime.push('140분', '175분', '180분')
         }
     }
     postRecipeInfo();
-    showControl(RECIPE_LOADING_DISPLAY);
+    showControl(recipeLoadingDisplay);
 }
 
 // 레시피 조건 보내기 POST
 function postRecipeInfo() {
-    var recipe_info = {"IRDNT_NM": IRDNT_NM, "NATION_NM": NATION_NM, "LEVEL_NM": LEVEL_NM, "COOKING_TIME": COOKING_TIME}
+    var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
     $.ajax({
         type: "POST",
         contentType: 'application/json',
         url: "/recipe/post",
         dataType: 'json',
-        data: JSON.stringify(recipe_info),
+        data: JSON.stringify(recipeInfo),
         success: function (response) {
             if (response['msg'] == 'success') {
                 getRecipeList();
-                showControl(RECIPE_LIST_DISPLAY);
+                showControl(recipeListDisplay);
             } else {
                 alert("조건에 해당 되는 레시피가 없습니다.😥")
-                showControl(RECIPE_CHOICE_DISPLAY);
+                showControl(recipeChoiceDisplay);
             }
         }
     })
@@ -209,34 +212,34 @@ function getRecipeList() {
             $('#recipe-list').empty();
             let recipe = response['DATA_WE_GET']
             for (let i = 0; i < recipe.length; i++) {
-                let recipe_url = recipe[i]['IMG_URL']
-                let recipe_name = recipe[i]['RECIPE_NM_KO']
-                let recipe_desc = recipe[i]['SUMRY']
-                let recipe_id = recipe[i]['RECIPE_ID']
-                let recipe_liked = recipe[i]['Liked']
+                let recipeUrl = recipe[i]['IMG_URL']
+                let recipeName = recipe[i]['RECIPE_NM_KO']
+                let recipeDesc = recipe[i]['SUMRY']
+                let recipeId = recipe[i]['RECIPE_ID']
+                let recipeLiked = recipe[i]['Liked']
 
-                makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked)
+                makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked)
             }
         }
     })
 }
 
 // 레시피 리스트 html
-function makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
-    let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                
-                        <img class="card-img-top img-fix" src="${recipe_url}" alt="Card image cap">
+function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked) {
+    let tempHtml = `<div  id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                
+                        <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
                         <div class="card-body">
-                            <h5 class="card-title">${recipe_name}</h5>
-                            <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipe_desc}</p>
+                            <h5 class="card-title">${recipeName}</h5>
+                            <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
-                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
-    if (recipe_liked >= 1) {
-        tempHtml += `<a id="before-like_${recipe_id}" style="color:black; float:right; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_${recipe_id}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a>
+                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>`
+    if (recipeLiked >= 1) {
+        tempHtml += `<a id="before-like-${recipeId}" style="color:black; float:right; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})" style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-${recipeId}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})" style="margin-right:5px"></i>${recipeLiked}</a>
                         </div>
                     </div>
                     </div>`
     } else {
-        tempHtml += `<a id="before-like_${recipe_id}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_${recipe_id}" style="color:red; float:right; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})" style="margin-right:5px"></i>${recipe_liked}</a>
+        tempHtml += `<a id="before-like-${recipeId}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})" style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-${recipeId}" style="color:red; float:right; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})" style="margin-right:5px"></i>${recipeLiked}</a>
                         </div>
                     </div>
                     </div>`
@@ -246,10 +249,10 @@ function makeRecipeList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_
 }
 
 /* 레시피 상세정보 요청 함수 */
-function getRecipeDetail(recipe_id) {
+function getRecipeDetail(recipeId) {
     $.ajax({
         type: "GET",
-        url: `/recipe/detail?recipe_id=${recipe_id}`,
+        url: `/recipe/detail?recipe_id=${recipeId}`,
         success: function (response) {
             makeRecipeDetail(response["info"], response["detail"], response["ingredients"])
         }
@@ -258,30 +261,30 @@ function getRecipeDetail(recipe_id) {
 
 /* 레시피 상세정보 출력 함수 */
 function makeRecipeDetail(info, detail, ingredients) {
-    let info_html = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
+    let infoHtml = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                      <span class="detail-info">${info["COOKING_TIME"]}</span>
                      <span class="detail-info">${info["QNT"]}</span>`
     if (info['Liked'] >= 1) {
-        info_html += `<a id="before-like_detail_${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like_detail_${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
+        infoHtml += `<a id="before-like-detail-${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like-detail-${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
                     
                     <h4>${info["SUMRY"]}</h4>`
     } else {
-        info_html += `<a id="before-like_detail_${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like_detail_${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
+        infoHtml += `<a id="before-like-detail-${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like-detail-${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
                     
                     <h4>${info["SUMRY"]}</h4>`
     }
 
     for (let i = 0; i < ingredients.length; i++) {
-        info_html += `<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
+        infoHtml += `<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
     }
 
-    let detail_html = ``
+    let detailHtml = ``
     detail.forEach(function (step) {
-        detail_html += `<div class="col-12">STEP<span class="detail-step-num">${step["COOKING_NO"]}. </span> ${step["COOKING_DC"]}</div>`
+        detailHtml += `<div class="col-12">STEP<span class="detail-step-num">${step["COOKING_NO"]}. </span> ${step["COOKING_DC"]}</div>`
     })
 
     // 댓글 저장 시, RECIPE_ID 정보 필요
-    let comment_btn_html = `<button type="button" class="btn btn-primary" onclick="saveComment(${info["RECIPE_ID"]})">댓글 작성</button>`
+    let commentBtnHtml = `<button type="button" class="btn btn-primary" onclick="saveComment(${info["RECIPE_ID"]})">댓글 작성</button>`
 
     // 이전에 출력했던 상세정보 지우기
     $('#detail-img').empty()
@@ -290,16 +293,16 @@ function makeRecipeDetail(info, detail, ingredients) {
     $('#comment-upload-btn-div').empty()
 
     $('#detail-img').attr("src", info["IMG_URL"])
-    $('#detail-info').append(info_html)
-    $('#detail-step').append(detail_html)
-    $('#comment-upload-btn-div').append(comment_btn_html)
+    $('#detail-info').append(infoHtml)
+    $('#detail-step').append(detailHtml)
+    $('#comment-upload-btn-div').append(commentBtnHtml)
 }
 
 /* 댓글 리스트 요청 함수 */
-function getComment(recipe_id) {
+function getComment(recipeId) {
     $.ajax({
         type: "GET",
-        url: `/recipe/comment?recipe_id=${recipe_id}`,
+        url: `/recipe/comment?recipe-id=${recipeId}`,
         success: function (response) {
             makeComment(response)
         }
@@ -307,12 +310,12 @@ function getComment(recipe_id) {
 }
 
 /* 사용자 닉네임, 비밀번호 입력 체크 함수 */
-function checkCommentUserInfo(nick_nm, pw, text) {
+function checkCommentUserInfo(nickNm, pw, text) {
     if (text == "") {
         alert("내용을 입력해주세요!")
         return false
     }
-    if (nick_nm == "") {
+    if (nickNm == "") {
         alert("닉네임을 입력해주세요!")
         return false
     }
@@ -324,21 +327,21 @@ function checkCommentUserInfo(nick_nm, pw, text) {
 }
 
 /* 댓글 저장 요청 함수 */
-function saveComment(recipe_id) {
-    let nick_nm = $('#comment-nick').val()
-    let pw = $('#comment-pw').val()
-    let text = $('#comment-text-area').val()
-    let img_src = $('#file')[0].files[0]
+function saveComment(recipeId) {
+    let nickNm = $('#comment-nick').val();
+    let pw = $('#comment-pw').val();
+    let text = $('#comment-text-area').val();
+    let imgSrc = $('#file')[0].files[0];
 
     // 아이디 또는 비밀번호, 댓글 내용을 입력 안한 경우
-    if (!checkCommentUserInfo(nick_nm, pw, text)) return
+    if (!checkCommentUserInfo(nickNm, pw, text)) return
 
-    let form_data = new FormData()
-    form_data.append("recipe_id", recipe_id)
-    form_data.append("text", text)
-    form_data.append("img_src", img_src)
-    form_data.append("nick_nm", nick_nm)
-    form_data.append("pw", pw)
+    let formData = new FormData()
+    formData.append("recipe_id", recipeId)
+    formData.append("text", text)
+    formData.append("img_src", imgSrc)
+    formData.append("nick_nm", nickNm)
+    formData.append("pw", pw)
 
     $.ajax({
         type: "POST",
@@ -356,7 +359,7 @@ function saveComment(recipe_id) {
                 $('#comment-nick').val("")
                 $('#comment-pw').val("")
 
-                getComment(recipe_id)
+                getComment(recipeId)
             } else {
                 // 중복된 닉네임일 경우, 닉네임이랑 비밀번호만 지우기
                 $('#comment-nick').val("")
@@ -375,7 +378,7 @@ function makeComment(comments) {
     $('#comment-list').empty()
 
     comments.forEach(function (comment, idx, arr) {
-        let comment_html = `<div class="container">
+        let commentHtml = `<div class="container">
                                 <div class="row justify-content-between">
                                 <div class="col-4">
                                     <div class="row">
@@ -397,28 +400,28 @@ function makeComment(comments) {
                              </div>
                              <hr>`
 
-        $('#comment-list').append(comment_html)
+        $('#comment-list').append(commentHtml)
 
         // 이미지가 있는 경우 댓글 내용에 이미지 출력
         if (comment["IMG_SRC"] != "") {
-            let img_html = `<div class="col-12"><img src="../static/images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"></div>`
-            $(`#comment-content-${idx}`).append(img_html)
+            let imgHtml = `<div class="col-12"><img src="../static/images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"></div>`
+            $(`#comment-content-${idx}`).append(imgHtml)
         }
 
-        let txt_html = `<div class="col-12">${comment["TEXT"]}</div>`
-        $(`#comment-content-${idx}`).append(txt_html)
+        let txtHtml = `<div class="col-12">${comment["TEXT"]}</div>`
+        $(`#comment-content-${idx}`).append(txtHtml)
     })
 }
 
-function deleteComment(recipe_id, nick_nm, pw) {
+function deleteComment(recipeId, nickNm, pw) {
     $.ajax({
         type: "POST",
         url: "/recipe/comment/delete",
-        data: {"nick_nm": nick_nm, "pw": pw},
+        data: {"nick_nm": nickNm, "pw": pw},
         success: function (response) {
             if (response["result"] == "success") {
                 // 댓글 다시 출력: 삭제된 댓글 반영
-                getComment(recipe_id)
+                getComment(recipeId)
             } else {
                 alert(response["msg"])
                 return
@@ -428,7 +431,7 @@ function deleteComment(recipe_id, nick_nm, pw) {
 }
 
 /* 비밀번호 입력 다이얼로그 출력 함수 */
-function showPasswordDialog(recipe_id, nick_nm) {
+function showPasswordDialog(recipeId, nickNm) {
     $('#comment-pw-confirm-dialog').dialog({
         buttons: [
             {
@@ -440,12 +443,12 @@ function showPasswordDialog(recipe_id, nick_nm) {
             {
                 text: "확인",
                 click: function () {
-                    pw = $('#comment-pw-confirm-input').val()
+                    pw = $('#comment-pw-confirm-input').val();
                     if (pw == "") {
-                        $('#comment-pw-confirm-input').css('border-color', 'red')
-                        $('#comment-pw-confirm-input').attr('placeholder', '비밀번호를 입력해주세요!')
+                        $('#comment-pw-confirm-input').css('border-color', 'red');
+                        $('#comment-pw-confirm-input').attr('placeholder', '비밀번호를 입력해주세요!');
                     } else {
-                        deleteComment(recipe_id, nick_nm, pw)
+                        deleteComment(recipeId, nickNm, pw);
                         $(this).dialog("close");
                     }
                 }
@@ -453,9 +456,9 @@ function showPasswordDialog(recipe_id, nick_nm) {
         ],
         // 다이얼로그가 닫히기 직전에 호출되는 함수
         beforeClose: function (event, ui) {
-            $('#comment-pw-confirm-input').val('')
-            $('#comment-pw-confirm-input').css('border-color', '')
-            $('#comment-pw-confirm-input').attr('placeholder', '')
+            $('#comment-pw-confirm-input').val('');
+            $('#comment-pw-confirm-input').css('border-color', '');
+            $('#comment-pw-confirm-input').attr('placeholder', '');
         }
     })
 }
@@ -471,17 +474,17 @@ function replay() {
 }
 
 // 좋아요 버튼 눌렀을 때
-function setLike(recipe_id) {
-    $('#before-like_' + recipe_id).hide();
-    $('#after-like_' + recipe_id).show();
-    $('#before-like_detail_' + recipe_id).hide();
-    $('#after-like_detail_' + recipe_id).show();
-    $('#before-like_liked_' + recipe_id).hide();
-    $('#after-like_liked_' + recipe_id).show();
+function setLike(recipeId) {
+    $('#before-like-' + recipeId).hide();
+    $('#after-like-' + recipeId).show();
+    $('#before-like-detail-' + recipeId).hide();
+    $('#after-like-detail-' + recipeId).show();
+    $('#before-like-liked-' + recipeId).hide();
+    $('#after-like-liked-' + recipeId).show();
     $.ajax({
         type: "PUT",
-        url: `/recipe/like?recipe-id=${recipe_id}`,
-        data: {recipe_id: recipe_id},
+        url: `/recipe/like?recipe-id=${recipeId}`,
+        data: {recipe_id: recipeId},
         success: function (response) {
             alert(response["msg"]);
         }
@@ -489,17 +492,17 @@ function setLike(recipe_id) {
 }
 
 // 좋아요 해제
-function setUnLike(recipe_id) {
-    $('#after-like_' + recipe_id).hide();
-    $('#before-like_' + recipe_id).show();
-    $('#after-like_detail_' + recipe_id).hide();
-    $('#before-like_detail_' + recipe_id).show();
-    $('#after-like_liked_' + recipe_id).hide();
-    $('#before-like_liked_' + recipe_id).show();
+function setUnLike(recipeId) {
+    $('#after-like-' + recipeId).hide();
+    $('#before-like-' + recipeId).show();
+    $('#after-like-detail-' + recipeId).hide();
+    $('#before-like-detail-' + recipeId).show();
+    $('#after-like-liked-' + recipeId).hide();
+    $('#before-like-liked-' + recipeId).show();
     $.ajax({
         type: "PUT",
-        url: `/recipe/unlike?recipe-id=${recipe_id}`,
-        data: {recipe_id: recipe_id},
+        url: `/recipe/unlike?recipe-id=${recipeId}`,
+        data: {recipe_id: recipeId},
         success: function (response) {
             alert(response["msg"]);
         }
@@ -514,35 +517,35 @@ function getRecipesLikedList() { // 좋아요 탭
             $('#recipe-liked-list').empty();
             let recipe = response['recipe_liked'];
             for (let i = 0; i < recipe.length; i++) {
-                let recipe_url = recipe[i]['IMG_URL']
-                let recipe_name = recipe[i]['RECIPE_NM_KO']
-                let recipe_desc = recipe[i]['SUMRY']
-                let recipe_id = recipe[i]['RECIPE_ID']
-                let recipe_liked = recipe[i]['Liked']
+                let recipeUrl = recipe[i]['IMG_URL']
+                let recipeName = recipe[i]['RECIPE_NM_KO']
+                let recipeDesc = recipe[i]['SUMRY']
+                let recipeId = recipe[i]['RECIPE_ID']
+                let recipeLiked = recipe[i]['Liked']
 
-                makeRecipesLikedList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked)
+                makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked)
             }
         }
     })
 }
 
 // 좋아요탭의 좋아요한 레시피 표시
-function makeRecipesLikedList(recipe_id, recipe_url, recipe_name, recipe_desc, recipe_liked) {
-    let tempHtml = `<div  id="recipe${recipe_id}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">
-                        <img class="card-img-top img-fix" src="${recipe_url}" alt="Card image cap">
+function makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked) {
+    let tempHtml = `<div  id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">
+                        <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
                         <div class="card-body">
-                            <h5 class="card-title">${recipe_name}</h5>
-                            <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipe_desc}</p>
+                            <h5 class="card-title">${recipeName}</h5>
+                            <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
-                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipe_id}); getComment(${recipe_id}); showControl(RECIPE_DETAIL_DISPLAY)" class="card-link">자세히</a>`
-    if (recipe_liked >= 1) {
-        tempHtml += `<a id="before-like_liked_${recipe_id}" style="color:black; float:right; display:none;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_liked_${recipe_id}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a>
+                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>`
+    if (recipeLiked >= 1) {
+        tempHtml += `<a id="before-like-liked-${recipeId}" style="color:black; float:right; display:none;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-liked-${recipeId}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a>
                         </div>
                     </div>
                     </div>`
 
     } else {
-        tempHtml += `<a id="before-like_liked_${recipe_id}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a><a id="after-like_liked_${recipe_id}" style="color:red; float:right; display:none;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipe_id})"style="margin-right:5px"></i>${recipe_liked}</a>
+        tempHtml += `<a id="before-like-liked-${recipeId}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-liked-${recipeId}" style="color:red; float:right; display:none;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a>
                         </div>
                     </div>
                     </div>`
