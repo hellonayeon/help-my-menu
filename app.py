@@ -1,12 +1,11 @@
-import json
-
 from flask import Flask, render_template, jsonify, request, redirect, url_for
-import jwt # pip install PyJWT
-import hashlib
-
 from pymongo import MongoClient
 from datetime import datetime, timedelta
+import jwt # pip install PyJWT
+import hashlib
+import json
 import secrets
+
 
 # Flask 초기화
 app = Flask(__name__)
@@ -46,12 +45,9 @@ def sign_in():
     # 로그인
     email = request.form['email']
     password = request.form['password']
-    print(email, password)
 
-    # TODO: 회원가입 기능 추가 후 수정 - 해싱 비밀번호 저장
-    # pw_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-    # result = db.users.find_one({'email': email, 'password': pw_hash})
-    result = db.users.find_one({'email': email, 'password': password})
+    pw_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    result = db.users.find_one({'email': email, 'password': pw_hash})
 
     if result is not None:
         payload = {
@@ -64,6 +60,36 @@ def sign_in():
     # 찾지 못하면
     else:
         return jsonify({'result': 'fail', 'msg': '아이디/비밀번호가 일치하지 않습니다.'})
+
+
+# 회원가입 정보 저장
+@app.route('/sign_up/save', methods=['POST'])
+def sign_up():
+    username_receive = request.form['username_give']
+    email_receive = request.form['email_give']
+    password_receive = request.form['password_give']
+    password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
+    doc = {
+        "username": username_receive,                               # 아이디
+        "email" : email_receive,                                    # 이메일
+        "password": password_hash,                                  # 비밀번호
+        "profile_name": username_receive,                           # 프로필 이름 기본값은 아이디
+        "profile_pic": "",                                          # 프로필 사진 파일 이름
+        "profile_pic_real": "profile_pics/profile_placeholder.png", # 프로필 사진 기본 이미지
+        "profile_info": ""                                          # 프로필 한 마디
+    }
+    db.users.insert_one(doc)
+    return jsonify({'result': 'success'})
+
+
+# 이메일, 닉네임 중복 검사
+@app.route('/sign_up/check_dup', methods=['POST'])
+def check_dup():
+    username_receive = request.form['username_give']
+    email_receive = request.form['email_give']
+    username_exists = bool(db.users.find_one({"username": username_receive}))
+    email_exists = bool(db.users.find_one({"email": email_receive}))
+    return jsonify({'usernameExists': username_exists, 'emailExists':email_exists})
 
 
 # 첫 화면 재료 항목 불러오기
