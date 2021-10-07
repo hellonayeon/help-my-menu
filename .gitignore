@@ -1,6 +1,19 @@
-# JetBrains IDE Project Setting 
+#########################################
+##### JetBrains IDE project setting #####
+#########################################
 
 **/.idea
 
-# Image files
-/static/images/*
+
+###############################
+##### Comment image files #####
+###############################
+
+/static/comment-images/*
+
+
+#################################
+##### JWT encode&decode key #####
+#################################
+
+/secrets.json

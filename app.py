@@ -1,6 +1,12 @@
-from flask import Flask, json, render_template, jsonify, request
+import json
+
+from flask import Flask, render_template, jsonify, request, redirect, url_for
+import jwt # pip install PyJWT
+import hashlib
+
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timedelta
+import secrets
 
 # Flask 초기화
 app = Flask(__name__)
@@ -9,10 +15,56 @@ app = Flask(__name__)
 client = MongoClient('localhost', 27017)
 db = client.dbrecipe
 
+# JWT 암호화 키값 가져오기
+with open('secrets.json') as file:
+    secrets = json.loads(file.read())
+
 
 @app.route('/')
 def home():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        user_info = db.users.find_one({"username": payload["id"]})
+        return render_template('index.html', user_info=user_info)
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
     return render_template('index.html')
+
+
+@app.route('/login')
+def login():
+    msg = request.args.get("msg")
+    return render_template('login.html', msg=msg)
+
+
+@app.route('/sign_in', methods=['POST'])
+def sign_in():
+    # 로그인
+    email = request.form['email']
+    password = request.form['password']
+    print(email, password)
+
+    # TODO: 회원가입 기능 추가 후 수정 - 해싱 비밀번호 저장
+    # pw_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    # result = db.users.find_one({'email': email, 'password': pw_hash})
+    result = db.users.find_one({'email': email, 'password': password})
+
+    if result is not None:
+        payload = {
+         'id': email,
+         'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
+        }
+        token = jwt.encode(payload, secrets["SECRET_KEY"], algorithm='HS256')
+
+        return jsonify({'result': 'success', 'token': token})
+    # 찾지 못하면
+    else:
+        return jsonify({'result': 'fail', 'msg': '아이디/비밀번호가 일치하지 않습니다.'})
+
 
 # 첫 화면 재료 항목 불러오기
 @app.route('/ingredient', methods=['GET'])
@@ -126,15 +178,15 @@ def save_comment():
 
         # 이미지 확장자
         # 가장 마지막 문자열 가져오기 [-1]
-        # FIXME: 아이폰 heic 확장자 이미지 예외처리 필요
+        # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
         extension = file.filename.split('.')[-1]
 
         today = datetime.now()  # 현재 시각 가져오기
         time = today.strftime('%Y-%m-%d-%H-%M-%S')
         fname = f'file-{time}.{extension}'
 
-        save_to = f'static/images/{fname}'  # python f-string
-        file.save(save_to)  # 날짜 기반 새로운 파일 이름 생성 후 프로젝트 static/images/ 폴더에 저장
+        save_to = f'static/comment-images/{fname}'  # python f-string
+        file.save(save_to)  # 날짜 기반 새로운 파일 이름 생성 후 프로젝트 static/comment-comment-images/ 폴더에 저장
 
     # 업데이트 날짜 표시
     date = today.strftime('%Y.%m.%d')
