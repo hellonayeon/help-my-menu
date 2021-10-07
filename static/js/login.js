@@ -41,8 +41,6 @@ function toggleSignUpAndIn() {
     $("#signup").toggleClass("is-hidden")
 }
 
-let check = []
-
 function signUp() {
     let username = $("#username").val();
     let email = $("#email").val();
