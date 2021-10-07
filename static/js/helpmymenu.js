@@ -367,7 +367,7 @@ function makeComment(comments) {
                                 <div class="row justify-content-between">
                                 <div class="col-4">
                                     <div class="row">
-                                        <div class="col-6"><a href=""><img src="../static/chun_sik.png" style="width: 80px; height: 80px"></a></div>
+                                        <div class="col-6"><a href=""><img src="/static/images/chun_sik.png" style="width: 80px; height: 80px"></a></div>
                                         <div class="col-6 comment-profile">
                                         <div class="row"><span>${comment["NICK_NM"]}</span></div>
                                         <div class="row"><span>${comment["DATE"]}</span></div>

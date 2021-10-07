@@ -1,0 +1,91 @@
+html, body {
+    background-image: url('/static/images/helpmymenu.png');
+    background-size: 1400px;
+    background-repeat: no-repeat;
+    height: 100%;
+    font-family: 'Numans', sans-serif;
+}
+
+.container {
+    margin: 50px auto;
+    height: 100%;
+    align-content: center;
+}
+
+.login-card {
+    height: 300px;
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 400px;
+    background-color: rgba(0, 0, 0, 0.3)
+}
+
+.signup-card {
+    height: 370px;
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 400px;
+    background-color: rgba(0, 0, 0, 0.3)
+}
+
+.social_icon span {
+    font-size: 60px;
+    margin-left: 10px;
+    color: #fc6c3f;
+}
+
+.social_icon span:hover {
+    color: white;
+    cursor: pointer;
+}
+
+.card-header h3 {
+    color: white;
+}
+
+.social_icon {
+    position: absolute;
+    right: 20px;
+    top: -45px;
+}
+
+.input-group-prepend span {
+    width: 40px;
+    background-color: #fc6c3f;
+    color: black;
+    border: 0
+}
+
+.remember {
+    color: white;
+}
+
+.remember input {
+    width: 20px;
+    height: 20px;
+    margin-left: 15px;
+    margin-right: 5px;
+}
+
+.login-btn {
+    color: black;
+    background-color: #fc6c3f;
+    width: 100px;
+}
+
+.login-btn:hover {
+    color: black;
+    background-color: white;
+}
+
+.links {
+    color: white;
+}
+
+.links a {
+    margin-left: 4px;
+}
+
+.is-hidden {
+    display: none !important;
+}
