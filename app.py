@@ -1,6 +1,7 @@
 from flask import Flask, json, render_template, jsonify, request
 from pymongo import MongoClient
 from datetime import datetime
+import hashlib
 
 # Flask 초기화
 app = Flask(__name__)
@@ -12,7 +13,14 @@ db = client.dbrecipe
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('login.html')
+
+
+# 로그인 페이지 연결
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
 
 # 첫 화면 재료 항목 불러오기
 @app.route('/ingredient', methods=['GET'])
@@ -200,6 +208,36 @@ def get_recipe_liked():
                   "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
     recipe_liked_list = list(db.recipe_basic.find({"Liked": {"$gte":1}}, projection).sort("Liked",-1))
     return jsonify({'recipe_liked':recipe_liked_list})
+
+
+# 회원가입 정보 저장
+@app.route('/sign_up/save', methods=['POST'])
+def sign_up():
+    username_receive = request.form['username_give']
+    email_receive = request.form['email_give']
+    password_receive = request.form['password_give']
+    password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
+    doc = {
+        "username": username_receive,                               # 아이디
+        "email" : email_receive,                                    # 이메일
+        "password": password_hash,                                  # 비밀번호
+        "profile_name": username_receive,                           # 프로필 이름 기본값은 아이디
+        "profile_pic": "",                                          # 프로필 사진 파일 이름
+        "profile_pic_real": "profile_pics/profile_placeholder.png", # 프로필 사진 기본 이미지
+        "profile_info": ""                                          # 프로필 한 마디
+    }
+    db.users.insert_one(doc)
+    return jsonify({'result': 'success'})
+
+
+# 이메일, 닉네임 중복 검사
+@app.route('/sign_up/check_dup', methods=['POST'])
+def check_dup():
+    username_receive = request.form['username_give']
+    email_receive = request.form['email_give']
+    username_exists = bool(db.users.find_one({"username": username_receive}))
+    email_exists = bool(db.users.find_one({"email": email_receive}))
+    return jsonify({'usernameExists': username_exists, 'emailExists':email_exists})
 
 
 if __name__ == '__main__':
