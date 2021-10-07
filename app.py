@@ -62,11 +62,19 @@ def sign_in():
         return jsonify({'result': 'fail', 'msg': '아이디/비밀번호가 일치하지 않습니다.'})
 
 
-# 회원가입 정보 저장
+# 회원가입 정보 저장, 닉네임/이메일 중복 검사
 @app.route('/sign_up/save', methods=['POST'])
 def sign_up():
     username_receive = request.form['username_give']
     email_receive = request.form['email_give']
+    username_exists = bool(db.users.find_one({"username": username_receive}))
+    email_exists = bool(db.users.find_one({"email": email_receive}))
+
+    if username_exists :
+        return jsonify({'result': 'fail:username_exists'})
+    if email_exists :
+        return jsonify({'result': 'fail:email_exists'})
+
     password_receive = request.form['password_give']
     password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
     doc = {
@@ -80,16 +88,6 @@ def sign_up():
     }
     db.users.insert_one(doc)
     return jsonify({'result': 'success'})
-
-
-# 이메일, 닉네임 중복 검사
-@app.route('/sign_up/check_dup', methods=['POST'])
-def check_dup():
-    username_receive = request.form['username_give']
-    email_receive = request.form['email_give']
-    username_exists = bool(db.users.find_one({"username": username_receive}))
-    email_exists = bool(db.users.find_one({"email": email_receive}))
-    return jsonify({'usernameExists': username_exists, 'emailExists':email_exists})
 
 
 # 첫 화면 재료 항목 불러오기

@@ -48,7 +48,6 @@ function signUp() {
     let email = $("#email").val();
     let password = $("#password").val();
     let repassword = $("#repassword").val();
-    console.log(username, email, password, repassword)
 
     if (username == "") {
         alert("닉네임을 입력해주세요.\n닉네임은 4-10자의 영문, 숫자, 일부 특수문자(._-)만 입력 가능합니다.")
@@ -66,8 +65,6 @@ function signUp() {
         return;
     }
 
-    checkDupNicknameAndEmail();
-
     if (password == "") {
         alert("비밀번호를 설정해주세요.")
         return;
@@ -83,15 +80,7 @@ function signUp() {
         alert("비밀번호가 일치하지 않습니다.")
         return;
     }
-
-    if (check[0] == 1) {
-        alert("이미 존재하는 닉네임입니다.")
-        return;
-    } else if (check[1] == 1) {
-        alert("이미 존재하는 이메일입니다.")
-        return;
-    }
-
+    
     $.ajax({
         type: "POST",
         url: "/sign_up/save",
@@ -101,8 +90,16 @@ function signUp() {
             password_give: password
         },
         success: function (response) {
-            alert("회원가입을 축하드립니다!")
-            window.location.replace("/")
+            if (response['result'] == 'fail:username_exists') {
+                alert("이미 존재하는 닉네임입니다.")
+                return;
+            } else if (response['result'] == 'fail:email_exists') {
+                alert("이미 존재하는 이메일입니다.")
+                return;
+            } else {
+                alert("회원가입을 축하드립니다!")
+                window.location.replace("/")
+            }
         }
     });
 }
@@ -120,31 +117,4 @@ function isEmail(asValue) {
 function isPassword(asValue) {
     var regExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z!@#$%^&*]{8,20}$/;
     return regExp.test(asValue);
-}
-
-function checkDupNicknameAndEmail() {
-    let username = $("#username").val();
-    let email = $("#email").val();
-    $.ajax({
-        type: "POST",
-        url: "/sign_up/check_dup",
-        async: false,
-        data: {
-            username_give: username,
-            email_give: email
-        },
-        success: function (response) {
-            check = []
-            if (response["usernameExists"]) {
-                check.push(1)
-            } else {
-                check.push(0)
-            }
-            if (response["emailExists"]) {
-                check.push(1)
-            } else {
-                check.push(0)
-            }
-        }
-    });
 }
