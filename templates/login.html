@@ -40,8 +40,8 @@
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
     <!-- 'Help My Menu' Javascript, CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='helpmymenu.css') }}">
-    <script type="text/javascript" src="{{ url_for('static', filename='helpmymenu.js') }}"></script>
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='helpmymenu.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='helpmymenu.js') }}"></script> -->
 
     <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
@@ -92,7 +92,7 @@
         .social_icon span {
             font-size: 60px;
             margin-left: 10px;
-            color: #ff7f50;
+            color: #fc6c3f;
         }
 
         .social_icon span:hover {
@@ -112,7 +112,7 @@
 
         .input-group-prepend span {
             width: 40px;
-            background-color: #ff7f50;
+            background-color: #fc6c3f;
             color: black;
             border: 0
         }
@@ -130,7 +130,7 @@
 
         .login_btn {
             color: black;
-            background-color: #ff7f50;
+            background-color: #fc6c3f;
             width: 100px;
         }
 
@@ -153,8 +153,9 @@
 
     </style>
     <script>
-        function toggle_sign_up() {
+        function toggleSignUpAndIn() {
             $("#login").toggleClass("is-hidden")
+            $("#signup").toggleClass("is-hidden")
         }
     </script>
 </head>
@@ -199,13 +200,13 @@
             </div>
             <div class="card-footer">
                 <div class="d-flex justify-content-center links">
-                    아직 계정이 없으신가요?<a href="#signup" onclick="toggle_sign_up()">회원가입 하러가기</a>
+                    아직 계정이 없으신가요?<a href="#" onclick="toggleSignUpAndIn()">회원가입 하러가기</a>
                 </div>
             </div>
         </div>
 
         <!-- 회원가입 란 -->
-        <div class="signup-card" id="signup">
+        <div class="signup-card is-hidden" id="signup">
             <div class="card-header">
                 <h3>회원가입</h3>
             </div>
@@ -245,7 +246,7 @@
             </div>
             <div class="card-footer">
                 <div class="d-flex justify-content-center links">
-                    회원가입 완료!<a href="#login">로그인 하러가기</a>
+                    회원가입 완료!<a href="#" onclick="toggleSignUpAndIn()">로그인 하러가기</a>
                 </div>
             </div>
         </div>
