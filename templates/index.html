@@ -39,8 +39,8 @@
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
     <!-- 'Help My Menu' Javascript, CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='helpmymenu.css') }}">
-    <script type="text/javascript" src="{{ url_for('static', filename='helpmymenu.js') }}"></script>
+    <script type="text/javascript" src="/static/js/helpmymenu.js"></script>
+    <link rel="stylesheet" href="/static/css/helpmymenu.css">
 
     <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
@@ -171,7 +171,7 @@
     <div class="container" id="recipe-loading-container">
         <div id="loading">
             <p>레시피 가져오는 중...🔍</p>
-            <img src="{{ url_for('static', filename='LoadingImg.gif') }}" alt="Loading...">
+            <img src="/static/images/LoadingImg.gif" alt="Loading...">
         </div>
     </div>
 
@@ -180,7 +180,7 @@
         <div class="jumbotron" style="padding-bottom: 10px">
             <!-- [추천, 좋아요] 페이지 네비게이션 -->
             <!-- 상세정보 페이지에서는 네비게이션 숨김 -->
-            <!-- FIXME: 최종적인 페이지 구성에 따라 변경 필요 -->
+            <!-- TODO: 최종적인 페이지 구성에 따라 변경 필요 -->
             <ul class="nav" style="margin: -40px 0px 0px 0px">
                 <li class="nav-item" id="part-rec">
                     <a class="nav-link active" aria-current="page" href="#" onclick="changePart('rec')">추천</a>
