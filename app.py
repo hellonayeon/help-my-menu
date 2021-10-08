@@ -1,3 +1,4 @@
+from re import L
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from pymongo import MongoClient
 from datetime import datetime, timedelta
@@ -24,14 +25,12 @@ def home():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        user_info = db.users.find_one({"username": payload["id"]})
+        user_info = db.users.find_one({"email": payload["id"]})
         return render_template('index.html', user_info=user_info)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
-
-    return render_template('index.html')
 
 
 @app.route('/login')
@@ -52,6 +51,7 @@ def sign_in():
     if result is not None:
         payload = {
          'id': email,
+         'username' : result['username'],
          'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
         }
         token = jwt.encode(payload, secrets["SECRET_KEY"], algorithm='HS256')
@@ -99,75 +99,94 @@ def ingredient_listing():
 
 
 # 레시피 검색정보 받아오기
-@app.route('/recipe/detail-info', methods=['POST'])
+@app.route('/recipe/search', methods=['POST'])
 def post_recipe_info():
-    data_we_want = []
-    recipe_info = request.get_json()
-    irdnt_nm = recipe_info['IRDNT_NM']
-    nation_nm = recipe_info['NATION_NM']
-    level_nm = recipe_info['LEVEL_NM']
-    cooking_time = recipe_info['COOKING_TIME']
+    mytoken = request.cookies.get('mytoken')
+    try :
+        payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
+        data_we_want = []
+        username = (db.users.find_one({"email": payload["id"]}))['username']
+        recipe_info = request.get_json()
+        irdnt_nm = recipe_info['IRDNT_NM']
+        nation_nm = recipe_info['NATION_NM']
+        level_nm = recipe_info['LEVEL_NM']
+        cooking_time = recipe_info['COOKING_TIME']
 
-    level_nm_list = []
-    for i in level_nm:
-        level_nm_list.append({"LEVEL_NM": i})
+        level_nm_list = []
+        for i in level_nm:
+            level_nm_list.append({"LEVEL_NM": i})
 
-    cooking_time_list = []
-    for i in cooking_time:
-        cooking_time_list.append({"COOKING_TIME": i})
+        cooking_time_list = []
+        for i in cooking_time:
+            cooking_time_list.append({"COOKING_TIME": i})
 
-    nation_nm_list = []
-    if "서양, 이탈리아" in nation_nm:
-        nation_nm_list.append({"NATION_NM": '서양'})
-        nation_nm_list.append({"NATION_NM": '이탈리아'})
-        nation_nm.remove('서양, 이탈리아')
-    for i in nation_nm:
-        nation_nm_list.append({"NATION_NM": i})
-    selected_by_condition = list(db.recipe_basic.find(
-        {"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
+        nation_nm_list = []
+        if "서양, 이탈리아" in nation_nm:
+            nation_nm_list.append({"NATION_NM": '서양'})
+            nation_nm_list.append({"NATION_NM": '이탈리아'})
+            nation_nm.remove('서양, 이탈리아')
+        for i in nation_nm:
+            nation_nm_list.append({"NATION_NM": i})
+        selected_by_condition = list(db.recipe_basic.find(
+            {"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
 
-    recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
+        recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
-    first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[0]}, {"_id": False, "RECIPE_ID": True}))
-    ingredient_set = set([irdnt['RECIPE_ID'] for irdnt in first_irdnt_ids])
-    for i in range(1, len(irdnt_nm)):
-        irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[i]}, {"_id": False, "RECIPE_ID": True}))
-        tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
-        ingredient_set = ingredient_set & tmp_set
+        first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[0]}, {"_id": False, "RECIPE_ID": True}))
+        ingredient_set = set([irdnt['RECIPE_ID'] for irdnt in first_irdnt_ids])
+        for i in range(1, len(irdnt_nm)):
+            irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[i]}, {"_id": False, "RECIPE_ID": True}))
+            tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
+            ingredient_set = ingredient_set & tmp_set
 
-    data_we_want = list(recipe_ids & ingredient_set)
+        data_we_want = list(recipe_ids & ingredient_set)
 
-    if data_we_want != []:
-        projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                      "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
-        data_we_get = []
-        for data in data_we_want:
-            data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID":int(data)}, projection))
-        return jsonify({'msg': 'success', "data_we_get": data_we_get})
-    else:
-        return jsonify({'msg': 'nothing'})
+        if data_we_want != []:
+            projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
+                        "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
+            data_we_get = []
+            for i in range(len(data_we_want)):
+                data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID":int(data_we_want[i])}, projection))
+                data_we_get[i]['likes_count'] = db.likes.count_documents({"RECIPE_ID":data_we_want[i]})
+                data_we_get[i]['like_by_me'] = bool(db.likes.find_one({"RECIPE_ID":data_we_want[i], "username":username}))
+            return jsonify({'msg': 'success', "data_we_get": data_we_get})
+        else:
+            return jsonify({'msg': 'nothing'})
+
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("/"))
 
 
 # 레시피 상세정보 API
 @app.route('/recipe/detail', methods=['GET'])
 def get_recipe_detail():
     recipe_id = int(request.args.get("recipe-id"))
+    mytoken = request.cookies.get('mytoken')
+    try:    
+        payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
+        username = (db.users.find_one({"email": payload["id"]}))['username']
+        # 레시피 정보
+        projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
+                    "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
+        info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
 
-    # 레시피 정보
-    projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
-    info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
+        # 상세정보(조리과정)
+        projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
+        detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
 
-    # 상세정보(조리과정)
-    projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
-    detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection).sort("Liked",-1))
+        # 재료정보
+        projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
+        ingredients = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
 
-    # 재료정보
-    projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
-    ingredients = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
+        # 좋아요 정보
+        like_info = [{}]
+        like_info[0]['likes_count'] = db.likes.count_documents({"RECIPE_ID":recipe_id})
+        like_info[0]['like_by_me'] = bool(db.likes.find_one({"RECIPE_ID":recipe_id, "username":username}))
 
-    return jsonify({"info":info, "detail": detail, "ingredients":ingredients})
+        return jsonify({"info":info, "detail": detail, "ingredients":ingredients, "like_info":like_info})
 
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("/"))
 
 # 댓글 목록 API
 @app.route('/recipe/comment', methods=['GET'])
@@ -247,35 +266,29 @@ def delete_comment():
     return jsonify({'result': 'success'})
 
 
-# 좋아요 누르기
-@app.route('/recipe/like', methods=['PUT'])
-def set_like():
-    recipe_id = request.form['recipe_id']
-    target_recipe = list(db.recipe_basic.find({"RECIPE_ID": int(recipe_id)}))
-    current_like = target_recipe[0]["Liked"]
-    new_like = current_like + 1
-    db.recipe_basic.update_one({"RECIPE_ID": int(recipe_id)}, {'$set': {"Liked": int(new_like)}})
-    return jsonify({"msg":"좋아요가 추가되었습니다."})
+# 좋아요 기능
+@app.route('/recipe/update_like', methods=['POST'])
+def update_like() :
+    mytoken = request.cookies.get('mytoken')
+    try :
+        payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
+        # 좋아요 수 변경
+        user_info = db.users.find_one({"email": payload["id"]})
+        recipe_id = int(request.form["recipe_id"])
+        action = request.form["action"]
+        doc = {
+            "RECIPE_ID" : recipe_id,
+            "username" : user_info["username"]
+        }
+        if action == "like" : 
+            db.likes.insert_one(doc)
+        else :
+            db.likes.delete_one(doc)
+        likes_count = db.likes.count_documents({"RECIPE_ID":recipe_id})
+        return jsonify({"likes_count":likes_count})
 
-
-# 좋아요 해제
-@app.route('/recipe/unlike', methods=['PUT'])
-def set_unlike():
-    recipe_id = request.form['recipe_id']
-    target_recipe = list(db.recipe_basic.find({"RECIPE_ID": int(recipe_id)}))
-    current_like = target_recipe[0]["Liked"]
-    new_like = current_like - 1
-    db.recipe_basic.update_one({"RECIPE_ID": int(recipe_id)}, {'$set': {"Liked": int(new_like)}})
-    return jsonify({"msg":"좋아요가 해제되었습니다."})
-
-
-# 좋아요 탭
-@app.route('/recipe/liked', methods=['GET'])
-def get_recipe_liked():
-    projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
-    recipe_liked_list = list(db.recipe_basic.find({"Liked": {"$gte":1}}, projection).sort("Liked",-1))
-    return jsonify({'recipe_liked':recipe_liked_list})
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("/"))
 
 
 if __name__ == '__main__':

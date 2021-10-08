@@ -156,3 +156,24 @@
     height: 400px;
     width: 400px;
 }
+
+.heart {
+    float: right;
+}
+
+/* .heart.unliked {
+    color : black;
+} */
+
+.heart.liked {
+    color : red !important; 
+}
+
+.heart-detail {
+    float:right;
+    margin-top:20px;
+}
+
+.heart-detail.liked {
+    color : red;
+}
