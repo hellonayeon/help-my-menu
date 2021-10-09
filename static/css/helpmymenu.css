@@ -161,10 +161,6 @@
     float: right;
 }
 
-/* .heart.unliked {
-    color : black;
-} */
-
 .heart.liked {
     color : red !important; 
 }
@@ -175,5 +171,12 @@
 }
 
 .heart-detail.liked {
-    color : red;
+    color : red !important;
+}
+
+#alert-no-liked {
+    font-size:x-large;
+    display: block;
+    margin: 50px auto auto auto;
+    text-align: center;
 }

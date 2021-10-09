@@ -127,8 +127,7 @@ def post_recipe_info():
             nation_nm.remove('서양, 이탈리아')
         for i in nation_nm:
             nation_nm_list.append({"NATION_NM": i})
-        selected_by_condition = list(db.recipe_basic.find(
-            {"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
+        selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
 
         recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
@@ -290,6 +289,30 @@ def update_like() :
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("/"))
 
+
+# 좋아요 탭
+@app.route('/recipe/liked', methods=['GET'])
+def get_recipe_liked():
+    mytoken = request.cookies.get('mytoken')
+    try :
+        payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
+        username = (db.users.find_one({"email": payload["id"]}))['username']
+        liked_recipe_id = list(db.likes.find({"username":username}).distinct("RECIPE_ID"))
+
+        if liked_recipe_id != []:
+            projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True, 
+                        "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
+            data_we_get = []
+            for i in range(len(liked_recipe_id)):
+                data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID":int(liked_recipe_id[i])}, projection))
+                data_we_get[i]['likes_count'] = db.likes.count_documents({"RECIPE_ID":liked_recipe_id[i]})
+                data_we_get[i]['like_by_me'] = bool(db.likes.find_one({"RECIPE_ID":liked_recipe_id[i], "username":username}))
+            return jsonify({'msg': 'success', "data_we_get": data_we_get})
+        else:
+            return jsonify({'msg': 'nothing'})
+
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("/"))
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)

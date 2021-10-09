@@ -242,7 +242,7 @@ function getRecipeDetail(recipeId) {
 /* 레시피 상세정보 출력 함수 */
 function makeRecipeDetail(info, detail, ingredients, like_info) {
     let class_heart = like_info['like_by_me'] ? "fa-heart" : "fa-heart-o"
-    let class_color = like_info['like_by_me'] ? "heart liked" : "heart"
+    let class_color = like_info['like_by_me'] ? "heart-detail liked" : "heart-detail"
     let infoHtml = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                      <span class="detail-info">${info["COOKING_TIME"]}</span>
                      <span class="detail-info">${info["QNT"]}</span>
@@ -512,41 +512,42 @@ function getRecipesLikedList() { // 좋아요 탭
         url: "/recipe/liked",
         success: function (response) {
             $('#recipe-liked-list').empty();
-            let recipe = response['recipe_liked'];
-            for (let i = 0; i < recipe.length; i++) {
-                let recipeUrl = recipe[i]['IMG_URL']
-                let recipeName = recipe[i]['RECIPE_NM_KO']
-                let recipeDesc = recipe[i]['SUMRY']
-                let recipeId = recipe[i]['RECIPE_ID']
-                let recipeLiked = recipe[i]['Liked']
+            if (response['msg'] == 'success') {
+                let recipe = response['data_we_get']
+                for (let i = 0; i < recipe.length; i++) {
+                    let recipeUrl = recipe[i]['IMG_URL']
+                    let recipeName = recipe[i]['RECIPE_NM_KO']
+                    let recipeDesc = recipe[i]['SUMRY']
+                    let recipeId = recipe[i]['RECIPE_ID']
+                    let recipeLikesCount = recipe[i]['likes_count']
+                    let recipeLikebyMe = recipe[i]['like_by_me']
 
-                makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked)
+                    makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe)
+                }
+            } else if (response['msg'] == 'nothing') {
+                let tempHtml = `<div id="alert-no-liked">좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
+                $('#recipe-liked-list').append(tempHtml)
             }
         }
     })
 }
 
+
 // 좋아요탭의 좋아요한 레시피 표시
-function makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked) {
-    let tempHtml = `<div  id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">
+function makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe) {
+    let class_heart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
+    let class_color = recipeLikebyMe ? "heart liked" : "heart"
+    let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                
                         <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
                         <div class="card-body">
                             <h5 class="card-title">${recipeName}</h5>
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
-                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>`
-    if (recipeLiked >= 1) {
-        tempHtml += `<a id="before-like-liked-${recipeId}" style="color:black; float:right; display:none;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-liked-${recipeId}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a>
+                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
+                                <a id="likes-liked-${recipeId}" class="${class_color}" onclick="toggleLike(${recipeId}, 3)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                            </div>
                         </div>
-                    </div>
                     </div>`
-
-    } else {
-        tempHtml += `<a id="before-like-liked-${recipeId}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-liked-${recipeId}" style="color:red; float:right; display:none;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a>
-                        </div>
-                    </div>
-                    </div>`
-    }
     $('#recipe-liked-list').append(tempHtml)
 }
 
