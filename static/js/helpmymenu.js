@@ -221,7 +221,7 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
                                 <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
-                                <a id="likes-${recipeId}" class="${class_color}" onclick="toggleLike(${recipeId}, 1)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                                <a id="likes-${recipeId}" class="${class_color}" onclick="toggleLike(${recipeId}, 0)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
                     </div>`
@@ -246,7 +246,7 @@ function makeRecipeDetail(info, detail, ingredients, like_info) {
     let infoHtml = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                      <span class="detail-info">${info["COOKING_TIME"]}</span>
                      <span class="detail-info">${info["QNT"]}</span>
-                     <a id="likes-detail-${info["RECIPE_ID"]}" class="${class_color}" onclick="toggleLike(${info["RECIPE_ID"]}, 2)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(like_info['likes_count'])}</span></a>
+                     <a id="likes-detail-${info["RECIPE_ID"]}" class="${class_color}" onclick="toggleLike(${info["RECIPE_ID"]}, 1)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(like_info['likes_count'])}</span></a>
 
                     <h4>${info["SUMRY"]}</h4>`
 
@@ -451,14 +451,8 @@ function replay() {
 
 // 좋아요 기능
 function toggleLike(recipe_id, num) {
-    let likeId
-    if (num == 1) {
-        likeId = $(`#likes-${recipe_id}`)
-    } else if (num == 2) {
-        likeId = $(`#likes-detail-${recipe_id}`)
-    } else {
-        likeId = $(`#likes-liked-${recipe_id}`)
-    }
+    let likeIdArray = ["","-detail", "-liked"]
+    let likeId = $(`#likes${likeIdArray[num]}-${recipe_id}`)
     
     if (!likeId.hasClass("liked")) {
         $.ajax({
@@ -469,9 +463,12 @@ function toggleLike(recipe_id, num) {
                 action : "like"
             },
             success : function(response) {
-                likeId.find("i").addClass("fa-heart").removeClass("fa-heart-o")
-                likeId.addClass("liked")
-                likeId.find("span.like-num").text(num2str(response["likes_count"]))
+                for(let i = 0; i < likeIdArray.length; i++) {
+                    let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
+                    likeId.find("i").addClass("fa-heart").removeClass("fa-heart-o")
+                    likeId.addClass("liked")
+                    likeId.find("span.like-num").text(num2str(response["likes_count"]))
+                }
             }
         })
     } else {
@@ -483,9 +480,12 @@ function toggleLike(recipe_id, num) {
                 action : "unlike"
             },
             success : function(response) {
-                likeId.find("i").addClass("fa-heart-o").removeClass("fa-heart")
-                likeId.removeClass("liked")
-                likeId.find("span.like-num").text(num2str(response["likes_count"]))
+                for(let i = 0; i < likeIdArray.length; i++) {
+                    let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
+                    likeId.find("i").addClass("fa-heart-o").removeClass("fa-heart")
+                    likeId.removeClass("liked")
+                    likeId.find("span.like-num").text(num2str(response["likes_count"]))
+                }
             }
         })
     }
@@ -544,7 +544,7 @@ function makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recip
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
                                 <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
-                                <a id="likes-liked-${recipeId}" class="${class_color}" onclick="toggleLike(${recipeId}, 3)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                                <a id="likes-liked-${recipeId}" class="${class_color}" onclick="toggleLike(${recipeId}, 2)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
                     </div>`
