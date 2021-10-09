@@ -50,7 +50,6 @@
     <link rel="stylesheet" href="/static/css/login.css">
 
 
-
     <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
     <style>
@@ -66,101 +65,102 @@
 </head>
 
 <body>
-<div class="container">
-    <div class="d-flex justify-content-center h-100">
-        <!-- 로그인 란 -->
-        <div class="login-card" id="login">
-            <div class="card-header">
-                <h3>로그인</h3>
-            </div>
-            <!-- 간편로그인 아이콘
-                            <div class="d-flex justify-content-end social_icon">
-                                <span><i class="fab fa-facebook-square"></i></span>
-                                <span><i class="fab fa-google-plus-square"></i></span>
-                                <span><i class="fab fa-twitter-square"></i></span>
+    <div class="container">
+        <div class="d-flex justify-content-center h-100">
+            <!-- 로그인 란 -->
+            <div class="login-card" id="login">
+                <div class="card-header">
+                    <h3>로그인</h3>
+                </div>
+                <!-- 간편로그인 아이콘
+                                <div class="d-flex justify-content-end social_icon">
+                                    <span><i class="fab fa-facebook-square"></i></span>
+                                    <span><i class="fab fa-google-plus-square"></i></span>
+                                    <span><i class="fab fa-twitter-square"></i></span>
+                                </div>
+                -->
+                <div class="card-body">
+                    <form>
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fa fa-user" aria-hidden="true"></i></span>
                             </div>
-            -->
-            <div class="card-body">
-                <form>
-                    <div class="input-group form-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fa fa-user" aria-hidden="true"></i></span>
+                            <input type="email" class="form-control" id="input-email" placeholder="이메일@helpmymenu.com">
                         </div>
-                        <input type="email" class="form-control" id="input-email" placeholder="이메일@helpmymenu.com">
-                    </div>
-                    <!-- TODO: 회원가입 이메일 형식 검사 -->
-                    <!-- TODO: Bulma 클래스 제거 -->
-                    <p id="help-email-login"></p>
+                        <!-- TODO: 회원가입 이메일 형식 검사 -->
+                        <!-- TODO: Bulma 클래스 제거 -->
+                        <p id="help-email-login"></p>
 
-                    <div class="input-group form-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fa fa-key" aria-hidden="true"></i></span>
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fa fa-key" aria-hidden="true"></i></span>
+                            </div>
+                            <input type="password" class="form-control" placeholder="패스워드" id="input-password"><br>
                         </div>
-                        <input type="password" class="form-control" placeholder="패스워드" id="input-password"><br>
-                    </div>
-                    <p id="help-password-login"></p>
+                        <p id="help-password-login"></p>
 
-                    <div class="row align-items-center remember">
-                        <input type="checkbox">&nbsp;아이디 기억하기
+                        <div class="row align-items-center remember">
+                            <input type="checkbox">&nbsp;아이디 기억하기
+                        </div>
+                        <div class="form-group">
+                            <input type="button" value="로그인하기" class="btn float-right login-btn" onclick="signIn()">
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-center links">
+                        아직 계정이 없으신가요?<a href="#" onclick="toggleSignUpAndIn()">회원가입 하러가기</a>
                     </div>
-                    <div class="form-group">
-                        <input type="button" value="로그인하기" class="btn float-right login-btn" onclick="signIn()">
-                    </div>
-                </form>
-            </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-center links">
-                    아직 계정이 없으신가요?<a href="#" onclick="toggleSignUpAndIn()">회원가입 하러가기</a>
                 </div>
             </div>
-        </div>
 
-        <!-- 회원가입 란 -->
-        <div class="signup-card is-hidden" id="signup">
-            <div class="card-header">
-                <h3>회원가입</h3>
-            </div>
-            <div class="card-body">
-                <form>
-                    <div class="input-group form-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+            <!-- 회원가입 란 -->
+            <div class="signup-card is-hidden" id="signup">
+                <div class="card-header">
+                    <h3>회원가입</h3>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            </div>
+                            <input type="text" class="form-control" id="username" minlength="4" maxlength="15"
+                                   placeholder="닉네임 (최소 4글자)" required>
                         </div>
-                        <input type="text" class="form-control" id="username" minlength="4" maxlength="15"
-                               placeholder="닉네임 (최소 4글자)" required>
-                    </div>
-                    <div class="input-group form-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            </div>
+                            <input type="email" class="form-control" id="email" placeholder="이메일@helpmymenu.com"
+                                   required>
                         </div>
-                        <input type="email" class="form-control" id="email" placeholder="이메일@helpmymenu.com" required>
-                    </div>
-                    <div class="input-group form-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            </div>
+                            <input type="password" class="form-control" id="password" minlength="8"
+                                   placeholder="패스워드 (최소 8글자)" required>
                         </div>
-                        <input type="password" class="form-control" id="password" minlength="8"
-                               placeholder="패스워드 (최소 8글자)" required>
-                    </div>
-                    <div class="input-group form-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                        <div class="input-group form-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            </div>
+                            <input type="password" class="form-control" id="repassword" minlength="8" length="8"
+                                   placeholder="패스워드를 재입력해주세요." required>
                         </div>
-                        <input type="password" class="form-control" id="repassword" minlength="8" length="8"
-                               placeholder="패스워드를 재입력해주세요." required>
+                        <div class="form-group">
+                            <input type="button" value="가입하기" class="btn float-right login_btn" onclick="signUp()">
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-center links">
+                        회원가입 완료!<a href="#" onclick="toggleSignUpAndIn()">로그인 하러가기</a>
                     </div>
-                    <div class="form-group">
-                        <input type="button" value="가입하기" class="btn float-right login_btn" onclick="signUp()">
-                    </div>
-                </form>
-            </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-center links">
-                    회원가입 완료!<a href="#" onclick="toggleSignUpAndIn()">로그인 하러가기</a>
                 </div>
             </div>
         </div>
     </div>
-</div>
 </body>
 </html>

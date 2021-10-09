@@ -2,11 +2,11 @@ from re import L
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from pymongo import MongoClient
 from datetime import datetime, timedelta
-import jwt # pip install PyJWT
+from werkzeug.utils import secure_filename
+import jwt  # pip install PyJWT
 import hashlib
 import json
 import secrets
-
 
 # Flask 초기화
 app = Flask(__name__)
@@ -37,6 +37,67 @@ def home():
 def login():
     msg = request.args.get("msg")
     return render_template('login.html', msg=msg)
+
+
+@app.route('/user/<email>')
+def user(email):
+    # 사용자의 개인 정보를 볼 수 있는 유저 페이지
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        user_info = db.users.find_one({"email": payload["id"]}, {"_id": False})
+        return render_template('user.html', user_info=user_info)
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+
+@app.route('/user', methods=['POST'])
+def update_profile():
+    # 사용자 프로필 변경 요청 API
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        email = payload["id"]
+        username_receive = request.form["username_give"]
+        introduce_receive = request.form["introduce_give"]
+        new_doc = {
+            "username": username_receive,
+            "profile_info": introduce_receive
+        }
+        if 'file_give' in request.files:
+            file = request.files["file_give"]
+            filename = secure_filename(file.filename)
+            extension = filename.split(".")[-1]
+            file_path = f"profile_pics/{email}.{extension}"
+            file.save("./static/" + file_path)
+            new_doc["profile_pic"] = filename
+            new_doc["profile_pic_real"] = file_path
+        db.users.update_one({'email': payload['id']}, {'$set': new_doc})
+        return jsonify({"result": "success", 'msg': '프로필을 업데이트했습니다.'})
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("home"))
+
+@app.route('/user/change-img', methods=['POST'])
+def delete_img():
+    # 사용자 프로필 이미지 삭제 요청 API
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        email = payload["id"]
+        origin_doc = {
+            "profile_pic":"",
+            "profile_pic_real":'profile_pics/profile_placeholder.png'
+        }
+        if (db.users.find_one({"email":email})["profile_pic"]==""):
+            msg = "이미지가 없습니다.."
+        else:
+            db.users.update_one({'email': email}, {'$set': origin_doc})
+            msg = "이미지 삭제 완료!."
+        return jsonify({"result": "success", 'msg': msg})
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("home"))
 
 
 @app.route('/sign_in', methods=['POST'])
@@ -70,21 +131,21 @@ def sign_up():
     username_exists = bool(db.users.find_one({"username": username_receive}))
     email_exists = bool(db.users.find_one({"email": email_receive}))
 
-    if username_exists :
+    if username_exists:
         return jsonify({'result': 'fail:username_exists'})
-    if email_exists :
+    if email_exists:
         return jsonify({'result': 'fail:email_exists'})
 
     password_receive = request.form['password_give']
     password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
     doc = {
-        "username": username_receive,                               # 아이디
-        "email" : email_receive,                                    # 이메일
-        "password": password_hash,                                  # 비밀번호
-        "profile_name": username_receive,                           # 프로필 이름 기본값은 아이디
-        "profile_pic": "",                                          # 프로필 사진 파일 이름
-        "profile_pic_real": "profile_pics/profile_placeholder.png", # 프로필 사진 기본 이미지
-        "profile_info": ""                                          # 프로필 한 마디
+        "username": username_receive,  # 아이디
+        "email": email_receive,  # 이메일
+        "password": password_hash,  # 비밀번호
+        "profile_name": username_receive,  # 프로필 이름 기본값은 아이디
+        "profile_pic": "",  # 프로필 사진 파일 이름
+        "profile_pic_real": "profile_pics/profile_placeholder.png",  # 프로필 사진 기본 이미지
+        "profile_info": ""  # 프로필 한 마디
     }
     db.users.insert_one(doc)
     return jsonify({'result': 'success'})
@@ -95,7 +156,7 @@ def sign_up():
 def ingredient_listing():
     # 중복 제거
     irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM"))
-    return jsonify({'recipe_ingredient':irdnt})
+    return jsonify({'recipe_ingredient': irdnt})
 
 
 # 레시피 검색할 리스트 & 좋아요 탭 불러오기
@@ -264,7 +325,7 @@ def delete_comment():
     comment = db.comment.find_one({"NICK_NM": nick_nm}, {"_id": False})
 
     # 닉네임에 해당되는 비밀번호가 일치하지 않을 경우
-    if(pw != comment["PW"]):
+    if (pw != comment["PW"]):
         return jsonify({'result': 'failure', 'msg': '비밀번호가 일치하지 않습니다!'})
 
     # 일치하는 경우 삭제
