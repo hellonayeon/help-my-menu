@@ -111,7 +111,7 @@ function signUp() {
                 return;
             } else {
                 alert("회원가입을 축하드립니다!")
-                window.location.replace("/")
+                window.location.replace("/login")
             }
         }
     });
