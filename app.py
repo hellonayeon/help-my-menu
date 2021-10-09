@@ -98,48 +98,56 @@ def ingredient_listing():
     return jsonify({'recipe_ingredient':irdnt})
 
 
-# 레시피 검색정보 받아오기
-@app.route('/recipe/search', methods=['POST'])
-def post_recipe_info():
+# 레시피 검색할 리스트 & 좋아요 탭 불러오기
+@app.route('/recipe/search', methods=['POST','GET'])
+def make_recipe_list():
     mytoken = request.cookies.get('mytoken')
     try :
         payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
-        data_we_want = []
         username = (db.users.find_one({"email": payload["id"]}))['username']
-        recipe_info = request.get_json()
-        irdnt_nm = recipe_info['IRDNT_NM']
-        nation_nm = recipe_info['NATION_NM']
-        level_nm = recipe_info['LEVEL_NM']
-        cooking_time = recipe_info['COOKING_TIME']
+        
+        # 만약 POST 방식이면, 검색결과로 출력할 RECIPE_ID들을 DB에서 가져옴.
+        if request.method == 'POST' : 
+            data_we_want = []
+            recipe_info = request.get_json()
+            irdnt_nm = recipe_info['IRDNT_NM']
+            nation_nm = recipe_info['NATION_NM']
+            level_nm = recipe_info['LEVEL_NM']
+            cooking_time = recipe_info['COOKING_TIME']
 
-        level_nm_list = []
-        for i in level_nm:
-            level_nm_list.append({"LEVEL_NM": i})
+            level_nm_list = []
+            for i in level_nm:
+                level_nm_list.append({"LEVEL_NM": i})
 
-        cooking_time_list = []
-        for i in cooking_time:
-            cooking_time_list.append({"COOKING_TIME": i})
+            cooking_time_list = []
+            for i in cooking_time:
+                cooking_time_list.append({"COOKING_TIME": i})
 
-        nation_nm_list = []
-        if "서양, 이탈리아" in nation_nm:
-            nation_nm_list.append({"NATION_NM": '서양'})
-            nation_nm_list.append({"NATION_NM": '이탈리아'})
-            nation_nm.remove('서양, 이탈리아')
-        for i in nation_nm:
-            nation_nm_list.append({"NATION_NM": i})
-        selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
+            nation_nm_list = []
+            if "서양, 이탈리아" in nation_nm:
+                nation_nm_list.append({"NATION_NM": '서양'})
+                nation_nm_list.append({"NATION_NM": '이탈리아'})
+                nation_nm.remove('서양, 이탈리아')
+            for i in nation_nm:
+                nation_nm_list.append({"NATION_NM": i})
+            selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
 
-        recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
+            recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
-        first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[0]}, {"_id": False, "RECIPE_ID": True}))
-        ingredient_set = set([irdnt['RECIPE_ID'] for irdnt in first_irdnt_ids])
-        for i in range(1, len(irdnt_nm)):
-            irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[i]}, {"_id": False, "RECIPE_ID": True}))
-            tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
-            ingredient_set = ingredient_set & tmp_set
+            first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[0]}, {"_id": False, "RECIPE_ID": True}))
+            ingredient_set = set([irdnt['RECIPE_ID'] for irdnt in first_irdnt_ids])
+            for i in range(1, len(irdnt_nm)):
+                irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[i]}, {"_id": False, "RECIPE_ID": True}))
+                tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
+                ingredient_set = ingredient_set & tmp_set
 
-        data_we_want = list(recipe_ids & ingredient_set)
+            data_we_want = list(recipe_ids & ingredient_set)
 
+        # 만약 'GET' 방식이면, 좋아요 탭을 위한 RECIPE_ID들을 DB에서 가져옴
+        elif request.method == 'GET':
+            data_we_want = list(db.likes.find({"username":username}).distinct("RECIPE_ID"))
+
+        # DB에서 찾은 RECIPE_ID에 해당하는 레시피 정보들을 data_we_get에 저장 후 전송
         if data_we_want != []:
             projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
                         "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
@@ -289,30 +297,6 @@ def update_like() :
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("/"))
 
-
-# 좋아요 탭
-@app.route('/recipe/liked', methods=['GET'])
-def get_recipe_liked():
-    mytoken = request.cookies.get('mytoken')
-    try :
-        payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
-        username = (db.users.find_one({"email": payload["id"]}))['username']
-        liked_recipe_id = list(db.likes.find({"username":username}).distinct("RECIPE_ID"))
-
-        if liked_recipe_id != []:
-            projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True, 
-                        "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
-            data_we_get = []
-            for i in range(len(liked_recipe_id)):
-                data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID":int(liked_recipe_id[i])}, projection))
-                data_we_get[i]['likes_count'] = db.likes.count_documents({"RECIPE_ID":liked_recipe_id[i]})
-                data_we_get[i]['like_by_me'] = bool(db.likes.find_one({"RECIPE_ID":liked_recipe_id[i], "username":username}))
-            return jsonify({'msg': 'success', "data_we_get": data_we_get})
-        else:
-            return jsonify({'msg': 'nothing'})
-
-    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-        return redirect(url_for("/"))
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)

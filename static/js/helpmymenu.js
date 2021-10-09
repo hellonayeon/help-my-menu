@@ -174,46 +174,72 @@ function selectedRecipeNation() {
             gCookingTime.push('140분', '175분', '180분')
         }
     }
-    postRecipeInfo("rec");
+    postRecipeInfo("search");
     showControl(recipeLoadingDisplay);
 }
 
-// 검색할 레시피 조건 보내기 & 검색한 레시피 리스트 출력 함수 호출
-function postRecipeInfo() {
-    var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
-    $.ajax({
-        type: "POST",
-        contentType: 'application/json',
-        url: `/recipe/search`,
-        dataType: 'json',
-        data: JSON.stringify(recipeInfo),
-        success: function (response) {
-            if (response['msg'] == 'success') {
-            $('#recipe-list').empty();
-            let recipe = response['data_we_get']
-            for (let i = 0; i < recipe.length; i++) {
-                let recipeUrl = recipe[i]['IMG_URL']
-                let recipeName = recipe[i]['RECIPE_NM_KO']
-                let recipeDesc = recipe[i]['SUMRY']
-                let recipeId = recipe[i]['RECIPE_ID']
-                let recipeLikesCount = recipe[i]['likes_count']
-                let recipeLikebyMe = recipe[i]['like_by_me']
+function postRecipeInfo(status) {
+    if (status == "search") {
+        var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
+        $.ajax({
+            type: "POST",
+            contentType: 'application/json',
+            url: `/recipe/search`,
+            dataType: 'json',
+            data: JSON.stringify(recipeInfo),
+            success: function (response) {
+                if (response['msg'] == 'success') {
+                $('#recipe-list').empty();
+                let recipe = response['data_we_get']
+                for (let i = 0; i < recipe.length; i++) {
+                    let recipeUrl = recipe[i]['IMG_URL']
+                    let recipeName = recipe[i]['RECIPE_NM_KO']
+                    let recipeDesc = recipe[i]['SUMRY']
+                    let recipeId = recipe[i]['RECIPE_ID']
+                    let recipeLikesCount = recipe[i]['likes_count']
+                    let recipeLikebyMe = recipe[i]['like_by_me']
 
-                makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe)
+                    makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, "search")
+                }
+                showControl(recipeListDisplay);
+            } else if (response['msg'] == 'nothing') {
+                    alert("조건에 해당 되는 레시피가 없습니다.😥")
+                    showControl(recipeChoiceDisplay);
+                }
             }
-            showControl(recipeListDisplay);
-        } else if (response['msg'] == 'nothing') {
-                alert("조건에 해당 되는 레시피가 없습니다.😥")
-                showControl(recipeChoiceDisplay);
+        });
+    } else if (status == "liked") {
+        $.ajax({
+            type: "GET",
+            url: "/recipe/search",
+            success: function (response) {
+                $('#recipe-liked-list').empty();
+                if (response['msg'] == 'success') {
+                    let recipe = response['data_we_get']
+                    for (let i = 0; i < recipe.length; i++) {
+                        let recipeUrl = recipe[i]['IMG_URL']
+                        let recipeName = recipe[i]['RECIPE_NM_KO']
+                        let recipeDesc = recipe[i]['SUMRY']
+                        let recipeId = recipe[i]['RECIPE_ID']
+                        let recipeLikesCount = recipe[i]['likes_count']
+                        let recipeLikebyMe = recipe[i]['like_by_me']
+    
+                        makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, "liked")
+                    }
+                } else if (response['msg'] == 'nothing') {
+                    let tempHtml = `<div id="alert-no-liked">좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
+                    $('#recipe-liked-list').append(tempHtml)
+                }
             }
-        }
-    });
+        })
+    }
 }
 
 // 검색한 레시피 리스트 출력
-function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe) {
-    let class_heart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
-    let class_color = recipeLikebyMe ? "heart liked" : "heart"
+function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status) {
+    let classHeart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
+    let classColor = recipeLikebyMe ? "heart liked" : "heart"
+    let idTyep = status == "search" ? "" : "-liked"
     let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                
                         <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
                         <div class="card-body">
@@ -221,11 +247,11 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
                                 <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
-                                <a id="likes-${recipeId}" class="${class_color}" onclick="toggleLike(${recipeId}, 0)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                                <a id="likes${idTyep}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, 0)"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
                     </div>`
-    $('#recipe-list').append(tempHtml)
+    $(`#recipe${idTyep}-list`).append(tempHtml)
 }
 
 /* 레시피 상세정보 요청 함수 */
@@ -506,51 +532,6 @@ function num2str(likesCount) {
 }
 
 
-function getRecipesLikedList() { // 좋아요 탭
-    $.ajax({
-        type: "GET",
-        url: "/recipe/liked",
-        success: function (response) {
-            $('#recipe-liked-list').empty();
-            if (response['msg'] == 'success') {
-                let recipe = response['data_we_get']
-                for (let i = 0; i < recipe.length; i++) {
-                    let recipeUrl = recipe[i]['IMG_URL']
-                    let recipeName = recipe[i]['RECIPE_NM_KO']
-                    let recipeDesc = recipe[i]['SUMRY']
-                    let recipeId = recipe[i]['RECIPE_ID']
-                    let recipeLikesCount = recipe[i]['likes_count']
-                    let recipeLikebyMe = recipe[i]['like_by_me']
-
-                    makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe)
-                }
-            } else if (response['msg'] == 'nothing') {
-                let tempHtml = `<div id="alert-no-liked">좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
-                $('#recipe-liked-list').append(tempHtml)
-            }
-        }
-    })
-}
-
-
-// 좋아요탭의 좋아요한 레시피 표시
-function makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe) {
-    let class_heart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
-    let class_color = recipeLikebyMe ? "heart liked" : "heart"
-    let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                
-                        <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
-                        <div class="card-body">
-                            <h5 class="card-title">${recipeName}</h5>
-                            <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
-                            <div class="card-footer">
-                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
-                                <a id="likes-liked-${recipeId}" class="${class_color}" onclick="toggleLike(${recipeId}, 2)"><i class="fa ${class_heart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
-                            </div>
-                        </div>
-                    </div>`
-    $('#recipe-liked-list').append(tempHtml)
-}
-
 function changePart(part) { // 좋아요 탭 눌렀을 경우
     if (part == 'rec') {
         $('#recipe-liked-list').hide();
@@ -566,7 +547,7 @@ function changePart(part) { // 좋아요 탭 눌렀을 경우
     } else {
         $('#recipe-list').hide();
         $('#recipe-liked-list').show();
-        getRecipesLikedList();
+        postRecipeInfo("liked");
         if ($('#part-like').children("a").hasClass("disabled")) {
             $('#part-like').children("a").removeClass("disabled")
             $('#part-like').children("a").addClass("active")
