@@ -109,6 +109,7 @@ function searchShow() {
     });
 };
 
+// 지정한 재료 버튼 형식의 태그 저장
 function ingredientDisplay(ingredient) {
     if (gIrdntNm.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
         let tempHtml = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${gIndex}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
@@ -178,7 +179,9 @@ function selectedRecipeNation() {
     showControl(recipeLoadingDisplay);
 }
 
+// 레시피 리스트 만들기 (검색 & 좋아요 탭)
 function postRecipeInfo(status) {
+    // 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
     if (status == "search") {
         var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
         $.ajax({
@@ -208,6 +211,7 @@ function postRecipeInfo(status) {
                 }
             }
         });
+    // 좋아요 탭을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
     } else if (status == "liked") {
         $.ajax({
             type: "GET",
@@ -235,7 +239,7 @@ function postRecipeInfo(status) {
     }
 }
 
-// 검색한 레시피 리스트 출력
+// 검색한 레시피 리스트 & 좋아요 탭 레시피 리스트 출력
 function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status) {
     let classHeart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
     let classColor = recipeLikebyMe ? "heart liked" : "heart"
@@ -531,8 +535,8 @@ function num2str(likesCount) {
     return likesCount
 }
 
-
-function changePart(part) { // 좋아요 탭 눌렀을 경우
+// 상단 navbar 추천탭/좋아요탭 기능
+function changePart(part) { 
     if (part == 'rec') {
         $('#recipe-liked-list').hide();
         $('#recipe-list').show();
