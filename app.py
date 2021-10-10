@@ -39,13 +39,16 @@ def login():
     return render_template('login.html', msg=msg)
 
 
-@app.route('/user/<email>')
-def user(email):
+@app.route('/user/<username>')
+def user(username):
     # 사용자의 개인 정보를 볼 수 있는 유저 페이지
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         user_info = db.users.find_one({"email": payload["id"]}, {"_id": False})
+        # 사용자 닉네임과 API주소가 동일하지 않을 경우 로그인화면으로 다시 돌려보냄.
+        if (user_info["username"] != username):
+            return redirect(url_for("login", msg="로그인 정보가 정확하지 않습니다."))
         return render_template('user.html', user_info=user_info)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -60,10 +63,10 @@ def update_profile():
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         email = payload["id"]
-        username_receive = request.form["username_give"]
+        profile_name_receive = request.form["profile_name_give"]
         introduce_receive = request.form["introduce_give"]
         new_doc = {
-            "username": username_receive,
+            "profile_name": profile_name_receive,
             "profile_info": introduce_receive
         }
         if 'file_give' in request.files:
@@ -79,6 +82,7 @@ def update_profile():
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
 
+
 @app.route('/user/change-img', methods=['POST'])
 def delete_img():
     # 사용자 프로필 이미지 삭제 요청 API
@@ -87,15 +91,47 @@ def delete_img():
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         email = payload["id"]
         origin_doc = {
-            "profile_pic":"",
-            "profile_pic_real":'profile_pics/profile_placeholder.png'
+            "profile_pic": "",
+            "profile_pic_real": 'profile_pics/profile_placeholder.png'
         }
-        if (db.users.find_one({"email":email})["profile_pic"]==""):
+        if (db.users.find_one({"email": email})["profile_pic"] == ""):
             msg = "이미지가 없습니다.."
         else:
             db.users.update_one({'email': email}, {'$set': origin_doc})
             msg = "이미지 삭제 완료!."
         return jsonify({"result": "success", 'msg': msg})
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("home"))
+
+
+@app.route('/user/change-password', methods=['POST'])
+def change_password():
+    # 사용자 비밀번호 변경 요청 API
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        email = payload["id"]
+        existing_password_receive = request.form["existing_password_give"]
+        changing_password_receive = request.form["changing_password_give"]
+        info = db.users.find_one({"email":payload["id"]}, {"_id":False})
+
+        existing_password = hashlib.sha256(existing_password_receive.encode('utf-8')).hexdigest()
+        changing_password = hashlib.sha256(changing_password_receive.encode('utf-8')).hexdigest()
+        print(existing_password, changing_password)
+
+
+        if (existing_password != info["password"]):
+            msg = "기존 비밀번호가 다릅니다!"
+            status = "실패"
+        elif (existing_password == changing_password):
+            msg = "기존의 비밀번호와 동일합니다!"
+            status = "동일"
+        else:
+            db.users.update_one({"email": email}, {'$set': {"password": changing_password}})
+            msg = "비밀번호 변경 완료!"
+            status = "성공"
+
+        return jsonify({"result": "success", 'msg': msg, 'status': status})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
 
