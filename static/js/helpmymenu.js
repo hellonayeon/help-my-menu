@@ -3,6 +3,7 @@ let gNationNm = []
 let gLevelNm = []
 let gCookingTime = []
 let gIngreList = []
+let gRecipeNameList = []
 let gIndex = 1
 
 
@@ -56,7 +57,7 @@ function showControl(display) {
 function ingredientListing() {
     $.ajax({
         type: "GET",
-        url: "/ingredient",
+        url: "/ingredient-and-recipe",
         data: {},
         success: function (response) {
             let ingreList = response['recipe_ingredient']
@@ -64,7 +65,7 @@ function ingredientListing() {
             for (let i = 0; i < ingreList.length; i++) {
                 let ingredient = ingreList[i]
                 let tempHtml = `<option value="main">${ingredient}</option>`
-                $('#ingre1').append(tempHtml)
+                $('#ingredient-select-list').append(tempHtml)
             }
         }
     });
@@ -74,18 +75,19 @@ function ingredientListing() {
 $(function autoSearch() {
     $.ajax({
         type: "GET",
-        url: "/ingredient",
+        url: "/ingredient-and-recipe",
         data: {},
         success: function (response) {
             gIngreList = response["recipe_ingredient"]
+            gRecipeNameList = response['recipe_name_kor']
             searchShow()
         }
     })
 });
 
-// 선택한 재료 표시하기 & 선택 재료 데이터 저장
+// 재료 검색 자동완성, 선택한 재료 표시하기 & 선택 재료 데이터 저장 / 레시피 검색 자동완성
 function searchShow() {
-    $("#searchInput").autocomplete({
+    $("#search-input").autocomplete({
         autoFocus: true,
         source: gIngreList,
         select: function (event, ui) {
@@ -107,7 +109,24 @@ function searchShow() {
         delay: 100,
         disabled: false
     });
-};
+
+    $("#search-recipe-input").autocomplete({
+        autoFocus: true,
+        source: gRecipeNameList,
+        focus: function (event, ui) {
+            return false;
+        },
+        minLength: 1,
+        delay: 100,
+        disabled: false
+    });
+}
+
+// 레시피 검색
+function recipeNameKorSearch() {
+    let recipe_name = $('#search-recipe-input').val()
+}
+
 
 // 지정한 재료 버튼 형식의 태그 저장
 function ingredientDisplay(ingredient) {
@@ -137,8 +156,8 @@ function selectedRecipeNation() {
         return 0
     }
     // 식사 유형 데이터 저장
-    if (document.getElementById('inputGroupSelect04').value != "바로...") {
-        gNationNm.push(document.getElementById('inputGroupSelect04').value)
+    if (document.getElementById('recipe-type-select-list').value != "바로...") {
+        gNationNm.push(document.getElementById('recipe-type-select-list').value)
     } else {
         alert("식사 유형을 선택해주세요.")
         return 0
@@ -470,15 +489,6 @@ function showPasswordDialog(recipeId, nickNm) {
     })
 }
 
-// 더 보기 닫기
-function closeDetail() {
-    location.reload();
-}
-
-// 다시 선택
-function replay() {
-    location.reload();
-}
 
 // 좋아요 기능
 function toggleLike(recipe_id, num) {

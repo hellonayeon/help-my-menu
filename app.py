@@ -152,19 +152,20 @@ def sign_up():
 
 
 # 첫 화면 재료 항목 불러오기
-@app.route('/ingredient', methods=['GET'])
+@app.route('/ingredient-and-recipe', methods=['GET'])
 def ingredient_listing():
     # 중복 제거
     irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM"))
-    return jsonify({'recipe_ingredient': irdnt})
+    recipe = list(db.recipe_basic.distinct("RECIPE_NM_KO"))
+    return jsonify({'recipe_ingredient': irdnt, 'recipe_name_kor' : recipe})
 
 
 # 레시피 검색할 리스트 & 좋아요 탭 불러오기
 @app.route('/recipe/search', methods=['POST','GET'])
 def make_recipe_list():
-    mytoken = request.cookies.get('mytoken')
+    token_receive = request.cookies.get('mytoken')
     try :
-        payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         username = (db.users.find_one({"email": payload["id"]}))['username']
         
         # 만약 POST 방식이면, 검색결과로 출력할 RECIPE_ID들을 DB에서 가져옴.
@@ -229,9 +230,9 @@ def make_recipe_list():
 @app.route('/recipe/detail', methods=['GET'])
 def get_recipe_detail():
     recipe_id = int(request.args.get("recipe-id"))
-    mytoken = request.cookies.get('mytoken')
+    token_receive = request.cookies.get('mytoken')
     try:    
-        payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         username = (db.users.find_one({"email": payload["id"]}))['username']
         # 레시피 정보
         projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
@@ -337,9 +338,9 @@ def delete_comment():
 # 좋아요 기능
 @app.route('/recipe/update_like', methods=['POST'])
 def update_like() :
-    mytoken = request.cookies.get('mytoken')
+    token_receive = request.cookies.get('mytoken')
     try :
-        payload = jwt.decode(mytoken, secrets["SECRET_KEY"], algorithms=['HS256'])
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         # 좋아요 수 변경
         user_info = db.users.find_one({"email": payload["id"]})
         recipe_id = int(request.form["recipe_id"])
