@@ -117,8 +117,6 @@ def change_password():
 
         existing_password = hashlib.sha256(existing_password_receive.encode('utf-8')).hexdigest()
         changing_password = hashlib.sha256(changing_password_receive.encode('utf-8')).hexdigest()
-        print(existing_password, changing_password)
-
 
         if (existing_password != info["password"]):
             msg = "기존 비밀번호가 다릅니다!"
@@ -241,9 +239,18 @@ def make_recipe_list():
 
             data_we_want = list(recipe_ids & ingredient_set)
 
-        # 만약 'GET' 방식이면, 좋아요 탭을 위한 RECIPE_ID들을 DB에서 가져옴
-        elif request.method == 'GET':
-            data_we_want = list(db.likes.find({"username":username}).distinct("RECIPE_ID"))
+        # 만약 'GET' 방식이면, "레시피 검색 기능" 혹은 "좋아요 탭"을 사용한 것으로 인식 
+        elif request.method == 'GET' :
+            recipe_search_name = request.args.get("recipe-search-name")
+            
+            # 'GET' 방식이면서, API 통신 url에 args(url에서 ? 뒤의 값)이 존재하면 "레시피 검색 기능"으로 인식
+            if recipe_search_name :
+                data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex":recipe_search_name}}).distinct("RECIPE_ID"))
+            # 'GET' 방식이면서, API 통신 url에 args가 None("")이면 "좋아요 탭"으로 인식
+            else :
+                data_we_want = list(db.likes.find({"username":username}).distinct("RECIPE_ID"))
+        
+
 
         # DB에서 찾은 RECIPE_ID에 해당하는 레시피 정보들을 data_we_get에 저장 후 전송
         if data_we_want != []:
