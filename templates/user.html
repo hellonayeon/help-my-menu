@@ -80,7 +80,7 @@
         </div>
         <div class="info-area">
             <div class="main-name">
-                <h2>{{ user_info["username"] }}<span
+                <h2>{{ user_info["profile_name"] }}<span
                         style="font-size: 15px; margin-left: 10px;">{{ user_info["email"] }}</span></h2>
             </div>
             <div class="main-intro" id="user-introduce">
@@ -103,11 +103,11 @@
                 </div>
                 <div class="modal-body">
                     <form>
-                        <div class="form-group">
-                            <label for="change-username" class="col-form-label">닉네임:</label>
-                            <input type="text" class="form-control" id="change-username">
+                        <div id="input-profile-name" class="form-group">
+                            <label for="change-profile-name" class="col-form-label">닉네임:</label>
+                            <input type="text" class="form-control" value="{{ user_info["profile_name"] }}" id="change-profile-name">
                         </div>
-                        <div id="username-condition" class="warning is-safe">
+                        <div id="profile-name-condition" class="warning is-safe">
                         </div>
                         <div>사진선택:</div>
                         <div class="input-group mb-3">
@@ -119,7 +119,7 @@
 
                         <div class="form-group">
                             <label for="change-introduce" class="col-form-label">자기소개:</label>
-                            <textarea class="form-control" id="change-introduce"></textarea>
+                            <textarea class="form-control" id="change-introduce" >{{ user_info["profile_info"] }}</textarea>
                             <div id="intro-condition" class="warning is-safe">
                             </div>
                         </div>
