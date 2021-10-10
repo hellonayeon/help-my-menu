@@ -131,7 +131,10 @@ function recipeNameKorSearch() {
     } else {
         gRecipeSearchName = recipeName
         postRecipeInfo("searchRecipes");
-        showControl(recipeLoadingDisplay);
+        // FIXME: 로딩창을 띄울 경우 원래 검색하던 위치로 다시 돌아갈 수 없는 경우 발생
+        // showControl의 인수에 따라 검색하기 이전 페이지로 돌아가도록 하는 코드가 필요합니다.
+        // 아주 사소한 것이라 안 고쳐도 됩니다.
+        // showControl(recipeLoadingDisplay);
     }
 }
 
@@ -202,8 +205,8 @@ function selectedRecipeNation() {
             gCookingTime.push('140분', '175분', '180분')
         }
     }
-    postRecipeInfo("search");
     showControl(recipeLoadingDisplay);
+    postRecipeInfo("search");
 }
 
 // 레시피 리스트 만들기 (검색 & 좋아요 탭)
@@ -261,7 +264,7 @@ function postRecipeInfo(status) {
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
                     alert("조건에 해당 되는 레시피가 없습니다.😥")
-                    showControl(recipeChoiceDisplay);
+                    // showControl(recipeChoiceDisplay);
                 }
             }
         });
