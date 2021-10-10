@@ -66,6 +66,56 @@ function deleteImg() {
     })
 }
 
+
+// 비밀번호 변경
+function changePassword() {
+    let existingPassword = $('#input-existing-password').val()
+    let changingPassword = $('#input-changing-password').val()
+    let morePassword = $('#input-more-password').val()
+
+    // 비밀번호 변경 조건 판단
+    if (changingPassword == "") {
+        $('#changing-password-condition').text('비밀번호를 입력해주세요.').removeClass("is-safe").addClass("is-danger")
+        $('#input-changing-password').focus()
+        return;
+    } else if (!isPassword(changingPassword)) {
+        $('#changing-password-condition').text('비밀번호의 형식을 확인해주세요.\n비밀번호는 8-20자의 영문과 숫자 필수 포함, 특수문자(!@#$%^&*)만 사용 가능합니다.').removeClass("is-safe").addClass("is-danger")
+        $('#input-changing-password').focus()
+        return;
+    }
+
+    if (morePassword == "") {
+        $('#more-password-condition').text('비밀번호를 입력해주세요.').removeClass("is-safe").addClass("is-danger")
+        $('#input-more-password').focus()
+        return;
+    } else if (morePassword != changingPassword) {
+        $('#changing-password-condition').text('비밀번호가 일치하지 않습니다.').removeClass("is-safe").addClass("is-danger")
+        $('#input-more-password').focus()
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "/user/change-password",
+        data: {existing_password_give: existingPassword, changing_password_give: changingPassword},
+        success: function (response) {
+            if (response["result"] == "success") {
+                if (response["status"] == "성공") {
+                    alert(response["msg"])
+                    logout()
+                } else if (response["status"] == "동일") {
+                    alert(response["msg"])
+                    logout()
+                } else {
+                    $('#existing-password-condition').text(response["msg"]).removeClass("is-safe").addClass("is-danger")
+                    $('#input-existing-password').focus()
+                }
+            }
+        }
+    })
+
+}
+
 <!--FIXME 로그인화면과 조건 상이하여 함수 하나 더 생성했음. -->
 function isUserNickname(asValue) {
     var regExp = /[가-힣a-zA-Z0-9_.]{3,10}$/;

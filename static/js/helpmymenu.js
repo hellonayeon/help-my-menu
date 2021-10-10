@@ -189,19 +189,19 @@ function postRecipeInfo() {
         data: JSON.stringify(recipeInfo),
         success: function (response) {
             if (response['msg'] == 'success') {
-            $('#recipe-list').empty();
-            let recipe = response['data_we_get']
-            for (let i = 0; i < recipe.length; i++) {
-                let recipeUrl = recipe[i]['IMG_URL']
-                let recipeName = recipe[i]['RECIPE_NM_KO']
-                let recipeDesc = recipe[i]['SUMRY']
-                let recipeId = recipe[i]['RECIPE_ID']
-                let recipeLiked = recipe[i]['Liked']
+                $('#recipe-list').empty();
+                let recipe = response['data_we_get']
+                for (let i = 0; i < recipe.length; i++) {
+                    let recipeUrl = recipe[i]['IMG_URL']
+                    let recipeName = recipe[i]['RECIPE_NM_KO']
+                    let recipeDesc = recipe[i]['SUMRY']
+                    let recipeId = recipe[i]['RECIPE_ID']
+                    let recipeLiked = recipe[i]['Liked']
 
-                makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked)
-            }
-            showControl(recipeListDisplay);
-        } else if (response['msg'] == 'nothing') {
+                    makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked)
+                }
+                showControl(recipeListDisplay);
+            } else if (response['msg'] == 'nothing') {
                 alert("조건에 해당 되는 레시피가 없습니다.😥")
                 showControl(recipeChoiceDisplay);
             }
@@ -563,4 +563,11 @@ function changePart(part) { // 좋아요 탭 눌렀을 경우
             $('#part-rec').children("a").addClass("disabled")
         }
     }
+}
+
+<!--FIXME logout이 안되요ㅠㅠ -->
+function logout() {
+    $.removeCookie('mytoken');
+    alert('로그아웃!')
+    window.location.href = '/login'
 }

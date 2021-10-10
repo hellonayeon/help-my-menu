@@ -29,6 +29,7 @@
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
             integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
             crossorigin="anonymous"></script>
@@ -52,6 +53,7 @@
         @import url('https://fonts.googleapis.com/css?family=Numans');
     </style>
     <script>
+
         $('#myModal').on('shown.bs.modal', function () {
             $('#myInput').trigger('focus')
         })
@@ -105,7 +107,8 @@
                     <form>
                         <div id="input-profile-name" class="form-group">
                             <label for="change-profile-name" class="col-form-label">닉네임:</label>
-                            <input type="text" class="form-control" value="{{ user_info["profile_name"] }}" id="change-profile-name">
+                            <input type="text" class="form-control" value="{{ user_info["profile_name"] }}"
+                                   id="change-profile-name">
                         </div>
                         <div id="profile-name-condition" class="warning is-safe">
                         </div>
@@ -119,7 +122,8 @@
 
                         <div class="form-group">
                             <label for="change-introduce" class="col-form-label">자기소개:</label>
-                            <textarea class="form-control" id="change-introduce" >{{ user_info["profile_info"] }}</textarea>
+                            <textarea class="form-control"
+                                      id="change-introduce">{{ user_info["profile_info"] }}</textarea>
                             <div id="intro-condition" class="warning is-safe">
                             </div>
                         </div>
@@ -127,12 +131,58 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" data-toggle="modal"
+                            data-target="#passwordModify" data-whatever="@mdo">
+                        비밀번호 변경
+                    </button>
                     <button onclick="updateProfile()" type="button" class="btn btn-primary">업데이트</button>
                 </div>
             </div>
         </div>
     </div>
     <!-- 프로필 변경 modal end -->
+
+    <!-- 비밀번호 변경 modal start -->
+    <div class="modal fade" id="passwordModify" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">비밀번호 변경</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="input-existing-password" class="col-form-label">기존 비밀번호:</label>
+                            <input type="password" class="form-control" id="input-existing-password">
+                        </div>
+                        <div id="existing-password-condition" class="warning is-safe">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-changing-password" class="col-form-label">새 비밀번호:</label>
+                            <input type="password" class="form-control" id="input-changing-password">
+                        </div>
+                        <div id="changing-password-condition" class="warning is-safe">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-more-password" class="col-form-label">비밀번호 확인:</label>
+                            <input type="password" class="form-control" id="input-more-password">
+                        </div>
+                        <div id="more-password-condition" class="warning is-safe">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                    <button onclick="changePassword()" type="button" class="btn btn-primary">수정</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 비밀번호 변경 modal end -->
 
     <!-- 즐겨찾기 & 내가쓴글 태그 start -->
     <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
