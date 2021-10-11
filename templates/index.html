@@ -29,6 +29,7 @@
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
             integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
             crossorigin="anonymous"></script>
@@ -53,6 +54,27 @@
 </head>
 
 <body>
+<nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="/">헤얿 마이 메뉴!</a>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+            <a class="nav-link" href="/">홈</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/user/{{ user_info.username }}">마이페이지</a>
+        </li>
+        <li class="nav-item" style="margin-left: 870px;">
+            <a class="nav-link" onclick="logout()" href="#">로그아웃</a>
+        </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <input id="search-recipe-input" class="form-control mr-sm-2" placeholder="레시피를 입력하세요">
+            <button class="btn btn-outline-secondary my-2 my-sm-0" onclick="recipeNameKorSearch();">레시피 검색</button>
+        </div>
+    </div>
+</nav>
+
 <div class="wrap">
     <!-- 레시피 선택 화면 (첫 화면) -->
     <div class="container" id="recipe-choice-container">
@@ -102,12 +124,12 @@
             🍳 왓츠 인 마이 냉장고? :
 
             <div class="input-group" style="height: 50px;">
-                <input id="searchInput" type="text" class="form-control" placeholder="재료를 입력해주세요" aria-label="Text input with dropdown button">
+                <input id="search-input" type="text" class="form-control" placeholder="재료를 입력해주세요" aria-label="Text input with dropdown button">
                 <div class="input-group-append">
                     <select class="btn btn-outline-secondary dropdown-toggle" type="select" onchange="ingredientDisplay(this)" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
                         <option selected hidden>재료 리스트</option>
-                        <optgroup label="재료" id="ingre1">
+                        <optgroup label="재료" id="ingredient-select-list">
                         </optgroup>
                     </select>
                 </div>
@@ -117,7 +139,7 @@
 
             💭 지금 땡기는 건
             <div class="input-group">
-                <select class="custom-select" id="inputGroupSelect04">
+                <select class="custom-select" id="recipe-type-select-list">
                     <option selected>바로...</option>
                     <option value="한식">한식!</option>
                     <option value="서양, 이탈리아">양식!</option>
@@ -198,7 +220,7 @@
             <hr class="my-4">
             <p id="tag"></p>
             <p class="lead">
-                <a onclick="replay()" class="btn btn-primary btn-lg" href="#" role="button">다시 선택</a>
+                <a class="btn btn-primary btn-lg" href="/" role="button">다시 선택</a>
             </p>
         </div>
         <div id="recipe-list" class="card-deck"></div>

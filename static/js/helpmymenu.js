@@ -3,6 +3,8 @@ let gNationNm = []
 let gLevelNm = []
 let gCookingTime = []
 let gIngreList = []
+let gRecipeNameList = []
+let gRecipeSearchName
 let gIndex = 1
 
 
@@ -56,7 +58,7 @@ function showControl(display) {
 function ingredientListing() {
     $.ajax({
         type: "GET",
-        url: "/ingredient",
+        url: "/ingredient-and-recipe",
         data: {},
         success: function (response) {
             let ingreList = response['recipe_ingredient']
@@ -64,7 +66,7 @@ function ingredientListing() {
             for (let i = 0; i < ingreList.length; i++) {
                 let ingredient = ingreList[i]
                 let tempHtml = `<option value="main">${ingredient}</option>`
-                $('#ingre1').append(tempHtml)
+                $('#ingredient-select-list').append(tempHtml)
             }
         }
     });
@@ -74,18 +76,19 @@ function ingredientListing() {
 $(function autoSearch() {
     $.ajax({
         type: "GET",
-        url: "/ingredient",
+        url: "/ingredient-and-recipe",
         data: {},
         success: function (response) {
             gIngreList = response["recipe_ingredient"]
+            gRecipeNameList = response['recipe_name_kor']
             searchShow()
         }
     })
 });
 
-// 선택한 재료 표시하기 & 선택 재료 데이터 저장
+// 재료 검색 자동완성, 선택한 재료 표시하기 & 선택 재료 데이터 저장 / 레시피 검색 자동완성
 function searchShow() {
-    $("#searchInput").autocomplete({
+    $("#search-input").autocomplete({
         autoFocus: true,
         source: gIngreList,
         select: function (event, ui) {
@@ -107,8 +110,36 @@ function searchShow() {
         delay: 100,
         disabled: false
     });
-};
 
+    $("#search-recipe-input").autocomplete({
+        autoFocus: true,
+        source: gRecipeNameList,
+        focus: function (event, ui) {
+            return false;
+        },
+        minLength: 1,
+        delay: 100,
+        disabled: false
+    });
+}
+
+// 레시피 검색 (Navbar 오른쪽)
+function recipeNameKorSearch() {
+    let recipeName = $('#search-recipe-input').val();
+    if (recipeName.length < 2) {
+        alert("검색할 레시피 이름을 2글자 이상 기입하세요.");
+    } else {
+        gRecipeSearchName = recipeName
+        postRecipeInfo("searchRecipes");
+        // FIXME: 로딩창을 띄울 경우 원래 검색하던 위치로 다시 돌아갈 수 없는 경우 발생
+        // showControl의 인수에 따라 검색하기 이전 페이지로 돌아가도록 하는 코드가 필요합니다.
+        // 아주 사소한 것이라 안 고쳐도 됩니다.
+        // showControl(recipeLoadingDisplay);
+    }
+}
+
+
+// 지정한 재료 버튼 형식의 태그 저장
 function ingredientDisplay(ingredient) {
     if (gIrdntNm.indexOf(ingredient.options[ingredient.selectedIndex].text) == -1) {
         let tempHtml = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${gIndex}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
@@ -129,15 +160,15 @@ function cancleSelectingIngredientAdded(ingredient) {
     gIrdntNm.splice(idx, 1)
 }
 
-// "레시피 보기" 버튼 누르기
+// "레시피 보기" 버튼 누르기 (검색 호출)
 function selectedRecipeNation() {
     if (gIrdntNm.length < 1) { // 원하는 개수만큼 조건에 맞게 숫자 수정 가능
         alert("재료를 선택해주세요!")
         return 0
     }
     // 식사 유형 데이터 저장
-    if (document.getElementById('inputGroupSelect04').value != "바로...") {
-        gNationNm.push(document.getElementById('inputGroupSelect04').value)
+    if (document.getElementById('recipe-type-select-list').value != "바로...") {
+        gNationNm.push(document.getElementById('recipe-type-select-list').value)
     } else {
         alert("식사 유형을 선택해주세요.")
         return 0
@@ -174,63 +205,94 @@ function selectedRecipeNation() {
             gCookingTime.push('140분', '175분', '180분')
         }
     }
-    postRecipeInfo();
     showControl(recipeLoadingDisplay);
+    postRecipeInfo("search");
 }
 
-// 레시피 조건 보내기 POST
-function postRecipeInfo() {
-    var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
-    $.ajax({
-        type: "POST",
-        contentType: 'application/json',
-        url: "/recipe/detail-info",
-        dataType: 'json',
-        data: JSON.stringify(recipeInfo),
-        success: function (response) {
-            if (response['msg'] == 'success') {
-            $('#recipe-list').empty();
-            let recipe = response['data_we_get']
-            for (let i = 0; i < recipe.length; i++) {
-                let recipeUrl = recipe[i]['IMG_URL']
-                let recipeName = recipe[i]['RECIPE_NM_KO']
-                let recipeDesc = recipe[i]['SUMRY']
-                let recipeId = recipe[i]['RECIPE_ID']
-                let recipeLiked = recipe[i]['Liked']
-
-                makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked)
+// 레시피 리스트 만들기 ("레시피 보기" or "레시피 검색" or 좋아요 탭)
+function postRecipeInfo(status) {
+    // "레시피 보기"를 클릭한 경우, 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
+    if (status == "search") {
+        var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
+        $.ajax({
+            type: "POST",
+            contentType: 'application/json',
+            url: `/recipe/search`,
+            dataType: 'json',
+            data: JSON.stringify(recipeInfo),
+            success: function (response) {
+                if (response['msg'] == 'success') {
+                    $('#recipe-list').empty();
+                    let recipe = response['data_we_get']
+                    for (let i = 0; i < recipe.length; i++) {
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "search")
+                    }
+                    showControl(recipeListDisplay);
+                } else if (response['msg'] == 'nothing') {
+                    alert("조건에 해당 되는 레시피가 없습니다.😥")
+                    showControl(recipeChoiceDisplay);
+                }
             }
-            showControl(recipeListDisplay);
-        } else if (response['msg'] == 'nothing') {
-                alert("조건에 해당 되는 레시피가 없습니다.😥")
-                showControl(recipeChoiceDisplay);
+        });
+    // Navbar의 "레시피 검색"을 클릭한 경우, 검색어에 알맞는 레시피 호출 & 출력
+    } else if (status == "searchRecipes") {
+        $.ajax({
+            type: "GET",
+            url: `/recipe/search?recipe-search-name=${gRecipeSearchName}`,
+            success: function (response) {
+                if (response['msg'] == 'success') {
+                    $('#recipe-list').empty();
+                    changePart("rec");
+                    let recipe = response['data_we_get']
+                    for (let i = 0; i < recipe.length; i++) {
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "search")
+                    }
+                    showControl(recipeListDisplay);
+                } else if (response['msg'] == 'nothing') {
+                    alert("조건에 해당 되는 레시피가 없습니다.😥")
+                    // showControl(recipeChoiceDisplay);
+                }
             }
-        }
-    });
+        });
+    // 좋아요 탭을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
+    } else if (status == "liked") {
+        $.ajax({
+            type: "GET",
+            url: "/recipe/search",
+            success: function (response) {
+                $('#recipe-liked-list').empty();
+                if (response['msg'] == 'success') {
+                    let recipe = response['data_we_get']
+                    for (let i = 0; i < recipe.length; i++) {
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "liked")
+                    }
+                } else if (response['msg'] == 'nothing') {
+                    let tempHtml = `<div id="alert-no-liked">좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
+                    $('#recipe-liked-list').append(tempHtml)
+                }
+            }
+        })
+    }
 }
 
-// 레시피 리스트 html
-function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked) {
-    let tempHtml = `<div  id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                
+// 검색한 레시피 리스트 & 좋아요 탭 레시피 리스트 출력
+function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status) {
+    let classHeart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
+    let classColor = recipeLikebyMe ? "heart liked" : "heart"
+    let idTyep = status == "search" ? "" : "-liked"
+    let toggleLikeNum = status == "search" ? 0 : 2
+    let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">                                
                         <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
                         <div class="card-body">
                             <h5 class="card-title">${recipeName}</h5>
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
-                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>`
-    if (recipeLiked >= 1) {
-        tempHtml += `<a id="before-like-${recipeId}" style="color:black; float:right; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})" style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-${recipeId}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})" style="margin-right:5px"></i>${recipeLiked}</a>
+                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
+                                <a id="likes${idTyep}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum})"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                            </div>
                         </div>
-                    </div>
                     </div>`
-    } else {
-        tempHtml += `<a id="before-like-${recipeId}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})" style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-${recipeId}" style="color:red; float:right; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})" style="margin-right:5px"></i>${recipeLiked}</a>
-                        </div>
-                    </div>
-                    </div>`
-    }
-
-    $('#recipe-list').append(tempHtml)
+    $(`#recipe${idTyep}-list`).append(tempHtml)
 }
 
 /* 레시피 상세정보 요청 함수 */
@@ -239,25 +301,21 @@ function getRecipeDetail(recipeId) {
         type: "GET",
         url: `/recipe/detail?recipe-id=${recipeId}`,
         success: function (response) {
-            makeRecipeDetail(response["info"], response["detail"], response["ingredients"])
+            makeRecipeDetail(response["info"], response["detail"], response["ingredients"], response["like_info"][0])
         }
     })
 }
 
 /* 레시피 상세정보 출력 함수 */
-function makeRecipeDetail(info, detail, ingredients) {
+function makeRecipeDetail(info, detail, ingredients, like_info) {
+    let classHeart = like_info['like_by_me'] ? "fa-heart" : "fa-heart-o"
+    let classColor = like_info['like_by_me'] ? "heart-detail liked" : "heart-detail"
     let infoHtml = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                      <span class="detail-info">${info["COOKING_TIME"]}</span>
-                     <span class="detail-info">${info["QNT"]}</span>`
-    if (info['Liked'] >= 1) {
-        infoHtml += `<a id="before-like-detail-${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px; display:none"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like-detail-${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
-                    
+                     <span class="detail-info">${info["QNT"]}</span>
+                     <a id="likes-detail-${info["RECIPE_ID"]}" class="${classColor}" onclick="toggleLike(${info["RECIPE_ID"]}, 1)"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(like_info['likes_count'])}</span></a>
+
                     <h4>${info["SUMRY"]}</h4>`
-    } else {
-        infoHtml += `<a id="before-like-detail-${info["RECIPE_ID"]}" style="color:black;float:right;margin-top:20px"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a><a id="after-like-detail-${info["RECIPE_ID"]}" style="color:red; float:right;margin-top:20px; display:none"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${info["RECIPE_ID"]})" style="margin-right:5px"></i>${info['Liked']}</a>
-                    
-                    <h4>${info["SUMRY"]}</h4>`
-    }
 
     for (let i = 0; i < ingredients.length; i++) {
         infoHtml += `<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
@@ -448,97 +506,65 @@ function showPasswordDialog(recipeId, nickNm) {
     })
 }
 
-// 더 보기 닫기
-function closeDetail() {
-    location.reload();
-}
 
-// 다시 선택
-function replay() {
-    location.reload();
-}
-
-// 좋아요 버튼 눌렀을 때
-function setLike(recipeId) {
-    $('#before-like-' + recipeId).hide();
-    $('#after-like-' + recipeId).show();
-    $('#before-like-detail-' + recipeId).hide();
-    $('#after-like-detail-' + recipeId).show();
-    $('#before-like-liked-' + recipeId).hide();
-    $('#after-like-liked-' + recipeId).show();
-    $.ajax({
-        type: "PUT",
-        url: `/recipe/like`,
-        data: {recipe_id: recipeId},
-        success: function (response) {
-            alert(response["msg"]);
-        }
-    })
-}
-
-// 좋아요 해제
-function setUnLike(recipeId) {
-    $('#after-like-' + recipeId).hide();
-    $('#before-like-' + recipeId).show();
-    $('#after-like-detail-' + recipeId).hide();
-    $('#before-like-detail-' + recipeId).show();
-    $('#after-like-liked-' + recipeId).hide();
-    $('#before-like-liked-' + recipeId).show();
-    $.ajax({
-        type: "PUT",
-        url: `/recipe/unlike`,
-        data: {recipe_id: recipeId},
-        success: function (response) {
-            alert(response["msg"]);
-        }
-    })
-}
-
-function getRecipesLikedList() { // 좋아요 탭
-    $.ajax({
-        type: "GET",
-        url: "/recipe/liked",
-        success: function (response) {
-            $('#recipe-liked-list').empty();
-            let recipe = response['recipe_liked'];
-            for (let i = 0; i < recipe.length; i++) {
-                let recipeUrl = recipe[i]['IMG_URL']
-                let recipeName = recipe[i]['RECIPE_NM_KO']
-                let recipeDesc = recipe[i]['SUMRY']
-                let recipeId = recipe[i]['RECIPE_ID']
-                let recipeLiked = recipe[i]['Liked']
-
-                makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked)
+// 좋아요 기능
+function toggleLike(recipe_id, num) {
+    let likeIdArray = ["","-detail", "-liked"]
+    let likeId = $(`#likes${likeIdArray[num]}-${recipe_id}`)
+    
+    if (!likeId.hasClass("liked")) {
+        $.ajax({
+            type : 'POST',
+            url : `recipe/update_like`,
+            data : {
+                recipe_id : recipe_id,
+                action : "like"
+            },
+            success : function(response) {
+                for(let i = 0; i < likeIdArray.length; i++) {
+                    let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
+                    likeId.find("i").addClass("fa-heart").removeClass("fa-heart-o")
+                    likeId.addClass("liked")
+                    likeId.find("span.like-num").text(num2str(response["likes_count"]))
+                }
             }
-        }
-    })
-}
-
-// 좋아요탭의 좋아요한 레시피 표시
-function makeRecipesLikedList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLiked) {
-    let tempHtml = `<div  id="recipe${recipeId}" class="card" style="margin-right: 12px; margin-left: 12px; min-width: 200px; max-width: 200px; margin-top: 10px; margin-bottom: 10px;">
-                        <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
-                        <div class="card-body">
-                            <h5 class="card-title">${recipeName}</h5>
-                            <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
-                            <div class="card-footer">
-                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>`
-    if (recipeLiked >= 1) {
-        tempHtml += `<a id="before-like-liked-${recipeId}" style="color:black; float:right; display:none;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-liked-${recipeId}" style="color:red; float:right;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a>
-                        </div>
-                    </div>
-                    </div>`
-
+        })
     } else {
-        tempHtml += `<a id="before-like-liked-${recipeId}" style="color:black; float:right;"><i class="fa fa-heart-o" aria-hidden="true" onclick="setLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a><a id="after-like-liked-${recipeId}" style="color:red; float:right; display:none;"><i class="fa fa-heart" aria-hidden="true" onclick="setUnLike(${recipeId})"style="margin-right:5px"></i>${recipeLiked}</a>
-                        </div>
-                    </div>
-                    </div>`
+        $.ajax({
+            type : 'POST',
+            url : `recipe/update_like`,
+            data : {
+                recipe_id : recipe_id,
+                action : "unlike"
+            },
+            success : function(response) {
+                for(let i = 0; i < likeIdArray.length; i++) {
+                    let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
+                    likeId.find("i").addClass("fa-heart-o").removeClass("fa-heart")
+                    likeId.removeClass("liked")
+                    likeId.find("span.like-num").text(num2str(response["likes_count"]))
+                }
+            }
+        })
     }
-    $('#recipe-liked-list').append(tempHtml)
 }
 
-function changePart(part) { // 좋아요 탭 눌렀을 경우
+// 좋아요 수 편집 (K로 나타내기)
+function num2str(likesCount) {
+    if (likesCount > 10000) {
+        return parseInt(likesCount / 1000) + "k"
+    }
+    if (likesCount > 500) {
+        return parseInt(likesCount / 100) / 10 + "k"
+    }
+    if (likesCount == 0) {
+        return ""
+    }
+    return likesCount
+}
+
+// 상단 navbar 추천탭/좋아요탭 기능
+function changePart(part) { 
     if (part == 'rec') {
         $('#recipe-liked-list').hide();
         $('#recipe-list').show();
@@ -553,7 +579,7 @@ function changePart(part) { // 좋아요 탭 눌렀을 경우
     } else {
         $('#recipe-list').hide();
         $('#recipe-liked-list').show();
-        getRecipesLikedList();
+        postRecipeInfo("liked");
         if ($('#part-like').children("a").hasClass("disabled")) {
             $('#part-like').children("a").removeClass("disabled")
             $('#part-like').children("a").addClass("active")
@@ -562,5 +588,13 @@ function changePart(part) { // 좋아요 탭 눌렀을 경우
             $('#part-rec').children("a").removeClass("active")
             $('#part-rec').children("a").addClass("disabled")
         }
+    }
+}
+
+function logout() {
+    $.removeCookie('mytoken');
+    if ($.cookie('mytoken') == undefined) {
+        alert('로그아웃!');
+        window.location.href = '/login';
     }
 }

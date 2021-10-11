@@ -41,6 +41,21 @@ function toggleSignUpAndIn() {
     $("#signup").toggleClass("is-hidden")
 }
 
+function isNickname(asValue) {
+    var regExp = /^(?=.*[a-zA-Z])[-a-zA-Z0-9_.]{4,10}$/;
+    return regExp.test(asValue);
+}
+
+function isEmail(asValue) {
+    var regExp = regExp = /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i;
+    return regExp.test(asValue);
+}
+
+function isPassword(asValue) {
+    var regExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z!@#$%^&*]{8,20}$/;
+    return regExp.test(asValue);
+}
+
 function signUp() {
     let username = $("#username").val();
     let email = $("#email").val();
@@ -96,23 +111,8 @@ function signUp() {
                 return;
             } else {
                 alert("회원가입을 축하드립니다!")
-                window.location.replace("/")
+                window.location.replace("/login")
             }
         }
     });
-}
-
-function isNickname(asValue) {
-    var regExp = /^(?=.*[a-zA-Z])[-a-zA-Z0-9_.]{4,10}$/;
-    return regExp.test(asValue);
-}
-
-function isEmail(asValue) {
-    var regExp = regExp = /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i;
-    return regExp.test(asValue);
-}
-
-function isPassword(asValue) {
-    var regExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z!@#$%^&*]{8,20}$/;
-    return regExp.test(asValue);
 }

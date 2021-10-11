@@ -16,17 +16,19 @@ def database_del():
         db.recipe_ingredient.delete_many({})
         db.recipe_number.delete_many({})
         db.recipe_ingredient_map.delete_many({})
+        # 밑의 코드는 상황에 맞게 쓰세요
+        # db.likes.delete_many({})
+        # db.comment.delete_many({})
+        # db.users.delete_many({})
 
 def database_init():
     # 데이터 기본 정보 537개
-    url = "http://211.237.50.150:7080/openapi/636efef2ee651816d34e0aa4bae9f1a0f131cab04e533fef4273222d9bdf56fd/json/Grid_20150827000000000226_1/1/537"
+    url = "http://211.237.50.150:7080/openapi/636efef2ee651816d34e0aa4bae9f1a0f131cab04e533fef4273222d9bdf56fd/json/Grid_20150827000000000226_1/1/1000"
     requests_data = requests.get(url)
     if requests_data.status_code != 200 :
         print("오류 발생, code :", requests_data.status_code)
         return
     data_basic = requests_data.json()
-    for i in range(537):
-        data_basic['Grid_20150827000000000226_1']['row'][i]["Liked"] = 0
     db.recipe_basic.insert_many(data_basic['Grid_20150827000000000226_1']['row'])
 
 
