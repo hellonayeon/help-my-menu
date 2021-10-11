@@ -511,42 +511,27 @@ function showPasswordDialog(recipeId, nickNm) {
 function toggleLike(recipe_id, num) {
     let likeIdArray = ["","-detail", "-liked"]
     let likeId = $(`#likes${likeIdArray[num]}-${recipe_id}`)
-    
-    if (!likeId.hasClass("liked")) {
-        $.ajax({
-            type : 'POST',
-            url : `recipe/update_like`,
-            data : {
-                recipe_id : recipe_id,
-                action : "like"
-            },
-            success : function(response) {
-                for(let i = 0; i < likeIdArray.length; i++) {
-                    let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
-                    likeId.find("i").addClass("fa-heart").removeClass("fa-heart-o")
-                    likeId.addClass("liked")
-                    likeId.find("span.like-num").text(num2str(response["likes_count"]))
-                }
+    let actionData = !likeId.hasClass("liked") ? "like" : "unlike"
+    let iAddClassData = !likeId.hasClass("liked") ? "fa-heart" : "fa-heart-o"
+    let iRemoveClassData = !likeId.hasClass("liked") ? "fa-heart-o" : "fa-heart"
+
+    $.ajax({
+        type : 'POST',
+        url : `recipe/update_like`,
+        data : {
+            recipe_id : recipe_id,
+            action : actionData
+        },
+        success : function(response) {
+            for(let i = 0; i < likeIdArray.length; i++) {
+                let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
+                likeId.find("i").addClass(iAddClassData).removeClass(iRemoveClassData)
+                if (!likeId.hasClass("liked")) {likeId.addClass("liked")}
+                else {likeId.removeClass("liked")}
+                likeId.find("span.like-num").text(num2str(response["likes_count"]))
             }
-        })
-    } else {
-        $.ajax({
-            type : 'POST',
-            url : `recipe/update_like`,
-            data : {
-                recipe_id : recipe_id,
-                action : "unlike"
-            },
-            success : function(response) {
-                for(let i = 0; i < likeIdArray.length; i++) {
-                    let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
-                    likeId.find("i").addClass("fa-heart-o").removeClass("fa-heart")
-                    likeId.removeClass("liked")
-                    likeId.find("span.like-num").text(num2str(response["likes_count"]))
-                }
-            }
-        })
-    }
+        }
+    })
 }
 
 // 좋아요 수 편집 (K로 나타내기)
@@ -563,7 +548,7 @@ function num2str(likesCount) {
     return likesCount
 }
 
-// 상단 navbar 추천탭/좋아요탭 기능
+// 검색 결과 출력 페이지 상단의 추천탭/좋아요탭 기능
 function changePart(part) { 
     if (part == 'rec') {
         $('#recipe-liked-list').hide();
