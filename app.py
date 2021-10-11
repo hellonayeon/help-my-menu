@@ -1,8 +1,6 @@
-from re import L
-
-from bson import ObjectId
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from pymongo import MongoClient
+from bson import ObjectId
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import jwt  # pip install PyJWT
@@ -392,7 +390,8 @@ def delete_comment():
 
 # 좋아요 기능
 @app.route('/recipe/update_like', methods=['POST'])
-def update_like():
+@app.route('/user/recipe/update_like', methods=['POST'])
+def update_like() :
     token_receive = request.cookies.get('mytoken')
     try :
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
@@ -408,12 +407,14 @@ def update_like():
             "RECIPE_ID": recipe_id,
             "USER_ID": user_info["_id"]
         }
-        if action == "like":
+
+        if action == "like" : 
             db.likes.insert_one(doc)
         else:
             db.likes.delete_one(doc)
-        likes_count = db.likes.count_documents({"RECIPE_ID": recipe_id})
-        return jsonify({"LIKES_COUNT": likes_count})
+
+        likes_count = db.likes.count_documents({"RECIPE_ID":recipe_id})
+        return jsonify({"likes_count":likes_count})
 
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))

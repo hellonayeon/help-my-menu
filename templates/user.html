@@ -64,6 +64,7 @@
     </script>
 </head>
 <body>
+<!-- 상단 Navbar -->
 <nav class="navbar navbar-expand-lg navbar-light">
     <a class="navbar-brand" href="/">헤얿 마이 메뉴!</a>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -72,7 +73,7 @@
             <a class="nav-link" href="/">홈</a>
         </li>
         <li class="nav-item active">
-            <a class="nav-link" href="/user/{{ user_info.username }}">마이페이지</a>
+            <a class="nav-link" href="/user/{{ user_info._id }}">마이페이지</a>
         </li>
         <li class="nav-item" style="margin-left: 870px;">
             <a class="nav-link" onclick="logout()" href="#">로그아웃</a>
@@ -104,14 +105,14 @@
         <div class="info-area">
             <div class="main-name">
                 <h2>
-                    {{ user_info["USERNAME"] }}
-                    <span style="font-size: 15px; margin-left: 10px;">({{ user_info["_id"] }})</span>
-                    <span style="font-size: 15px; margin-left: 10px;">{{ user_info["EMAIL"] }}</span>
+                    {{ user_info.USERNAME }}
+                    <span style="font-size: 15px; margin-left: 10px;">({{ user_info._id }})</span>
+                    <span style="font-size: 15px; margin-left: 10px;">{{ user_info.EMAIL }}</span>
 
                 </h2>
             </div>
             <div class="main-intro" id="user-introduce">
-                <p>{{ user_info["PROFILE_INFO"] }}</p>
+                <p>{{ user_info.PROFILE_INFO }}</p>
             </div>
         </div>
     </section>
@@ -132,7 +133,7 @@
                     <form>
                         <div id="input-username" class="form-group">
                             <label for="change-username" class="col-form-label">닉네임:</label>
-                            <input type="text" class="form-control" value="{{ user_info["USERNAME"] }}"
+                            <input type="text" class="form-control" value="{{ user_info.USERNAME }}"
                                    id="change-username">
                         </div>
                         <div id="username-condition" class="warning is-safe">
@@ -148,7 +149,7 @@
                         <div class="form-group">
                             <label for="change-introduce" class="col-form-label">자기소개:</label>
                             <textarea class="form-control"
-                                      id="change-introduce">{{ user_info["PROFILE_INFO"] }}</textarea>
+                                      id="change-introduce">{{ user_info.PROFILE_INFO }}</textarea>
                             <div id="intro-condition" class="warning is-safe">
                             </div>
                         </div>
@@ -217,14 +218,14 @@
         </li>
         <li class="nav-item widthBtn">
             <a class="nav-link" id="pills-profile-tab" data-toggle="pill" href="#pills-profile" role="tab"
-               aria-controls="pills-profile" aria-selected="false">즐겨찾기</a>
+               aria-controls="pills-profile" aria-selected="false" onclick="postRecipeInfo('likedInMypage')">즐겨찾기</a>
         </li>
     </ul>
     <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
-            ...
         </div>
-        <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">...</div>
+        <div class="card-deck" id="recipe-liked-mp-list" role="tabpanel" aria-labelledby="pills-profile-tab">
+        </div>
     </div>
     <!-- 즐겨찾기 & 내가쓴글 태그 end -->
 </div>
