@@ -20,7 +20,6 @@ function updateCondition() {
 
 function updateProfile() {
     if (updateCondition() != "success") {
-        updateCondition()
         return
     }
 
@@ -116,7 +115,7 @@ function changePassword() {
 
 }
 
-<!--FIXME 로그인화면과 조건 상이하여 함수 하나 더 생성했음. -->
+// FIXME: 로그인화면과 조건 상이하여 함수 하나 더 생성했음.
 function isUserNickname(asValue) {
     var regExp = /[가-힣a-zA-Z0-9_.]{3,10}$/;
     return regExp.test(asValue);

@@ -156,3 +156,27 @@
     height: 400px;
     width: 400px;
 }
+
+.heart {
+    float: right;
+}
+
+.heart.liked {
+    color : red !important; 
+}
+
+.heart-detail {
+    float:right;
+    margin-top:20px;
+}
+
+.heart-detail.liked {
+    color : red !important;
+}
+
+#alert-no-liked {
+    font-size:x-large;
+    display: block;
+    margin: 50px auto auto auto;
+    text-align: center;
+}
