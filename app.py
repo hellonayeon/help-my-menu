@@ -1,4 +1,3 @@
-from re import L
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from pymongo import MongoClient
 from datetime import datetime, timedelta
@@ -384,6 +383,7 @@ def delete_comment():
 
 # 좋아요 기능
 @app.route('/recipe/update_like', methods=['POST'])
+@app.route('/user/recipe/update_like', methods=['POST'])
 def update_like() :
     token_receive = request.cookies.get('mytoken')
     try :
@@ -395,10 +395,12 @@ def update_like() :
             "RECIPE_ID" : recipe_id,
             "username" : user_info["username"]
         }
+
         if action == "like" : 
             db.likes.insert_one(doc)
         else :
             db.likes.delete_one(doc)
+
         likes_count = db.likes.count_documents({"RECIPE_ID":recipe_id})
         return jsonify({"likes_count":likes_count})
 
