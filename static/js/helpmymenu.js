@@ -225,7 +225,7 @@ function postRecipeInfo(status) {
                     $('#recipe-list').empty();
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "search")
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], "search")
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -245,7 +245,7 @@ function postRecipeInfo(status) {
                     changePart("rec");
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "search")
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], "search")
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -264,7 +264,7 @@ function postRecipeInfo(status) {
                 if (response['msg'] == 'success') {
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "liked")
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], "liked")
                     }
                 } else if (response['msg'] == 'nothing') {
                     let tempHtml = `<div id="alert-no-liked">좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
@@ -308,12 +308,12 @@ function getRecipeDetail(recipeId) {
 
 /* 레시피 상세정보 출력 함수 */
 function makeRecipeDetail(info, detail, ingredients, like_info) {
-    let classHeart = like_info['like_by_me'] ? "fa-heart" : "fa-heart-o"
-    let classColor = like_info['like_by_me'] ? "heart-detail liked" : "heart-detail"
+    let classHeart = like_info['LIKE_BY_ME'] ? "fa-heart" : "fa-heart-o"
+    let classColor = like_info['LIKE_BY_ME'] ? "heart-detail liked" : "heart-detail"
     let infoHtml = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
                      <span class="detail-info">${info["COOKING_TIME"]}</span>
                      <span class="detail-info">${info["QNT"]}</span>
-                     <a id="likes-detail-${info["RECIPE_ID"]}" class="${classColor}" onclick="toggleLike(${info["RECIPE_ID"]}, 1)"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(like_info['likes_count'])}</span></a>
+                     <a id="likes-detail-${info["RECIPE_ID"]}" class="${classColor}" onclick="toggleLike(${info["RECIPE_ID"]}, 1)"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(like_info['LIKES_COUNT'])}</span></a>
 
                     <h4>${info["SUMRY"]}</h4>`
 
@@ -525,7 +525,7 @@ function toggleLike(recipe_id, num) {
                     let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
                     likeId.find("i").addClass("fa-heart").removeClass("fa-heart-o")
                     likeId.addClass("liked")
-                    likeId.find("span.like-num").text(num2str(response["likes_count"]))
+                    likeId.find("span.like-num").text(num2str(response["LIKES_COUNT"]))
                 }
             }
         })
@@ -542,7 +542,7 @@ function toggleLike(recipe_id, num) {
                     let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
                     likeId.find("i").addClass("fa-heart-o").removeClass("fa-heart")
                     likeId.removeClass("liked")
-                    likeId.find("span.like-num").text(num2str(response["likes_count"]))
+                    likeId.find("span.like-num").text(num2str(response["LIKES_COUNT"]))
                 }
             }
         })
@@ -592,9 +592,8 @@ function changePart(part) {
 }
 
 function logout() {
-    $.removeCookie('mytoken');
-    if ($.cookie('mytoken') == undefined) {
-        alert('로그아웃!');
-        window.location.href = '/login';
-    }
+    console.log("여기까지 왔니?")
+    $.removeCookie('mytoken', {path: '/'});
+    alert('로그아웃!');
+    window.location.href = '/login';
 }

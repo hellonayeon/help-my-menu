@@ -1,4 +1,6 @@
 from re import L
+
+from bson import ObjectId
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from pymongo import MongoClient
 from datetime import datetime, timedelta
@@ -25,7 +27,9 @@ def home():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        user_info = db.users.find_one({"email": payload["id"]})
+        user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
+        user_info['_id'] = payload['user_id']
+        print(user_info)
         return render_template('index.html', user_info=user_info)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -39,16 +43,22 @@ def login():
     return render_template('login.html', msg=msg)
 
 
-@app.route('/user/<username>')
-def user(username):
+@app.route('/user/<_id>')
+def user(_id):
     # 사용자의 개인 정보를 볼 수 있는 유저 페이지
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        user_info = db.users.find_one({"email": payload["id"]}, {"_id": False})
-        # 사용자 닉네임과 API주소가 동일하지 않을 경우 로그인화면으로 다시 돌려보냄.
-        if (user_info["username"] != username):
+
+        # TODO: 다른 사람이 마이페이지를 방문할 경우 처리 필요(?) / status 데이터 사용
+        # 사용자 토큰의 user_id 와 API로 넘어온 _id가 동일하지 않을 경우 로그인화면으로 다시 돌려보냄.
+        if _id != payload['user_id']:
             return redirect(url_for("login", msg="로그인 정보가 정확하지 않습니다."))
+
+        user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
+        user_info['_id'] = payload['user_id']
+        print('my page user info = ')
+        print(user_info)
         return render_template('user.html', user_info=user_info)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -62,22 +72,22 @@ def update_profile():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        email = payload["id"]
-        profile_name_receive = request.form["profile_name_give"]
+        _id = payload["user_id"]
+        username_receive = request.form["username_give"]
         introduce_receive = request.form["introduce_give"]
         new_doc = {
-            "profile_name": profile_name_receive,
-            "profile_info": introduce_receive
+            "USERNAME": username_receive,
+            "PROFILE_INFO": introduce_receive
         }
         if 'file_give' in request.files:
-            file = request.files["file_give"]
-            filename = secure_filename(file.filename)
+            file_receive = request.files["file_give"]
+            filename = secure_filename(file_receive.filename)
             extension = filename.split(".")[-1]
-            file_path = f"profile_pics/{email}.{extension}"
-            file.save("./static/" + file_path)
-            new_doc["profile_pic"] = filename
-            new_doc["profile_pic_real"] = file_path
-        db.users.update_one({'email': payload['id']}, {'$set': new_doc})
+            file_path = f"profile_pics/{_id}.{extension}"
+            file_receive.save("./static/" + file_path)
+            new_doc["PROFILE_PIC"] = filename
+            new_doc["PROFILE_PIC_REAL"] = file_path
+        db.users.update_one({'_id': ObjectId(_id)}, {'$set': new_doc})
         return jsonify({"result": "success", 'msg': '프로필을 업데이트했습니다.'})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
@@ -89,15 +99,15 @@ def delete_img():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        email = payload["id"]
+        _id = payload["user_id"]
         origin_doc = {
-            "profile_pic": "",
-            "profile_pic_real": 'profile_pics/profile_placeholder.png'
+            "PROFILE_PIC": "",
+            "PROFILE_PIC_REAL": 'profile_pics/profile_placeholder.png'
         }
-        if (db.users.find_one({"email": email})["profile_pic"] == ""):
+        if db.users.find_one({'_id': ObjectId(_id)})["PROFILE_PIC"] == "":
             msg = "이미지가 없습니다.."
         else:
-            db.users.update_one({'email': email}, {'$set': origin_doc})
+            db.users.update_one({'_id': ObjectId(_id)}, {'$set': origin_doc})
             msg = "이미지 삭제 완료!."
         return jsonify({"result": "success", 'msg': msg})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
@@ -110,22 +120,22 @@ def change_password():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        email = payload["id"]
+        _id = payload["user_id"]
         existing_password_receive = request.form["existing_password_give"]
         changing_password_receive = request.form["changing_password_give"]
-        info = db.users.find_one({"email":payload["id"]}, {"_id":False})
+        info = db.users.find_one({'_id': ObjectId(_id)}, {"_id": False})
 
         existing_password = hashlib.sha256(existing_password_receive.encode('utf-8')).hexdigest()
         changing_password = hashlib.sha256(changing_password_receive.encode('utf-8')).hexdigest()
 
-        if (existing_password != info["password"]):
+        if existing_password != info["PASSWORD"]:
             msg = "기존 비밀번호가 다릅니다!"
             status = "실패"
-        elif (existing_password == changing_password):
+        elif existing_password == changing_password:
             msg = "기존의 비밀번호와 동일합니다!"
             status = "동일"
         else:
-            db.users.update_one({"email": email}, {'$set': {"password": changing_password}})
+            db.users.update_one({'_id': ObjectId(_id)}, {'$set': {"PASSWORD": changing_password}})
             msg = "비밀번호 변경 완료!"
             status = "성공"
 
@@ -141,12 +151,12 @@ def sign_in():
     password = request.form['password']
 
     pw_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-    result = db.users.find_one({'email': email, 'password': pw_hash})
+    result = db.users.find_one({'EMAIL': email, 'PASSWORD': pw_hash})
 
     if result is not None:
+        _id = str(result['_id'])
         payload = {
-         'id': email,
-         'username' : result['username'],
+         'user_id': _id,
          'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
         }
         token = jwt.encode(payload, secrets["SECRET_KEY"], algorithm='HS256')
@@ -157,29 +167,25 @@ def sign_in():
         return jsonify({'result': 'fail', 'msg': '아이디/비밀번호가 일치하지 않습니다.'})
 
 
-# 회원가입 정보 저장, 닉네임/이메일 중복 검사
+# 회원가입 정보 저장, 이메일 중복 검사
 @app.route('/sign_up/save', methods=['POST'])
 def sign_up():
     username_receive = request.form['username_give']
     email_receive = request.form['email_give']
-    username_exists = bool(db.users.find_one({"username": username_receive}))
-    email_exists = bool(db.users.find_one({"email": email_receive}))
+    email_exists = bool(db.users.find_one({"EMAIL": email_receive}))
 
-    if username_exists:
-        return jsonify({'result': 'fail:username_exists'})
     if email_exists:
         return jsonify({'result': 'fail:email_exists'})
 
     password_receive = request.form['password_give']
     password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
     doc = {
-        "username": username_receive,  # 아이디
-        "email": email_receive,  # 이메일
-        "password": password_hash,  # 비밀번호
-        "profile_name": username_receive,  # 프로필 이름 기본값은 아이디
-        "profile_pic": "",  # 프로필 사진 파일 이름
-        "profile_pic_real": "profile_pics/profile_placeholder.png",  # 프로필 사진 기본 이미지
-        "profile_info": ""  # 프로필 한 마디
+        "USERNAME": username_receive,  # 사용자 이름 / 프로필에 표시되는 이름
+        "EMAIL": email_receive,  # 이메일
+        "PASSWORD": password_hash,  # 비밀번호
+        "PROFILE_PIC": "",  # 프로필 사진 파일 이름
+        "PROFILE_PIC_REAL": "profile_pics/profile_placeholder.png",  # 프로필 사진 기본 이미지
+        "PROFILE_INFO": ""  # 프로필 한 마디
     }
     db.users.insert_one(doc)
     return jsonify({'result': 'success'})
@@ -191,20 +197,20 @@ def ingredient_listing():
     # 중복 제거
     irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM"))
     recipe = list(db.recipe_basic.distinct("RECIPE_NM_KO"))
-    return jsonify({'recipe_ingredient': irdnt, 'recipe_name_kor' : recipe})
+    return jsonify({'recipe_ingredient': irdnt, 'recipe_name_kor': recipe})
 
 
 # "레시피 보기" 버튼 클릭 or "레시피 검색" 버튼 클릭 or 좋아요 탭 버튼을 클릭 시 실행
-@app.route('/recipe/search', methods=['POST','GET'])
+@app.route('/recipe/search', methods=['POST', 'GET'])
 def make_recipe_list():
     token_receive = request.cookies.get('mytoken')
-    try :
+    try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        username = (db.users.find_one({"email": payload["id"]}))['username']
-        
+        _id = payload["user_id"]
+
         ## 결과로 출력할 RECIPE_ID들을 DB에서 가져오는 과정.
-        # 만약 POST 방식이면, "레시피 보기" 버튼 클릭으로 인식. 
-        if request.method == 'POST' : 
+        # 만약 POST 방식이면, "레시피 보기" 버튼 클릭으로 인식.
+        if request.method == 'POST':
             data_we_want = []
             recipe_info = request.get_json()
             irdnt_nm = recipe_info['IRDNT_NM']
@@ -241,26 +247,27 @@ def make_recipe_list():
             data_we_want = list(recipe_ids & ingredient_set)
 
         # 만약 'GET' 방식이면, "레시피 검색 기능" 혹은 "좋아요 탭"을 사용한 것으로 인식 
-        elif request.method == 'GET' :
+        elif request.method == 'GET':
             recipe_search_name = request.args.get("recipe-search-name")
-            
+
             # 'GET' 방식이면서, API 통신 url에 args(url에서 ? 뒤의 값)이 존재하면 "레시피 검색 기능"으로 인식
-            if recipe_search_name :
-                data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex":recipe_search_name}}).distinct("RECIPE_ID"))
+            if recipe_search_name:
+                data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
             # 'GET' 방식이면서, API 통신 url에 args가 None("")이면 "좋아요 탭"으로 인식
-            else :
-                data_we_want = list(db.likes.find({"username":username}).distinct("RECIPE_ID"))
-        
+            else:
+                data_we_want = list(db.likes.find({"USER_ID": _id}).distinct("RECIPE_ID"))
+
 
         ## 검색 결과를 출력하기 위해 DB에서 찾은 RECIPE_ID에 해당하는 레시피 상세 정보들을 data_we_get에 저장 후 전송
-        if data_we_want != []:
+        # data_we_want 리스트가 비어있지 않은 경우: data_we_want != [] 랑 동일한 구문, PEP8 가이드 준수
+        if data_we_want:
             projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
                         "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
             data_we_get = []
             for i in range(len(data_we_want)):
-                data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID":int(data_we_want[i])}, projection))
-                data_we_get[i]['likes_count'] = db.likes.count_documents({"RECIPE_ID":data_we_want[i]})
-                data_we_get[i]['like_by_me'] = bool(db.likes.find_one({"RECIPE_ID":data_we_want[i], "username":username}))
+                data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID": int(data_we_want[i])}, projection))
+                data_we_get[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": data_we_want[i]})
+                data_we_get[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": data_we_want[i], "USER_ID": _id}))
             return jsonify({'msg': 'success', "data_we_get": data_we_get})
         else:
             return jsonify({'msg': 'nothing'})
@@ -272,13 +279,14 @@ def make_recipe_list():
 
 
 # 레시피 상세정보 API
+# TODO: 사용자가 레시피 등록할 경우, 레시피 관리 어떻게 할건지 생각해보기
 @app.route('/recipe/detail', methods=['GET'])
 def get_recipe_detail():
     recipe_id = int(request.args.get("recipe-id"))
     token_receive = request.cookies.get('mytoken')
-    try:    
+    try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        username = (db.users.find_one({"email": payload["id"]}))['username']
+        _id = payload["user_id"]
 
         # 레시피 정보
         projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
@@ -295,10 +303,10 @@ def get_recipe_detail():
 
         # 좋아요 정보
         like_info = [{}]
-        like_info[0]['likes_count'] = db.likes.count_documents({"RECIPE_ID":recipe_id})
-        like_info[0]['like_by_me'] = bool(db.likes.find_one({"RECIPE_ID":recipe_id, "username":username}))
+        like_info[0]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
+        like_info[0]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
 
-        return jsonify({"info":info, "detail": detail, "ingredients":ingredients, "like_info":like_info})
+        return jsonify({"info": info, "detail": detail, "ingredients": ingredients, "like_info": like_info})
 
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -384,23 +392,28 @@ def delete_comment():
 
 # 좋아요 기능
 @app.route('/recipe/update_like', methods=['POST'])
-def update_like() :
+def update_like():
     token_receive = request.cookies.get('mytoken')
     try :
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        user_info = db.users.find_one({"email": payload["id"]})
+        _id = payload["user_id"]
+
+        user_info = db.users.find_one({"_id": ObjectId(_id)})
+        user_info["_id"] = _id
+
         recipe_id = int(request.form["recipe_id"])
         action = request.form["action"]
+
         doc = {
-            "RECIPE_ID" : recipe_id,
-            "username" : user_info["username"]
+            "RECIPE_ID": recipe_id,
+            "USER_ID": user_info["_id"]
         }
-        if action == "like" : 
+        if action == "like":
             db.likes.insert_one(doc)
-        else :
+        else:
             db.likes.delete_one(doc)
-        likes_count = db.likes.count_documents({"RECIPE_ID":recipe_id})
-        return jsonify({"likes_count":likes_count})
+        likes_count = db.likes.count_documents({"RECIPE_ID": recipe_id})
+        return jsonify({"LIKES_COUNT": likes_count})
 
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))

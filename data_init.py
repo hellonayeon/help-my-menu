@@ -3,12 +3,12 @@ from pymongo import MongoClient
 import json
 
 client = MongoClient('localhost', 27017)
-# client = MongoClient('mongodb://test:test@localhost', 27017) # EC2 업로드용
 db = client.dbrecipe
 
 with open('recipe_ingredient_map.json', 'r', encoding='UTF8') as file:
-  data = json.load(file)
-  file.close()
+    data = json.load(file)
+    file.close()
+
 
 def database_del():
     if db.recipe_basic.estimated_document_count() :
@@ -20,6 +20,7 @@ def database_del():
         # db.likes.delete_many({})
         # db.comment.delete_many({})
         # db.users.delete_many({})
+
 
 def database_init():
     # 데이터 기본 정보 537개
@@ -54,6 +55,7 @@ def database_init():
         db.recipe_number.insert_many(data_number['Grid_20150827000000000228_1']['row'])
 
     print("Success")
+
 
 # DB 데이터 전처리
 def data_preprocessing():
