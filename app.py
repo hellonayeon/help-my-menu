@@ -194,7 +194,7 @@ def ingredient_listing():
     return jsonify({'recipe_ingredient': irdnt, 'recipe_name_kor' : recipe})
 
 
-# 레시피 검색할 리스트 & 좋아요 탭 불러오기
+# "레시피 보기" 버튼 클릭 or "레시피 검색" 버튼 클릭 or 좋아요 탭 버튼을 클릭 시 실행
 @app.route('/recipe/search', methods=['POST','GET'])
 def make_recipe_list():
     token_receive = request.cookies.get('mytoken')
@@ -202,7 +202,8 @@ def make_recipe_list():
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         username = (db.users.find_one({"email": payload["id"]}))['username']
         
-        # 만약 POST 방식이면, 검색결과로 출력할 RECIPE_ID들을 DB에서 가져옴.
+        ## 결과로 출력할 RECIPE_ID들을 DB에서 가져오는 과정.
+        # 만약 POST 방식이면, "레시피 보기" 버튼 클릭으로 인식. 
         if request.method == 'POST' : 
             data_we_want = []
             recipe_info = request.get_json()
@@ -251,8 +252,7 @@ def make_recipe_list():
                 data_we_want = list(db.likes.find({"username":username}).distinct("RECIPE_ID"))
         
 
-
-        # DB에서 찾은 RECIPE_ID에 해당하는 레시피 정보들을 data_we_get에 저장 후 전송
+        ## 검색 결과를 출력하기 위해 DB에서 찾은 RECIPE_ID에 해당하는 레시피 상세 정보들을 data_we_get에 저장 후 전송
         if data_we_want != []:
             projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
                         "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
@@ -265,8 +265,10 @@ def make_recipe_list():
         else:
             return jsonify({'msg': 'nothing'})
 
-    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-        return redirect(url_for("/"))
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
 
 # 레시피 상세정보 API
@@ -277,6 +279,7 @@ def get_recipe_detail():
     try:    
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         username = (db.users.find_one({"email": payload["id"]}))['username']
+
         # 레시피 정보
         projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
                     "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
@@ -297,8 +300,10 @@ def get_recipe_detail():
 
         return jsonify({"info":info, "detail": detail, "ingredients":ingredients, "like_info":like_info})
 
-    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-        return redirect(url_for("/"))
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
 # 댓글 목록 API
 @app.route('/recipe/comment', methods=['GET'])
@@ -314,7 +319,6 @@ def get_comments():
 def save_comment():
     recipe_id = int(request.form["recipe_id"])
     text = request.form["text"]
-
     nick_nm = request.form["nick_nm"]
     pw = request.form["pw"]
 
@@ -384,7 +388,6 @@ def update_like() :
     token_receive = request.cookies.get('mytoken')
     try :
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
-        # 좋아요 수 변경
         user_info = db.users.find_one({"email": payload["id"]})
         recipe_id = int(request.form["recipe_id"])
         action = request.form["action"]
@@ -399,8 +402,10 @@ def update_like() :
         likes_count = db.likes.count_documents({"RECIPE_ID":recipe_id})
         return jsonify({"likes_count":likes_count})
 
-    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
-        return redirect(url_for("/"))
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
 
 if __name__ == '__main__':

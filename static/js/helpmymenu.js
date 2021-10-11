@@ -123,7 +123,7 @@ function searchShow() {
     });
 }
 
-// 레시피 검색
+// 레시피 검색 (Navbar 오른쪽)
 function recipeNameKorSearch() {
     let recipeName = $('#search-recipe-input').val();
     if (recipeName.length < 2) {
@@ -209,9 +209,9 @@ function selectedRecipeNation() {
     postRecipeInfo("search");
 }
 
-// 레시피 리스트 만들기 (검색 & 좋아요 탭)
+// 레시피 리스트 만들기 ("레시피 보기" or "레시피 검색" or 좋아요 탭)
 function postRecipeInfo(status) {
-    // 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
+    // "레시피 보기"를 클릭한 경우, 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
     if (status == "search") {
         var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
         $.ajax({
@@ -225,14 +225,7 @@ function postRecipeInfo(status) {
                     $('#recipe-list').empty();
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        let recipeUrl = recipe[i]['IMG_URL']
-                        let recipeName = recipe[i]['RECIPE_NM_KO']
-                        let recipeDesc = recipe[i]['SUMRY']
-                        let recipeId = recipe[i]['RECIPE_ID']
-                        let recipeLikesCount = recipe[i]['likes_count']
-                        let recipeLikebyMe = recipe[i]['like_by_me']
-
-                        makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, "search")
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "search")
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -241,7 +234,7 @@ function postRecipeInfo(status) {
                 }
             }
         });
-    // 좋아요 탭을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
+    // Navbar의 "레시피 검색"을 클릭한 경우, 검색어에 알맞는 레시피 호출 & 출력
     } else if (status == "searchRecipes") {
         $.ajax({
             type: "GET",
@@ -252,14 +245,7 @@ function postRecipeInfo(status) {
                     changePart("rec");
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        let recipeUrl = recipe[i]['IMG_URL']
-                        let recipeName = recipe[i]['RECIPE_NM_KO']
-                        let recipeDesc = recipe[i]['SUMRY']
-                        let recipeId = recipe[i]['RECIPE_ID']
-                        let recipeLikesCount = recipe[i]['likes_count']
-                        let recipeLikebyMe = recipe[i]['like_by_me']
-
-                        makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, "search")
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "search")
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -278,14 +264,7 @@ function postRecipeInfo(status) {
                 if (response['msg'] == 'success') {
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        let recipeUrl = recipe[i]['IMG_URL']
-                        let recipeName = recipe[i]['RECIPE_NM_KO']
-                        let recipeDesc = recipe[i]['SUMRY']
-                        let recipeId = recipe[i]['RECIPE_ID']
-                        let recipeLikesCount = recipe[i]['likes_count']
-                        let recipeLikebyMe = recipe[i]['like_by_me']
-    
-                        makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, "liked")
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['likes_count'], recipe[i]['like_by_me'], "liked")
                     }
                 } else if (response['msg'] == 'nothing') {
                     let tempHtml = `<div id="alert-no-liked">좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
