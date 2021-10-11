@@ -1,11 +1,11 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from pymongo import MongoClient
 from datetime import datetime, timedelta
-import jwt # pip install PyJWT
+from werkzeug.utils import secure_filename
+import jwt  # pip install PyJWT
 import hashlib
 import json
 import secrets
-
 
 # Flask 초기화
 app = Flask(__name__)
@@ -40,6 +40,103 @@ def login():
     return render_template('login.html', msg=msg)
 
 
+@app.route('/user/<username>')
+def user(username):
+    # 사용자의 개인 정보를 볼 수 있는 유저 페이지
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        user_info = db.users.find_one({"email": payload["id"]}, {"_id": False})
+        # 사용자 닉네임과 API주소가 동일하지 않을 경우 로그인화면으로 다시 돌려보냄.
+        if (user_info["username"] != username):
+            return redirect(url_for("login", msg="로그인 정보가 정확하지 않습니다."))
+        return render_template('user.html', user_info=user_info)
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+
+@app.route('/user', methods=['POST'])
+def update_profile():
+    # 사용자 프로필 변경 요청 API
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        email = payload["id"]
+        profile_name_receive = request.form["profile_name_give"]
+        introduce_receive = request.form["introduce_give"]
+        new_doc = {
+            "profile_name": profile_name_receive,
+            "profile_info": introduce_receive
+        }
+        if 'file_give' in request.files:
+            file = request.files["file_give"]
+            filename = secure_filename(file.filename)
+            extension = filename.split(".")[-1]
+            file_path = f"profile_pics/{email}.{extension}"
+            file.save("./static/" + file_path)
+            new_doc["profile_pic"] = filename
+            new_doc["profile_pic_real"] = file_path
+        db.users.update_one({'email': payload['id']}, {'$set': new_doc})
+        return jsonify({"result": "success", 'msg': '프로필을 업데이트했습니다.'})
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("home"))
+
+
+@app.route('/user/change-img', methods=['POST'])
+def delete_img():
+    # 사용자 프로필 이미지 삭제 요청 API
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        email = payload["id"]
+        origin_doc = {
+            "profile_pic": "",
+            "profile_pic_real": 'profile_pics/profile_placeholder.png'
+        }
+        if (db.users.find_one({"email": email})["profile_pic"] == ""):
+            msg = "이미지가 없습니다.."
+        else:
+            db.users.update_one({'email': email}, {'$set': origin_doc})
+            msg = "이미지 삭제 완료!."
+        return jsonify({"result": "success", 'msg': msg})
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("home"))
+
+
+@app.route('/user/change-password', methods=['POST'])
+def change_password():
+    # 사용자 비밀번호 변경 요청 API
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        email = payload["id"]
+        existing_password_receive = request.form["existing_password_give"]
+        changing_password_receive = request.form["changing_password_give"]
+        info = db.users.find_one({"email":payload["id"]}, {"_id":False})
+
+        existing_password = hashlib.sha256(existing_password_receive.encode('utf-8')).hexdigest()
+        changing_password = hashlib.sha256(changing_password_receive.encode('utf-8')).hexdigest()
+        print(existing_password, changing_password)
+
+
+        if (existing_password != info["password"]):
+            msg = "기존 비밀번호가 다릅니다!"
+            status = "실패"
+        elif (existing_password == changing_password):
+            msg = "기존의 비밀번호와 동일합니다!"
+            status = "동일"
+        else:
+            db.users.update_one({"email": email}, {'$set': {"password": changing_password}})
+            msg = "비밀번호 변경 완료!"
+            status = "성공"
+
+        return jsonify({"result": "success", 'msg': msg, 'status': status})
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("home"))
+
+
 @app.route('/sign_in', methods=['POST'])
 def sign_in():
     # 로그인
@@ -51,8 +148,8 @@ def sign_in():
 
     if result is not None:
         payload = {
-         'id': email,
-         'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
+            'id': email,
+            'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
         }
         token = jwt.encode(payload, secrets["SECRET_KEY"], algorithm='HS256')
 
@@ -70,21 +167,21 @@ def sign_up():
     username_exists = bool(db.users.find_one({"username": username_receive}))
     email_exists = bool(db.users.find_one({"email": email_receive}))
 
-    if username_exists :
+    if username_exists:
         return jsonify({'result': 'fail:username_exists'})
-    if email_exists :
+    if email_exists:
         return jsonify({'result': 'fail:email_exists'})
 
     password_receive = request.form['password_give']
     password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
     doc = {
-        "username": username_receive,                               # 아이디
-        "email" : email_receive,                                    # 이메일
-        "password": password_hash,                                  # 비밀번호
-        "profile_name": username_receive,                           # 프로필 이름 기본값은 아이디
-        "profile_pic": "",                                          # 프로필 사진 파일 이름
-        "profile_pic_real": "profile_pics/profile_placeholder.png", # 프로필 사진 기본 이미지
-        "profile_info": ""                                          # 프로필 한 마디
+        "username": username_receive,  # 아이디
+        "email": email_receive,  # 이메일
+        "password": password_hash,  # 비밀번호
+        "profile_name": username_receive,  # 프로필 이름 기본값은 아이디
+        "profile_pic": "",  # 프로필 사진 파일 이름
+        "profile_pic_real": "profile_pics/profile_placeholder.png",  # 프로필 사진 기본 이미지
+        "profile_info": ""  # 프로필 한 마디
     }
     db.users.insert_one(doc)
     return jsonify({'result': 'success'})
@@ -95,7 +192,7 @@ def sign_up():
 def ingredient_listing():
     # 중복 제거
     irdnt = list(db.recipe_ingredient.distinct("IRDNT_NM"))
-    return jsonify({'recipe_ingredient':irdnt})
+    return jsonify({'recipe_ingredient': irdnt})
 
 
 # 레시피 검색정보 받아오기
@@ -139,10 +236,10 @@ def post_recipe_info():
 
     if data_we_want != []:
         projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                      "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
+                      "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked": True, "_id": False}
         data_we_get = []
         for data in data_we_want:
-            data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID":int(data)}, projection))
+            data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID": int(data)}, projection))
         return jsonify({'msg': 'success', "data_we_get": data_we_get})
     else:
         return jsonify({'msg': 'nothing'})
@@ -155,18 +252,18 @@ def get_recipe_detail():
 
     # 레시피 정보
     projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
+                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked": True, "_id": False}
     info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
 
     # 상세정보(조리과정)
     projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
-    detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection).sort("Liked",-1))
+    detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection).sort("Liked", -1))
 
     # 재료정보
     projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
     ingredients = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
 
-    return jsonify({"info":info, "detail": detail, "ingredients":ingredients})
+    return jsonify({"info": info, "detail": detail, "ingredients": ingredients})
 
 
 # 댓글 목록 API
@@ -238,7 +335,7 @@ def delete_comment():
     comment = db.comment.find_one({"NICK_NM": nick_nm}, {"_id": False})
 
     # 닉네임에 해당되는 비밀번호가 일치하지 않을 경우
-    if(pw != comment["PW"]):
+    if (pw != comment["PW"]):
         return jsonify({'result': 'failure', 'msg': '비밀번호가 일치하지 않습니다!'})
 
     # 일치하는 경우 삭제
@@ -255,7 +352,7 @@ def set_like():
     current_like = target_recipe[0]["Liked"]
     new_like = current_like + 1
     db.recipe_basic.update_one({"RECIPE_ID": int(recipe_id)}, {'$set': {"Liked": int(new_like)}})
-    return jsonify({"msg":"좋아요가 추가되었습니다."})
+    return jsonify({"msg": "좋아요가 추가되었습니다."})
 
 
 # 좋아요 해제
@@ -266,16 +363,16 @@ def set_unlike():
     current_like = target_recipe[0]["Liked"]
     new_like = current_like - 1
     db.recipe_basic.update_one({"RECIPE_ID": int(recipe_id)}, {'$set': {"Liked": int(new_like)}})
-    return jsonify({"msg":"좋아요가 해제되었습니다."})
+    return jsonify({"msg": "좋아요가 해제되었습니다."})
 
 
 # 좋아요 탭
 @app.route('/recipe/liked', methods=['GET'])
 def get_recipe_liked():
     projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked":True, "_id": False}
-    recipe_liked_list = list(db.recipe_basic.find({"Liked": {"$gte":1}}, projection).sort("Liked",-1))
-    return jsonify({'recipe_liked':recipe_liked_list})
+                  "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "Liked": True, "_id": False}
+    recipe_liked_list = list(db.recipe_basic.find({"Liked": {"$gte": 1}}, projection).sort("Liked", -1))
+    return jsonify({'recipe_liked': recipe_liked_list})
 
 
 if __name__ == '__main__':
