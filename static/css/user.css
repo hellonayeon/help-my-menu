@@ -11,7 +11,7 @@
 }
 
 .user-wrap {
-    width: 780px;
+    width: 900px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -82,5 +82,16 @@
 
 .widthBtn {
     width: 150px;
+    text-align: center;
+}
+
+#recipe-liked-mp-list {
+    margin : auto;
+}
+
+#alert-no-liked-in-my-page {
+    font-size:x-large;
+    display: block;
+    margin: 50px auto auto auto;
     text-align: center;
 }
