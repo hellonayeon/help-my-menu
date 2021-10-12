@@ -1,14 +1,14 @@
 function updateCondition() {
     // 프로필 수정 조건
-    let checkname = $('#change-profile-name').val()
+    let checkname = $('#change-username').val()
     if (checkname == "") {
-        $('#profile-name-condition').text("닉네임을 입력해주세요.").removeClass("is-safe").addClass("is-danger")
-        $('#input-profile-name').focus()
+        $('#username-condition').text("닉네임을 입력해주세요.").removeClass("is-safe").addClass("is-danger")
+        $('#input-username').focus()
         return
     }
     if (!isUserNickname(checkname)) {
-        $('#profile-name-condition').text("닉네임 형식을 확인해주세요 한글과 영문과 숫자, 일부 특수문자(._-) 사용 가능. 3-10자 길이").removeClass("is-safe").addClass("is-danger")
-        $('#input-profile-name').focus()
+        $('#username-condition').text("닉네임 형식을 확인해주세요 한글과 영문과 숫자, 일부 특수문자(._-) 사용 가능. 3-10자 길이").removeClass("is-safe").addClass("is-danger")
+        $('#input-username').focus()
         return
     }
     if ($('#change-introduce').val().length > 100) {
@@ -24,14 +24,14 @@ function updateProfile() {
     }
 
     // 프로필 변경
-    let profileName = $('#change-profile-name').val()
+    let username = $('#change-username').val()
     let file = $('#change-file')[0].files[0]
     let introduce = $("#change-introduce").val()
     let form_data = new FormData()
-    form_data.append("profile_name_give", profileName)
+    form_data.append("username_give", username)
     form_data.append("file_give", file)
     form_data.append("introduce_give", introduce)
-    console.log(profileName, file, introduce, form_data)
+    console.log(username, file, introduce, form_data)
 
     $.ajax({
         type: "POST",
@@ -92,7 +92,7 @@ function changePassword() {
         $('#input-more-password').focus()
         return;
     }
-
+    console.log("test")
     $.ajax({
         type: "POST",
         url: "/user/change-password",

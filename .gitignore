@@ -12,6 +12,14 @@
 /static/comment-images/*
 
 
+###############################
+#### Profile picture files ####
+###############################
+
+/static/profile_pics/**
+!/static/profile_pics/profile_placeholder.png
+
+
 #################################
 ##### JWT encode&decode key #####
 #################################
