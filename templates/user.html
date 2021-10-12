@@ -96,11 +96,13 @@
         <div class="thumbnail-area">
             <img src="{{ url_for('static', filename=user_info.PROFILE_PIC_REAL) }}" alt="..."
                  style="border-radius: 50px;">
+            {% if is_mypage_user %}
             <button type="button" class="btn btn-secondary img-button" data-toggle="modal" data-target="#exampleModal"
                     data-whatever="@mdo">
                 프로필 변경
             </button>
             <button onclick="deleteImg()" type="button" class="btn btn-outline-secondary img-button">이미지 삭제</button>
+            {% endif %}
         </div>
         <div class="info-area">
             <div class="main-name">
@@ -118,6 +120,7 @@
     </section>
     <!-- 사용자 정보 표시 end -->
 
+    {% if is_mypage_user %}
     <!-- 프로필 변경 modal start -->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
          aria-hidden="true">
@@ -209,6 +212,7 @@
         </div>
     </div>
     <!-- 비밀번호 변경 modal end -->
+    {% endif %}
 
     <!-- 즐겨찾기 & 내가쓴글 태그 start -->
     <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
@@ -218,13 +222,13 @@
         </li>
         <li class="nav-item widthBtn">
             <a class="nav-link" id="pills-profile-tab" data-toggle="pill" href="#pills-profile" role="tab"
-               aria-controls="pills-profile" aria-selected="false" onclick="postRecipeInfo('likedInMypage')">즐겨찾기</a>
+               aria-controls="pills-profile" aria-selected="false" onclick="postRecipeInfo('{{ user_info._id }}')">즐겨찾기</a>
         </li>
     </ul>
     <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
         </div>
-        <div class="card-deck" id="recipe-liked-mp-list" role="tabpanel" aria-labelledby="pills-profile-tab">
+        <div class="card-deck" id="recipe-liked-mypage-list-{{ user_info._id }}" class="recipe-liked-mypage-list" role="tabpanel" aria-labelledby="pills-profile-tab">
         </div>
     </div>
     <!-- 즐겨찾기 & 내가쓴글 태그 end -->

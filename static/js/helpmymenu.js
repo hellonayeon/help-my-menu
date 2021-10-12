@@ -255,12 +255,13 @@ function postRecipeInfo(status) {
             }
         });
     // 좋아요 탭을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
-    } else if (status == "liked" || status == "likedInMypage") {
+    } else if (status == "liked" || (status != "liked" && status)) {
+        let urlForLikedOrMypage = status == "liked" ? `/recipe/search` : `/recipe/search?user_id=${status}`
         $.ajax({
             type: "GET",
-            url: "/recipe/search",
+            url: urlForLikedOrMypage,
             success: function (response) {
-                let idToAppend = status == "liked" ? "#recipe-liked-list" : "#recipe-liked-mp-list"
+                let idToAppend = status == "liked" ? "#recipe-liked-list" : `#recipe-liked-mypage-list-${status}`
                 let idAlertNoLiked = status == "liked" ? "alert-no-liked" : "alert-no-liked-in-my-page"
                 $(idToAppend).empty();
                 if (response['msg'] == 'success') {
@@ -269,7 +270,7 @@ function postRecipeInfo(status) {
                         makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
                     }
                 } else if (response['msg'] == 'nothing') {
-                    let tempHtml = `<div id=${idAlertNoLiked}>좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
+                    let tempHtml = `<div class=${idAlertNoLiked}>좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
                     $(idToAppend).append(tempHtml)
                 }
             }
@@ -283,9 +284,9 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
     let classColor = recipeLikebyMe ? "heart liked" : "heart"
     let idTyep
     let toggleLikeNum
-    if (status == "search") {idTyep = ""; toggleLikeNum = 0;}
-    else if (status == "liked") {idTyep = "-liked"; toggleLikeNum = 2;}
-    else if (status == "likedInMypage") {idTyep = "-liked-mp"; toggleLikeNum = 3;}
+    if (status == "search") {idTyep = "-list"; heartIdType = ""; toggleLikeNum = 0;}
+    else if (status == "liked") {idTyep = "-liked-list"; heartIdType = "-liked"; toggleLikeNum = 2;}
+    else if (status) {idTyep = `-liked-mypage-list-${status}`; heartIdType = "-liked-mypage"; toggleLikeNum = status;}
 
     let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin:10px 12.5px 10px 12.5px;  min-width: 200px; max-width: 200px;">                                
                         <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
@@ -294,11 +295,11 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
                                 <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
-                                <a id="likes${idTyep}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum})"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                                <a id="likes${heartIdType}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, '${toggleLikeNum}')"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
                     </div>`
-    $(`#recipe${idTyep}-list`).append(tempHtml)
+    $(`#recipe${idTyep}`).append(tempHtml)
 }
 
 /* 레시피 상세정보 요청 함수 */
@@ -515,25 +516,28 @@ function showPasswordDialog(recipeId, nickNm) {
 
 // 좋아요 기능
 function toggleLike(recipe_id, num) {
-    let likeIdArray = ["","-detail", "-liked", "-liked-mp"]
-    let likeId = $(`#likes${likeIdArray[num]}-${recipe_id}`)
-    let actionData = !likeId.hasClass("liked") ? "like" : "unlike"
-    let iAddClassData = !likeId.hasClass("liked") ? "fa-heart" : "fa-heart-o"
-    let iRemoveClassData = !likeId.hasClass("liked") ? "fa-heart-o" : "fa-heart"
-
+    let likeIdArray = ["","-detail", "-liked", "-liked-mypage"]
+    let likeId
+    if (num=='0') {num = 0}
+    else if (num == '2') {num = 2}
+    if (typeof(num) == "number") {likeId = $(`#likes${likeIdArray[num]}-${recipe_id}`)}
+    else {likeId = $(`#likes-liked-mypage-${recipe_id}`);}
     $.ajax({
         type : 'POST',
         url : `recipe/update_like`,
         data : {
-            recipe_id : recipe_id,
-            action : actionData
+            recipe_id : recipe_id
         },
         success : function(response) {
             for(let i = 0; i < likeIdArray.length; i++) {
-                let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
-                likeId.find("i").addClass(iAddClassData).removeClass(iRemoveClassData)
-                if (!likeId.hasClass("liked")) {likeId.addClass("liked")}
-                else {likeId.removeClass("liked")}
+                likeId = i < 3 ? $(`#likes${likeIdArray[i]}-${recipe_id}`) : $(`#likes-liked-mypage-${recipe_id}`)
+                if (response['action'] == "like") {
+                    if (likeId.find("i").hasClass("fa-heart-o")) {likeId.find("i").removeClass("fa-heart-o").addClass("fa-heart")}
+                    if (!likeId.hasClass("liked")) {likeId.addClass("liked")}
+                } else {
+                    if (likeId.find("i").hasClass("fa-heart")) {likeId.find("i").removeClass("fa-heart").addClass("fa-heart-o")}
+                    if (likeId.hasClass("liked")) {likeId.removeClass("liked")}
+                }
                 likeId.find("span.like-num").text(num2str(response["likes_count"]))
             }
         }

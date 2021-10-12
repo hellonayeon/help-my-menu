@@ -26,8 +26,9 @@ def home():
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        user_info['_id'] = payload['user_id']
         print(user_info)
+        print(user_info['_id'])
+        # user_info['_id'] = payload['user_id']
         return render_template('index.html', user_info=user_info)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -47,17 +48,14 @@ def user(_id):
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        # 내 마이페이지면 True, 다른 사람 마이페이지면 False
+        is_mypage_user = (_id == payload['user_id'])
 
-        # TODO: 다른 사람이 마이페이지를 방문할 경우 처리 필요(?) / status 데이터 사용
-        # 사용자 토큰의 user_id 와 API로 넘어온 _id가 동일하지 않을 경우 로그인화면으로 다시 돌려보냄.
-        if _id != payload['user_id']:
-            return redirect(url_for("login", msg="로그인 정보가 정확하지 않습니다."))
-
-        user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        user_info['_id'] = payload['user_id']
-        print('my page user info = ')
+        user_info = db.users.find_one({'_id': ObjectId(_id)})
         print(user_info)
-        return render_template('user.html', user_info=user_info)
+        print(user_info['_id'])
+        # user_info['_id'] = payload['user_id']
+        return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -154,8 +152,8 @@ def sign_in():
     if result is not None:
         _id = str(result['_id'])
         payload = {
-         'user_id': _id,
-         'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
+            'user_id': _id,
+            'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
         }
         token = jwt.encode(payload, secrets["SECRET_KEY"], algorithm='HS256')
 
@@ -247,11 +245,14 @@ def make_recipe_list():
         # 만약 'GET' 방식이면, "레시피 검색 기능" 혹은 "좋아요 탭"을 사용한 것으로 인식 
         elif request.method == 'GET':
             recipe_search_name = request.args.get("recipe-search-name")
+            user_id = request.args.get("user_id")
 
             # 'GET' 방식이면서, API 통신 url에 args(url에서 ? 뒤의 값)이 존재하면 "레시피 검색 기능"으로 인식
             if recipe_search_name:
                 data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
             # 'GET' 방식이면서, API 통신 url에 args가 None("")이면 "좋아요 탭"으로 인식
+            elif user_id:
+                data_we_want = list(db.likes.find({"USER_ID": user_id}).distinct("RECIPE_ID"))
             else:
                 data_we_want = list(db.likes.find({"USER_ID": _id}).distinct("RECIPE_ID"))
 
@@ -401,20 +402,20 @@ def update_like() :
         user_info["_id"] = _id
 
         recipe_id = int(request.form["recipe_id"])
-        action = request.form["action"]
 
         doc = {
             "RECIPE_ID": recipe_id,
             "USER_ID": user_info["_id"]
         }
-
-        if action == "like" : 
-            db.likes.insert_one(doc)
-        else:
+        if db.likes.find_one(doc) :
             db.likes.delete_one(doc)
+            action = "unlike"
+        else:
+            db.likes.insert_one(doc)
+            action = "like"
 
         likes_count = db.likes.count_documents({"RECIPE_ID":recipe_id})
-        return jsonify({"likes_count":likes_count})
+        return jsonify({"action": action, "likes_count":likes_count})
 
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
