@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{cmmn/adminLayout}">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- File Upload -->
+    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Google Font: Jua -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+    <!-- google Font: Noto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap" rel="stylesheet">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> <!-- jQuery UI -->
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!-- 'Help My Menu' Javascript, CSS -->
+    <script type="text/javascript" src="/static/js/helpmymenu.js"></script>
+    <script type="text/javascript" src="/static/js/user.js"></script>
+    <script type="text/javascript" src="/static/js/login.js"></script>
+    <link rel="stylesheet" href="/static/css/helpmymenu.css">
+    <link rel="stylesheet" href="/static/css/user.css">
+
+    <title>우당탕탕 | 헤얿 마이 메뉴</title>
+
+    <style>
+        /* TODO: 글꼴 통일하기 */
+        @import url('https://fonts.googleapis.com/css?family=Numans');
+
+        .add-btn {
+            color: #FFF2F6;;
+            background-color: #fc6c3f;
+            width: 100px;
+            border-radius: 10px;
+        }
+    </style>
+    <script>
+        let fileArr;
+        let fileInfoArr = [];
+
+        //썸네일 클릭시 삭제.
+        function fileRemove(index) {
+            console.log("index: " + index);
+            fileInfoArr.splice(index, 1);
+
+            let imgId = "#img_id_" + index;
+            $(imgId).remove();
+            console.log(fileInfoArr);
+        }
+
+        //썸네일 미리보기.
+        function previewImage(targetObj, View_area) {
+            let files = targetObj.files;
+            fileArr = Array.prototype.slice.call(files);
+
+            let preview = document.getElementById(View_area); //div id
+            let ua = window.navigator.userAgent;
+
+            //ie일때(IE8 이하에서만 작동)
+            if (ua.indexOf("MSIE") > -1) {
+                targetObj.select();
+                try {
+                    let src = document.selection.createRange().text; // get file full path(IE9, IE10에서 사용 불가)
+                    let ie_preview_error = document.getElementById("ie_preview_error_" + View_area);
+
+
+                    if (ie_preview_error) {
+                        preview.removeChild(ie_preview_error); //error가 있으면 delete
+                    }
+
+                    let img = document.getElementById(View_area); //이미지가 뿌려질 곳
+
+                    //이미지 로딩, sizingMethod는 div에 맞춰서 사이즈를 자동조절 하는 역할
+                    img.style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='" + src + "', sizingMethod='scale')";
+                } catch (e) {
+                    if (!document.getElementById("ie_preview_error_" + View_area)) {
+                        let info = document.createElement("<p>");
+                        info.id = "ie_preview_error_" + View_area;
+                        info.innerHTML = e.name;
+                        preview.insertBefore(info, null);
+                    }
+                }
+                //ie가 아닐때(크롬, 사파리, FF)
+            } else {
+                let files = targetObj.files;
+                for (let i = 0; i < files.length; i++) {
+                    let file = files[i];
+                    fileInfoArr.push(file);
+
+                    let imageType = /image.*/; //이미지 파일일경우만.. 뿌려준다.
+                    if (!file.type.match(imageType))
+                        continue;
+                    // let prevImg = document.getElementById("prev_" + View_area); //이전에 미리보기가 있다면 삭제
+                    // if (prevImg) {
+                    //     preview.removeChild(prevImg);
+                    // }
+
+                    let span = document.createElement('span');
+                    span.id = "img_id_" + i;
+                    span.style.width = '100px';
+                    span.style.height = '100px';
+                    preview.appendChild(span);
+
+                    let img = document.createElement("img");
+                    img.className = "addImg";
+                    img.classList.add("obj");
+                    img.file = file;
+                    img.style.width = 'inherit';
+                    img.style.height = 'inherit';
+                    img.style.cursor = 'pointer';
+                    const idx = i;
+                    img.onclick = () => fileRemove(idx);   //이미지를 클릭했을 때.
+                    span.appendChild(img);
+
+                    if (window.FileReader) { // FireFox, Chrome, Opera 확인.
+                        let reader = new FileReader();
+                        reader.onloadend = (function (aImg) {
+                            return function (e) {
+                                aImg.src = e.target.result;
+                            };
+                        })(img);
+                        reader.readAsDataURL(file);
+                    } else { // safari is not supported FileReader
+                        //alert('not supported FileReader');
+                        if (!document.getElementById("sfr_preview_error_"
+                            + View_area)) {
+                            let info = document.createElement("p");
+                            info.id = "sfr_preview_error_" + View_area;
+                            info.innerHTML = "not supported FileReader";
+                            preview.insertBefore(info, null);
+                        }
+                    }
+                }
+            }
+        }
+
+        //form데이터 전송
+        function dataSubmit() {
+            let token = $("meta[name='_csrf']").attr("content");
+            let header = $("meta[name='_csrf_header']").attr("content");
+
+            let data = new FormData($("#storeAddForm")[0]);
+
+            $.ajax({
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader(header, token);
+                },
+                url: "url",
+                data: data,
+                processData: false, //false 필수
+                contentType: false, //false 필수
+                enctype: 'multipart/form-data',
+                type: "POST",
+            }).done(function (fragment) {
+                $("#resultDiv").replaceWith(fragment);
+            });
+        }
+
+
+        출처: https://chung-develop.tistory.com/14 [춍춍's 블로그]
+    </script>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row border-bottom" style="margin-top: 10px; margin-bottom: 10px;"></div>
+    <form id="addForm">
+        <div style="display: inline;">
+            <label for="img_upload">
+                <img src="/static/images/img_upload.png" style="width:100px; height:100px; cursor: pointer;">
+            </label>
+            <input type="file" name="img_upload" id="img_upload"
+                   onchange="previewImage(this,'View_area')"
+                   style="display: none;" multiple>
+
+            <span id='View_area'
+                  style='position:relative; color: black; border: 0px solid black;'>
+        </span>
+        </div>
+
+        <div style="align-content: center; width: 100%; text-align: center;">
+            <input type="button" class="add-btn" onclick="dataSubmit();"
+                   value="등록하기">
+        </div>
+    </form>
+</div>
+</body>
+</html>
