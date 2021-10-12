@@ -54,6 +54,46 @@
         /* TODO: 글꼴 통일하기 */
         @import url('https://fonts.googleapis.com/css?family=Numans');
 
+        * {
+            width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            list-style: none;
+        }
+
+        ul {
+            padding: 16px 0;
+        }
+
+        ul li {
+            display: inline-block;
+            margin: 0 5px;
+            font-size: 14px;
+            letter-spacing: -.5px;
+        }
+
+        form {
+            padding-top: 16px;
+        }
+
+        ul li.tag-item {
+            padding: 4px 8px;
+            background-color: coral;
+            color: white;
+        }
+
+        .tag-item:hover {
+            background-color: orangered;
+            color: white;
+        }
+
+        .del-btn {
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
         .add-btn {
             color: #FFF2F6;;
             background-color: #fc6c3f;
@@ -183,31 +223,114 @@
             });
         }
 
+        $(document)
+            .ready(function () {
 
-        출처: https://chung-develop.tistory.com/14 [춍춍's 블로그]
+                let tag = {};
+                let counter = 0;
+
+                // 태그를 추가한다.
+                function addTag(value) {
+                    tag[counter] = value; // 태그를 Object 안에 추가
+                    counter++; // counter 증가 삭제를 위한 del-btn 의 고유 id
+                }
+
+                // 최종적으로 서버에 넘길때 tag 안에 있는 값을 array type 으로 만들어서 넘긴다.
+                function marginTag() {
+                    return Object.values(tag)
+                        .filter(function (word) {
+                            return word !== "";
+                        });
+                }
+
+                $("#tag")
+                    .on("keyup", function (e) {
+                        let self = $(this);
+                        console.log("keypress");
+
+                        // input 에 focus 되있을 때 엔터 및 스페이스바 입력시 구동
+                        if (e.key === "Enter" || e.keyCode == 32) {
+
+                            let tagValue = self.val(); // 값 가져오기
+
+                            // 값이 없으면 동작 안합니다.
+                            if (tagValue !== "") {
+
+                                // 같은 태그가 있는지 검사한다. 있다면 해당값이 array 로 return 된다.
+                                let result = Object.values(tag)
+                                    .filter(function (word) {
+                                        return word === tagValue;
+                                    })
+
+                                // 태그 중복 검사
+                                if (result.length == 0) {
+                                    $("#tag-list")
+                                        .append("<li class='tag-item'>" + tagValue + "<span class='del-btn' idx='" + counter + "'>x</span></li>");
+                                    addTag(tagValue);
+                                    self.val("");
+                                } else {
+                                    alert("태그값이 중복됩니다.");
+                                }
+                            }
+                            e.preventDefault(); // SpaceBar 시 빈공간이 생기지 않도록 방지
+                        }
+                    });
+
+                // 삭제 버튼
+                // 삭제 버튼은 비동기적 생성이므로 document 최초 생성시가 아닌 검색을 통해 이벤트를 구현시킨다.
+                $(document)
+                    .on("click", ".del-btn", function (e) {
+                        let index = $(this)
+                            .attr("idx");
+                        tag[index] = "";
+                        $(this)
+                            .parent()
+                            .remove();
+                    });
+            })
     </script>
 </head>
 <body>
+<section onclick="location.href='/'" class="banner">
+    help my menu
+</section>
+
 <div layout:fragment="content">
     <div class="row border-bottom" style="margin-top: 10px; margin-bottom: 10px;"></div>
     <form id="addForm">
         <div style="display: inline;">
             <label for="img_upload">
-                <img src="/static/images/img_upload.png" style="width:100px; height:100px; cursor: pointer;">
+                <img src="/static/images/img_upload.png" style="width:300px; height:300px; cursor: pointer;">
             </label>
             <input type="file" name="img_upload" id="img_upload"
                    onchange="previewImage(this,'View_area')"
                    style="display: none;" multiple>
 
             <span id='View_area'
-                  style='position:relative; color: black; border: 0px solid black;'>
+                  style='position:relative; color: black; border: 5px; solid: black;'>
         </span>
+            <input type="text" placeholder="요리명을 입력하세요."/>
         </div>
+        <div style="margin-top:40px; margin-left:40px;" class="content">
+            <div style="display: flex;">
+                <h3 style="width: 150px; margin-right:30px;">재료 리스트</h3>
+                <input type="text" id="tag" size="20" placeholder="재료를 추가해주세요."/>
+            </div>
 
+            <ul id="tag-list">
+            </ul>
+            <h1>조리법</h1>
+            <ol>
+                <li>첫번째 방법</li>
+                <li>두번째 방법</li>
+                <li>세번째 방법</li>
+            </ol>
+        </div>
         <div style="align-content: center; width: 100%; text-align: center;">
             <input type="button" class="add-btn" onclick="dataSubmit();"
                    value="등록하기">
         </div>
+
     </form>
 </div>
 </body>
