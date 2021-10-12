@@ -287,7 +287,7 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
     else if (status == "liked") {idTyep = "-liked"; toggleLikeNum = 2;}
     else if (status == "likedInMypage") {idTyep = "-liked-mp"; toggleLikeNum = 3;}
 
-    let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin:10px auto 10px auto;  min-width: 200px; max-width: 200px;">                                
+    let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin:10px 12.5px 10px 12.5px;  min-width: 200px; max-width: 200px;">                                
                         <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
                         <div class="card-body">
                             <h5 class="card-title">${recipeName}</h5>
