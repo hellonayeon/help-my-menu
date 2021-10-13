@@ -33,7 +33,6 @@ function showControl(display) {
         case recipeChoiceDisplay:
             $("#recipe-choice-container").show()
             $("#recipe-loading-container").hide()
-            $("#recipe-detail-container").hide()
             $("#recipe-list-container").hide()
             $("#recipe-fileterbar").hide()
             break
@@ -41,22 +40,13 @@ function showControl(display) {
             $("#recipe-choice-container").hide()
             $("#recipe-loading-container").show()
             $("#recipe-list-container").hide()
-            $("#recipe-detail-container").hide()
             $("#recipe-fileterbar").hide()
             break
         case recipeListDisplay:
             $("#recipe-choice-container").hide()
             $("#recipe-loading-container").hide()
             $("#recipe-list-container").show()
-            $("#recipe-detail-container").hide()
             $("#recipe-fileterbar").show()
-            break
-        case recipeDetailDisplay:
-            $("#recipe-choice-container").hide()
-            $("#recipe-loading-container").hide()
-            $("#recipe-list-container").hide()
-            $("#recipe-detail-container").show()
-            $("#recipe-fileterbar").hide()
             break
     }
 }
@@ -396,7 +386,7 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
                             <h5 class="card-title">${recipeName}</h5>
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
-                                <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
+                                <a href="/recipe/detail?recipe-id=${recipeId}" class="card-link">자세히</a>
                                 <a id="likes${idTyep}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum})"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
@@ -404,51 +394,51 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
     $(`#recipe${idTyep}-list`).append(tempHtml)
 }
 
-/* 레시피 상세정보 요청 함수 */
-function getRecipeDetail(recipeId) {
-    $.ajax({
-        type: "GET",
-        url: `/recipe/detail?recipe-id=${recipeId}`,
-        success: function (response) {
-            makeRecipeDetail(response["info"], response["detail"], response["ingredients"], response["like_info"][0])
-        }
-    })
-}
-
-/* 레시피 상세정보 출력 함수 */
-function makeRecipeDetail(info, detail, ingredients, like_info) {
-    let classHeart = like_info['LIKE_BY_ME'] ? "fa-heart" : "fa-heart-o"
-    let classColor = like_info['LIKE_BY_ME'] ? "heart-detail liked" : "heart-detail"
-    let infoHtml = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
-                     <span class="detail-info">${info["COOKING_TIME"]}</span>
-                     <span class="detail-info">${info["QNT"]}</span>
-                     <a id="likes-detail-${info["RECIPE_ID"]}" class="${classColor}" onclick="toggleLike(${info["RECIPE_ID"]}, 1)"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(like_info['LIKES_COUNT'])}</span></a>
-
-                    <h4>${info["SUMRY"]}</h4>`
-
-    for (let i = 0; i < ingredients.length; i++) {
-        infoHtml += `<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
-    }
-
-    let detailHtml = ``
-    detail.forEach(function (step) {
-        detailHtml += `<div class="col-12">STEP<span class="detail-step-num">${step["COOKING_NO"]}. </span> ${step["COOKING_DC"]}</div>`
-    })
-
-    // 댓글 저장 시, RECIPE_ID 정보 필요
-    let commentBtnHtml = `<button type="button" class="btn btn-primary" onclick="saveComment(${info["RECIPE_ID"]})">댓글 작성</button>`
-
-    // 이전에 출력했던 상세정보 지우기
-    $('#detail-img').empty()
-    $('#detail-info').empty()
-    $('#detail-step').empty()
-    $('#comment-upload-btn-div').empty()
-
-    $('#detail-img').attr("src", info["IMG_URL"])
-    $('#detail-info').append(infoHtml)
-    $('#detail-step').append(detailHtml)
-    $('#comment-upload-btn-div').append(commentBtnHtml)
-}
+// /* 레시피 상세정보 요청 함수 */
+// function getRecipeDetail(recipeId) {
+//     $.ajax({
+//         type: "GET",
+//         url: `/recipe/detail?recipe-id=${recipeId}`,
+//         success: function (response) {
+//             makeRecipeDetail(response["info"], response["detail"], response["ingredients"], response["like_info"][0])
+//         }
+//     })
+// }
+//
+// /* 레시피 상세정보 출력 함수 */
+// function makeRecipeDetail(info, detail, ingredients, like_info) {
+//     let classHeart = like_info['LIKE_BY_ME'] ? "fa-heart" : "fa-heart-o"
+//     let classColor = like_info['LIKE_BY_ME'] ? "heart-detail liked" : "heart-detail"
+//     let infoHtml = `<span class="detail-title">${info["RECIPE_NM_KO"]}</span>
+//                      <span class="detail-info">${info["COOKING_TIME"]}</span>
+//                      <span class="detail-info">${info["QNT"]}</span>
+//                      <a id="likes-detail-${info["RECIPE_ID"]}" class="${classColor}" onclick="toggleLike(${info["RECIPE_ID"]}, 1)"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(like_info['LIKES_COUNT'])}</span></a>
+//
+//                     <h4>${info["SUMRY"]}</h4>`
+//
+//     for (let i = 0; i < ingredients.length; i++) {
+//         infoHtml += `<span class="badge badge-primary ingredient-tag">${ingredients[i]["IRDNT_NM"]} : ${ingredients[i]["IRDNT_CPCTY"]}</span>`
+//     }
+//
+//     let detailHtml = ``
+//     detail.forEach(function (step) {
+//         detailHtml += `<div class="col-12">STEP<span class="detail-step-num">${step["COOKING_NO"]}. </span> ${step["COOKING_DC"]}</div>`
+//     })
+//
+//     // 댓글 저장 시, RECIPE_ID 정보 필요
+//     let commentBtnHtml = `<button type="button" class="btn btn-primary" onclick="saveComment(${info["RECIPE_ID"]})">댓글 작성</button>`
+//
+//     // 이전에 출력했던 상세정보 지우기
+//     $('#detail-img').empty()
+//     $('#detail-info').empty()
+//     $('#detail-step').empty()
+//     $('#comment-upload-btn-div').empty()
+//
+//     $('#detail-img').attr("src", info["IMG_URL"])
+//     $('#detail-info').append(infoHtml)
+//     $('#detail-step').append(detailHtml)
+//     $('#comment-upload-btn-div').append(commentBtnHtml)
+// }
 
 /* 댓글 리스트 요청 함수 */
 function getComment(recipeId) {
@@ -618,15 +608,19 @@ function showPasswordDialog(recipeId, nickNm) {
 
 // 좋아요 기능
 function toggleLike(recipe_id, num) {
+    console.log(recipe_id, num)
     let likeIdArray = ["", "-detail", "-liked", "-liked-mp"]
     let likeId = $(`#likes${likeIdArray[num]}-${recipe_id}`)
     let actionData = !likeId.hasClass("liked") ? "like" : "unlike"
     let iAddClassData = !likeId.hasClass("liked") ? "fa-heart" : "fa-heart-o"
     let iRemoveClassData = !likeId.hasClass("liked") ? "fa-heart-o" : "fa-heart"
+    console.log(`#likes${likeIdArray[num]}-${recipe_id}`)
+    console.log(likeId)
+    console.log(actionData)
 
     $.ajax({
         type: 'POST',
-        url: `recipe/update_like`,
+        url: `/recipe/update_like`,
         data: {
             recipe_id: recipe_id,
             action: actionData
@@ -634,6 +628,7 @@ function toggleLike(recipe_id, num) {
         success: function (response) {
             for (let i = 0; i < likeIdArray.length; i++) {
                 let likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
+                console.log(likeId)
                 likeId.find("i").addClass(iAddClassData).removeClass(iRemoveClassData)
                 if (!likeId.hasClass("liked")) {
                     likeId.addClass("liked")

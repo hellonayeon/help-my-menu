@@ -290,7 +290,6 @@ def make_recipe_list():
 
 
 # 레시피 상세정보 API
-# TODO: 사용자가 레시피 등록할 경우, 레시피 관리 어떻게 할건지 생각해보기
 @app.route('/recipe/detail', methods=['GET'])
 def get_recipe_detail():
     recipe_id = int(request.args.get("recipe-id"))
@@ -302,22 +301,23 @@ def get_recipe_detail():
         # 레시피 정보
         projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
                     "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
-        info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
+        recipe_info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
 
         # 상세정보(조리과정)
         projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
-        detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
+        steps = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
 
         # 재료정보
         projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
-        ingredients = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
+        irdnts = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
 
         # 좋아요 정보
-        like_info = [{}]
-        like_info[0]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
-        like_info[0]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
+        like_info = {}
+        like_info['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
+        like_info['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
 
-        return jsonify({"info": info, "detail": detail, "ingredients": ingredients, "like_info": like_info})
+        return render_template('detail.html',
+                               user_id = _id, recipe_info=recipe_info, steps=steps, irdnts=irdnts, like_info=like_info)
 
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -411,7 +411,7 @@ def update_like() :
         _id = payload["user_id"]
 
         user_info = db.users.find_one({"_id": ObjectId(_id)})
-        user_info["_id"] = _id
+        # user_info["_id"] = _id
 
         recipe_id = int(request.form["recipe_id"])
         action = request.form["action"]
