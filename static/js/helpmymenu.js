@@ -131,10 +131,6 @@ function recipeNameKorSearch() {
     } else {
         gRecipeSearchName = recipeName
         postRecipeInfo("searchRecipes", 0);
-        // FIXME: 로딩창을 띄울 경우 원래 검색하던 위치로 다시 돌아갈 수 없는 경우 발생
-        // showControl의 인수에 따라 검색하기 이전 페이지로 돌아가도록 하는 코드가 필요합니다.
-        // 아주 사소한 것이라 안 고쳐도 됩니다.
-        // showControl(recipeLoadingDisplay);
     }
 }
 
@@ -210,7 +206,7 @@ function selectedRecipeNation() {
 }
 
 // 레시피 리스트 만들기 ("레시피 보기" or "레시피 검색" or 좋아요 탭)
-function postRecipeInfo(status, _id) {
+function postRecipeInfo(status, info) {
     // "레시피 보기"를 클릭한 경우, 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
     if (status == "search") {
         var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
@@ -225,7 +221,7 @@ function postRecipeInfo(status, _id) {
                     $('#recipe-list').empty();
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, _id)
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -245,18 +241,39 @@ function postRecipeInfo(status, _id) {
                     changePart("rec");
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, _id)
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
                     alert("조건에 해당 되는 레시피가 없습니다.😥")
-                    // showControl(recipeChoiceDisplay);
+                }
+            }
+        });
+    // index.html 좋아요탭 혹은 user.html 즐겨찾기을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
+    } else if (status == "searchRecipesInMyPage") {
+        window.location.href = `/`;
+        showControl(recipeLoadingDisplay);
+        $.ajax({
+            type: "GET",
+            url: `/recipe/search?recipe-search-name=${info}`,
+            success: function (response) {
+                if (response['msg'] == 'success') {
+                    $('#recipe-list').empty();
+                    changePart("rec");
+                    let recipe = response['data_we_get']
+                    for (let i = 0; i < recipe.length; i++) {
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
+                    }
+                    showControl(recipeListDisplay);
+                } else if (response['msg'] == 'nothing') {
+                    alert("조건에 해당 되는 레시피가 없습니다.😥")
+                    window.location.href = '/';
                 }
             }
         });
     // index.html 좋아요탭 혹은 user.html 즐겨찾기을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
     } else if (status == "liked" || (status == "likedMypage")) {
-        let urlForLikedOrMypage = status == "liked" ? `/recipe/search` : `/recipe/search?user_id=${_id}`
+        let urlForLikedOrMypage = status == "liked" ? `/recipe/search` : `/recipe/search?user_id=${info}`
         $.ajax({
             type: "GET",
             url: urlForLikedOrMypage,
@@ -267,7 +284,7 @@ function postRecipeInfo(status, _id) {
                 if (response['msg'] == 'success') {
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, _id)
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
                     }
                 } else if (response['msg'] == 'nothing') {
                     let tempHtml = `<div class=${idAlertNoLiked}>좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
@@ -279,13 +296,13 @@ function postRecipeInfo(status, _id) {
 }
 
 // 검색한 레시피 리스트 & 좋아요 탭 레시피 리스트 출력
-function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status, _id) {
+function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status, info) {
     let classHeart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
     let classColor = recipeLikebyMe ? "heart liked" : "heart"
     let idTyep, toggleLikeNum, userId
-    if (status == "search" || status == "searchRecipes") {idTyep = "-list"; heartIdType = ""; toggleLikeNum = 0; userId = 0;}
-    else if (status == "liked") {idTyep = "-liked-list"; heartIdType = "-liked"; toggleLikeNum = 2; userId = 0;}
-    else if (status == "likedMypage") {idTyep = `-liked-mypage-list`; heartIdType = "-liked-mypage"; toggleLikeNum = 3; userId = _id}
+    if (status == "search" || status == "searchRecipes") {idTyep = "-list"; heartIdType = ""; toggleLikeNum = 0;}
+    else if (status == "liked") {idTyep = "-liked-list"; heartIdType = "-liked"; toggleLikeNum = 2;}
+    else if (status == "likedMypage") {idTyep = `-liked-mypage-list`; heartIdType = "-liked-mypage"; toggleLikeNum = 3; userId = info}
 
     let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin:10px 12.5px 10px 12.5px;  min-width: 200px; max-width: 200px;">                                
                         <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
