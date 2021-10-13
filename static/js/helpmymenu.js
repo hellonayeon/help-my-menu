@@ -35,24 +35,28 @@ function showControl(display) {
             $("#recipe-loading-container").hide()
             $("#recipe-detail-container").hide()
             $("#recipe-list-container").hide()
+            $("#recipe-fileterbar").hide()
             break
         case recipeLoadingDisplay:
             $("#recipe-choice-container").hide()
             $("#recipe-loading-container").show()
             $("#recipe-list-container").hide()
             $("#recipe-detail-container").hide()
+            $("#recipe-fileterbar").hide()
             break
         case recipeListDisplay:
             $("#recipe-choice-container").hide()
             $("#recipe-loading-container").hide()
             $("#recipe-list-container").show()
             $("#recipe-detail-container").hide()
+            $("#recipe-fileterbar").show()
             break
         case recipeDetailDisplay:
             $("#recipe-choice-container").hide()
             $("#recipe-loading-container").hide()
             $("#recipe-list-container").hide()
             $("#recipe-detail-container").show()
+            $("#recipe-fileterbar").hide()
             break
     }
 }
@@ -151,7 +155,6 @@ function ingredientDisplay(ingredient) {
         document.getElementById(temp).value = ingredient.options[ingredient.selectedIndex].text;
         gIndex += 1;
         gIrdntNm.push(document.getElementById(temp).value);
-
     }
 }
 
@@ -173,7 +176,7 @@ function selectedRecipeNation() {
     if (document.getElementById('recipe-type-select-list').value != "바로...") {
         gNationNm.push(document.getElementById('recipe-type-select-list').value)
         let checkNation = document.getElementById('recipe-type-select-list').value
-        console.log("이것은장르",checkNation)
+        console.log("이것은장르", checkNation)
         $(`input:radio[id="nation-food-${checkNation}"]`).attr("checked", true);
     } else {
         alert("식사 유형을 선택해주세요.")
@@ -224,55 +227,66 @@ function selectedRecipeNation() {
 
 // "필터 보기" 버튼 누르기 (검색 호출)
 function selectedRecipeFilter() {
-    // 식사 유형 데이터 저장
-    gNationNm.push($('input[name=nation]:checked').val())
-    console.log($('input[name=nation]:checked').val())
-    console.log(gNationNm)
-
-    // 식사 난이도 데이터 저장
-    if ($("input[id='filter-level1']:checked").val() == undefined && $("input[id='filter-level2']:checked").val() == undefined && $("input[id='filter-level3']:checked").val() == undefined) {
-        alert("난이도를 선택해주세요.")
-        return 0
+    // 좋아요 탭에서 호출 시 정렬만 적용
+    if ($("#favorite-page").hasClass("active")) {
+        if ($("input[name='align']:checked").val()) {
+            gSorted[0] = $("input[name='align']:checked").val()
+        } else {
+            alert("정렬을 선택해주세요.")
+            return 0
+        }
+        postRecipeInfo("liked");
     } else {
-        if ($("input[id='filter-level1']:checked").val() == 'on') {
-            gLevelNm.push('초보환영')
-        }
-        if ($("input[id='filter-level2']:checked").val() == 'on') {
-            gLevelNm.push('보통')
-        }
-        if ($("input[id='filter-level3']:checked").val() == 'on') {
-            gLevelNm.push('어려움')
-        }
-    }
+        // 추천레시피 탭에서 호출 시 조건 + 정렬 다 적용
+        // 식사 유형 데이터 저장
+        gNationNm.push($('input[name=nation]:checked').val())
+        console.log($('input[name=nation]:checked').val())
 
-    // 조리시간 데이터 저장
-    if ($("input[id='filter-short']:checked").val() == undefined && $("input[id='filter-medium']:checked").val() == undefined && $("input[id='filter-long']:checked").val() == undefined) {
-        alert("조리시간을 선택해주세요.")
-        return 0
-    } else {
-        if ($("input[id='filter-short']:checked").val() == 'on') {
-            gCookingTime.push('5분', '10분', '15분', '20분', '25분', '30분', '35분', '40분', '50분', '60분')
+        // 식사 난이도 데이터 저장
+        if ($("input[id='filter-level1']:checked").val() == undefined && $("input[id='filter-level2']:checked").val() == undefined && $("input[id='filter-level3']:checked").val() == undefined) {
+            alert("난이도를 선택해주세요.")
+            return 0
+        } else {
+            if ($("input[id='filter-level1']:checked").val() == 'on') {
+                gLevelNm.push('초보환영')
+            }
+            if ($("input[id='filter-level2']:checked").val() == 'on') {
+                gLevelNm.push('보통')
+            }
+            if ($("input[id='filter-level3']:checked").val() == 'on') {
+                gLevelNm.push('어려움')
+            }
         }
-        if ($("input[id='filter-medium']:checked").val() == 'on') {
-            gCookingTime.push('70분', '80분', '90분', '120분')
-        }
-        if ($("input[id='filter-long']:checked").val() == 'on') {
-            gCookingTime.push('140분', '175분', '180분')
-        }
-    }
 
-    if($("input[name='align']:checked").val()) {
-        gSorted[0] = $("input[name='align']:checked").val()
-    } else {
-        alert("정렬을 선택해주세요.")
-        return 0
+        // 조리시간 데이터 저장
+        if ($("input[id='filter-short']:checked").val() == undefined && $("input[id='filter-medium']:checked").val() == undefined && $("input[id='filter-long']:checked").val() == undefined) {
+            alert("조리시간을 선택해주세요.")
+            return 0
+        } else {
+            if ($("input[id='filter-short']:checked").val() == 'on') {
+                gCookingTime.push('5분', '10분', '15분', '20분', '25분', '30분', '35분', '40분', '50분', '60분')
+            }
+            if ($("input[id='filter-medium']:checked").val() == 'on') {
+                gCookingTime.push('70분', '80분', '90분', '120분')
+            }
+            if ($("input[id='filter-long']:checked").val() == 'on') {
+                gCookingTime.push('140분', '175분', '180분')
+            }
+        }
+
+        if ($("input[name='align']:checked").val()) {
+            gSorted[0] = $("input[name='align']:checked").val()
+        } else {
+            alert("정렬을 선택해주세요.")
+            return 0
+        }
+        postRecipeInfo("filter");
     }
-    console.log(gNationNm, gLevelNm, gCookingTime, gSorted)
-    postRecipeInfo("filter");
 }
 
 
 <!-- FIXME 필터 넣기 위해서 status 항목 추가 -->
+
 // 레시피 리스트 만들기 ("레시피 보기" or "레시피 검색" or 좋아요 탭 or )
 function postRecipeInfo(status) {
     // "레시피 보기"를 클릭한 경우, 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
@@ -302,11 +316,13 @@ function postRecipeInfo(status) {
                         makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], "search")
                     }
                     showControl(recipeListDisplay);
+
                 } else if (response['msg'] == 'nothing') {
                     alert("조건에 해당 되는 레시피가 없습니다.😥");
                     <!-- FIXME 필터 해당 레시피 없을경우에는 선택화면으로 돌아가지 않게 해놓음. -->
                     if (status == "search") {
                         showControl(recipeChoiceDisplay);
+
                     }
                 }
             }
@@ -334,7 +350,7 @@ function postRecipeInfo(status) {
         });
         // 좋아요 탭을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
     } else if (status == "liked" || status == "likedInMypage") {
-        console.log("뭔데이거",gSorted[0])
+        console.log("뭔데이거", gSorted[0])
         $.ajax({
             type: "GET",
             url: `/recipe/search?sort=${gSorted[0]}`,

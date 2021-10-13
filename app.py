@@ -19,7 +19,6 @@ db = client.dbrecipe
 with open('secrets.json') as file:
     secrets = json.loads(file.read())
 
-
 @app.route('/')
 def home():
     token_receive = request.cookies.get('mytoken')
@@ -272,7 +271,10 @@ def make_recipe_list():
                 data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID": int(data_we_want[i])}, projection))
                 data_we_get[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": data_we_want[i]})
                 data_we_get[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": data_we_want[i], "USER_ID": _id}))
-            print(data_we_get)
+
+            # 레시피 리스트 정렬 후에 데이터를 보냄. default는 추천순으로 정렬
+            data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
+
             if "recommend-sort" in recipe_sort:
                 data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
             elif "name-sort" in recipe_sort:
