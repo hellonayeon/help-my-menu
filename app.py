@@ -26,9 +26,10 @@ def home():
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        print(user_info)
-        print(user_info['_id'])
-        # user_info['_id'] = payload['user_id']
+        # print(payload['user_id'])
+        # print(user_info['_id'])
+        # print(user_info)
+        # payload['user_id']와 user_info['_id'] 찍어보면 원래부터 똑같네요.
         return render_template('index.html', user_info=user_info)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -52,9 +53,6 @@ def user(_id):
         is_mypage_user = (_id == payload['user_id'])
 
         user_info = db.users.find_one({'_id': ObjectId(_id)})
-        print(user_info)
-        print(user_info['_id'])
-        # user_info['_id'] = payload['user_id']
         return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
