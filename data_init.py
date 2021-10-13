@@ -1,8 +1,9 @@
+import os
 import requests
 from pymongo import MongoClient
 import json
 
-client = MongoClient('localhost', 27017)
+client = MongoClient(os.environ['MONGO_DB_PATH'])
 db = client.dbrecipe
 
 with open('recipe_ingredient_map.json', 'r', encoding='UTF8') as file:
@@ -16,10 +17,10 @@ def database_del():
         db.recipe_ingredient.delete_many({})
         db.recipe_number.delete_many({})
         db.recipe_ingredient_map.delete_many({})
-        # 밑의 코드는 상황에 맞게 쓰세요
-        # db.likes.delete_many({})
-        # db.comment.delete_many({})
-        # db.users.delete_many({})
+
+        db.likes.delete_many({})
+        db.comment.delete_many({})
+        db.users.delete_many({})
 
 
 def database_init():
