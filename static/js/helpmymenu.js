@@ -23,8 +23,6 @@ $(document).ready(function () {
 
     // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
     showControl(recipeChoiceDisplay)
-
-
 });
 
 /* 화면에 보여지는 내용 보이기, 숨기기 */
@@ -342,16 +340,14 @@ function postRecipeInfo(status, info) {
         });
     // index.html 좋아요탭 혹은 user.html 즐겨찾기을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
     } else if (status == "searchRecipesInMyPage") {
-        window.location.href = `/`;
         showControl(recipeLoadingDisplay);
         $.ajax({
             type: "GET",
-            url: `/recipe/search?recipe-search-name=${info}`,
+            url: `/recipe/search?recipe-search-name=${info}&sort=${gSorted[0]}`,
             success: function (response) {
                 if (response['msg'] == 'success') {
                     gSorted = [];
                     $('#recipe-list').empty();
-                    changePart("rec");
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
                         makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
@@ -389,7 +385,7 @@ function postRecipeInfo(status, info) {
 }
 
 // 검색한 레시피 리스트 & 좋아요 탭 레시피 리스트 출력
-function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status, info) {
+function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status) {
     let classHeart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
     let classColor = recipeLikebyMe ? "heart liked" : "heart"
     let idType, heartIdType, toggleLikeNum
@@ -403,8 +399,8 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
                             <h5 class="card-title">${recipeName}</h5>
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
-                                <a href="/recipe/detail?recipe-id=${recipeId}" class="card-link">자세히</a>
-                                <a id="likes${heartIdType}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum}, '${userId}')"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                                <a href="/recipe/detail?recipe-id=${recipeId}" target="_blank" class="card-link">자세히</a>
+                                <a id="likes${heartIdType}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum})"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
                     </div>`

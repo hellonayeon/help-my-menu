@@ -243,7 +243,6 @@ def make_recipe_list():
             user_id = request.args.get("user_id")
             recipe_sort = request.args.get("sort")
             # 'GET' 방식이면서, API 통신 url에 recipe_search_name이 존재하면 "레시피 검색 기능"으로 인식
-
             if recipe_search_name:
                 data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
             # 'GET' 방식이면서, API 통신 url에 user_id이 존재하면  "user.html 좋아요 탭"으로 인식
@@ -267,7 +266,6 @@ def make_recipe_list():
             # 레시피 리스트 정렬 후에 데이터를 보냄. default는 추천순으로 정렬
             data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
 
-            
             if recipe_sort == None :
                 pass
             elif "recommend-sort" in recipe_sort:
