@@ -19,7 +19,6 @@ db = client.dbrecipe
 with open('secrets.json') as file:
     secrets = json.loads(file.read())
 
-
 @app.route('/')
 def home():
     token_receive = request.cookies.get('mytoken')
@@ -203,6 +202,7 @@ def make_recipe_list():
         if request.method == 'POST':
             data_we_want = []
             recipe_info = request.get_json()
+            print(recipe_info)
             irdnt_nm = recipe_info['IRDNT_NM']
             nation_nm = recipe_info['NATION_NM']
             level_nm = recipe_info['LEVEL_NM']
@@ -224,8 +224,9 @@ def make_recipe_list():
                 nation_nm.remove('서양, 이탈리아')
             for i in nation_nm:
                 nation_nm_list.append({"NATION_NM": i})
-            selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
 
+
+            selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
             recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
             first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[0]}, {"_id": False, "RECIPE_ID": True}))
@@ -242,6 +243,7 @@ def make_recipe_list():
             user_id = request.args.get("user_id")
             recipe_sort = request.args.get("sort")
             # 'GET' 방식이면서, API 통신 url에 recipe_search_name이 존재하면 "레시피 검색 기능"으로 인식
+
             if recipe_search_name:
                 data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
             # 'GET' 방식이면서, API 통신 url에 user_id이 존재하면  "user.html 좋아요 탭"으로 인식
@@ -265,6 +267,7 @@ def make_recipe_list():
             # 레시피 리스트 정렬 후에 데이터를 보냄. default는 추천순으로 정렬
             data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
 
+            
             if recipe_sort == None :
                 pass
             elif "recommend-sort" in recipe_sort:
@@ -411,7 +414,9 @@ def update_like() :
             "RECIPE_ID": recipe_id,
             "USER_ID": user_info["_id"]
         }
+        
         if db.likes.find_one(doc) :
+
             db.likes.delete_one(doc)
             action = "unlike"
         else:

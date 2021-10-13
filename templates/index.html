@@ -54,6 +54,7 @@
 </head>
 
 <body>
+
 <!-- 상단 Navbar -->
 <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="/">헤얿 마이 메뉴!</a>
@@ -72,6 +73,7 @@
         </ul>
         <ul class="navbar-nav" style="padding-right: 20px;">
             <li class="nav-item">
+
                 <a class="nav-link" onclick="logout()" href="#">로그아웃</a>
             </li>
         </ul>
@@ -278,10 +280,10 @@
 
             <div class="input-group" style="height: 50px;">
                 <input id="search-input" type="text" class="form-control" placeholder="재료를 입력해주세요"
-                aria-label="Text input with dropdown button">
+                       aria-label="Text input with dropdown button">
                 <div class="input-group-append">
                     <select class="btn btn-outline-secondary dropdown-toggle" type="select"
-                    onchange="ingredientDisplay(this)" data-toggle="dropdown"
+                            onchange="ingredientDisplay(this)" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
                         <option selected hidden>재료 리스트</option>
                         <optgroup label="재료" id="ingredient-select-list">

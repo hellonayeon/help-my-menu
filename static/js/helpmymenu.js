@@ -240,6 +240,7 @@ function selectedRecipeFilter() {
             return 0
         }
         postRecipeInfo("searchRecipes", 0);
+
     } else {
         // 추천레시피 탭에서 호출 시 조건 + 정렬 다 적용
         // 식사 유형 데이터 저장
@@ -313,6 +314,7 @@ function postRecipeInfo(status, info) {
                     gNationNm = [];
                     gLevelNm = [];
                     gCookingTime = [];
+                  
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
                         makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
@@ -357,6 +359,7 @@ function postRecipeInfo(status, info) {
             url: `/recipe/search?recipe-search-name=${info}`,
             success: function (response) {
                 if (response['msg'] == 'success') {
+                    gSorted = [];
                     $('#recipe-list').empty();
                     changePart("rec");
                     let recipe = response['data_we_get']
@@ -370,6 +373,7 @@ function postRecipeInfo(status, info) {
                 }
             }
         });
+      // 좋아요 탭을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
     } else if (status == "liked" || status == "likedInMypage") {
         let urlForLikedOrMypage = status == "liked" ? `/recipe/search?sort=${gSorted[0]}` : `/recipe/search?user_id=${info}`
         $.ajax({
