@@ -115,6 +115,15 @@ function changePassword() {
 
 }
 
+function recipeNameKorSearchInMyPage() {
+    let recipeName = $('#search-recipe-input').val();
+    if (recipeName.length < 2) {
+        alert("검색할 레시피 이름을 2글자 이상 기입하세요.");
+    } else {
+        postRecipeInfo("searchRecipesInMyPage", recipeName);
+    }
+}
+
 // FIXME: 로그인화면과 조건 상이하여 함수 하나 더 생성했음.
 function isUserNickname(asValue) {
     var regExp = /[가-힣a-zA-Z0-9_.]{3,10}$/;
