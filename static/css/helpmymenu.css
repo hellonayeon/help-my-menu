@@ -160,6 +160,7 @@
 
 .heart {
     float: right;
+    cursor: pointer;
 }
 
 .heart.liked {
@@ -169,13 +170,14 @@
 .heart-detail {
     float:right;
     margin-top:20px;
+    cursor: pointer;
 }
 
 .heart-detail.liked {
     color : red !important;
 }
 
-#alert-no-liked {
+.alert-no-liked {
     font-size:x-large;
     display: block;
     margin: 50px auto auto auto;
