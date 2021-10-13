@@ -328,11 +328,12 @@ function postRecipeInfo(status, info) {
                     gSorted = [];
                     $('#recipe-list').empty();
                     changePart("rec");
+                    showControl(recipeListDisplay);
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
                         makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
                     }
-                    showControl(recipeListDisplay);
+                    // showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
                     alert("조건에 해당 되는 레시피가 없습니다.😥")
                 }

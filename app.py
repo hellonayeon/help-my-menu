@@ -320,8 +320,39 @@ def get_recipe_detail():
 # 댓글 목록 API
 @app.route('/recipe/comment', methods=['GET'])
 def get_comments():
+    # 토큰 유효성 검사
+    token_receive = request.cookies.get('mytoken')
+    try:
+        jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+    # 상세페이지 댓글
     recipe_id = int(request.args.get("recipe-id"))
-    comments = list(db.comment.find({"RECIPE_ID": recipe_id}, {"_id": False}))
+    # 마이페이지 댓글
+    user_id = request.args.get("user-id")
+
+    if recipe_id is not None:
+        comments = list(db.comment.find({"RECIPE_ID": recipe_id}))
+
+        # 댓글을 작성한 사용자의 '이름' '프로필 사진' 가져와서 각각의 댓글 딕셔너리에 저장
+        for comment in comments:
+            user_info = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
+            comment["USERNAME"] = user_info["USERNAME"]
+            comment["PROFILE_PIC_REAL"] = user_info["PROFILE_PIC_REAL"]
+            comment["_id"] = str(comment["_id"])
+    else:
+        user_info = db.users.find_one({"_id": ObjectId(user_id)})
+        username = ["USERNAME"]
+        profile_pic_real = ["PROFILE_PIC_REAL"]
+
+        comments = list(db.comment.find({"USER_ID": user_id}))
+        for comment in comments:
+            comment["USERNAME"] = username
+            comment["PROFILE_PIC_REAL"] = profile_pic_real
+            comment["_id"] = str(comment["_id"])
 
     return jsonify(comments)
 
@@ -329,67 +360,69 @@ def get_comments():
 # 댓글 작성 API
 @app.route('/recipe/comment', methods=['POST'])
 def save_comment():
-    recipe_id = int(request.form["recipe_id"])
-    text = request.form["text"]
-    nick_nm = request.form["nick_nm"]
-    pw = request.form["pw"]
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        _id = payload['user_id']
 
-    # 이미 있는 닉네임인 경우 해당 레코드 반환
-    used_nick_nm = db.comment.find_one({"NICK_NM": {"$in": [nick_nm]}})
-    if used_nick_nm != None:
-        return jsonify({'result': 'failure', 'msg': '이미 있는 닉네임입니다. 다른 닉네임을 입력해주세요!'})
+        recipe_id = int(request.form["recipe_id"])
+        text = request.form["text"]
 
-    # [업로드 이미지 처리]
-    # 클라이언트가 업로드한 파일을 서버에 저장
-    fname = ""
-    extension = ""
-    today = today = datetime.now()  # 현재 시각 가져오기
-    if len(request.files) != 0:
-        file = request.files["img_src"]
+        # [업로드 이미지 처리]
+        # 클라이언트가 업로드한 파일을 서버에 저장
+        fname = ""
+        extension = ""
+        today = today = datetime.now()  # 현재 시각 가져오기
+        if len(request.files) != 0:
+            file = request.files["img_src"]
 
-        # 이미지 확장자
-        # 가장 마지막 문자열 가져오기 [-1]
-        # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
-        extension = file.filename.split('.')[-1]
+            # 이미지 확장자
+            # 가장 마지막 문자열 가져오기 [-1]
+            # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
+            extension = file.filename.split('.')[-1]
 
-        today = datetime.now()  # 현재 시각 가져오기
-        time = today.strftime('%Y-%m-%d-%H-%M-%S')
-        fname = f'file-{time}.{extension}'
+            today = datetime.now()  # 현재 시각 가져오기
+            time = today.strftime('%Y-%m-%d-%H-%M-%S')
+            fname = f'file-{_id}-{time}.{extension}'
 
-        save_to = f'static/comment-images/{fname}'  # python f-string
-        file.save(save_to)  # 날짜 기반 새로운 파일 이름 생성 후 프로젝트 static/comment-comment-images/ 폴더에 저장
+            save_to = f'static/comment-images/{fname}'
+            file.save(save_to)
 
-    # 업데이트 날짜 표시
-    date = today.strftime('%Y.%m.%d')
+        # 업데이트 날짜 표시
+        date = today.strftime('%Y.%m.%d')
 
-    # [DB 처리]
-    doc = {
-        'RECIPE_ID': recipe_id,
-        'TEXT': text,
-        'IMG_SRC': fname,
-        'DATE': date,
-        'NICK_NM': nick_nm,
-        'PW': pw
-    }
+        # [DB 처리]
+        doc = {
+            'RECIPE_ID': recipe_id,
+            'TEXT': text,
+            'IMG_SRC': fname,
+            'DATE': date,
+            'USER_ID': _id
+        }
 
-    db.comment.insert_one(doc)
+        db.comment.insert_one(doc)
 
-    return jsonify({'result': 'success'})
+        return jsonify({'result': 'success'})
+
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
 
 # 댓글 삭제 API
 @app.route('/recipe/comment', methods=['DELETE'])
 def delete_comment():
-    nick_nm = request.form["nick_nm"]
-    pw = request.form["pw"]
-    comment = db.comment.find_one({"NICK_NM": nick_nm}, {"_id": False})
+    token_receive = request.cookies.get('mytoken')
+    try:
+        jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
-    # 닉네임에 해당되는 비밀번호가 일치하지 않을 경우
-    if (pw != comment["PW"]):
-        return jsonify({'result': 'failure', 'msg': '비밀번호가 일치하지 않습니다!'})
-
-    # 일치하는 경우 삭제
-    db.comment.delete_one(comment)
+    comment_id = request.form["comment_id"]
+    db.comment.delete_one({"_id": ObjectId(comment_id)})
 
     return jsonify({'result': 'success'})
 
