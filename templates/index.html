@@ -82,6 +82,152 @@
     </div>
 </nav>
 
+<div class="pos-f-t" id="recipe-fileterbar">
+    <div class="collapse" id="navbarToggleExternalContent">
+        <div class="bg-dark p-4">
+            <h5 class="text-white">장르</h5>
+            <div>
+                <div class="form-check">
+                    <div class="container" style="margin: 20px auto 50px 50px;">
+                        <div class="row justify-content-start">
+                            <div class="col-1">
+                                <input class="form-check-input" type="radio" name="nation" value="한식"
+                                       id="nation-food-한식">
+                                <label class="form-check-label text-white" for="nation-food-한식">
+                                    한식
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="radio" name="nation" value="서양, 이탈리아"
+                                       id="nation-food-서양, 이탈리아">
+                                <label class="form-check-label text-white" for="nation-food-서양, 이탈리아">
+                                    양식
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="radio" name="nation" value="중식"
+                                       id="nation-food-중식">
+                                <label class="form-check-label text-white" for="nation-food-중식">
+                                    중식
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="radio" name="nation" value="일식"
+                                       id="nation-food-일식">
+                                <label class="form-check-label text-white" for="nation-food-일식">
+                                    일식
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="radio" name="nation" value="동남아시아"
+                                       id="nation-food-동남아">
+                                <label class="form-check-label text-white" for="nation-food-동남아시아">
+                                    동남아
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="radio" name="nation" value="퓨전"
+                                       id="nation-food-그 외">
+                                <label class="form-check-label text-white" for="nation-food-퓨전">
+                                    그 외
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h5 class="text-white">난이도</h5>
+            <div>
+                <div class="form-check">
+                    <div class="container" style="margin: 20px auto 50px 50px;">
+                        <div class="row justify-content-start">
+                            <div class="col-1">
+                                <input class="form-check-input" type="checkbox" name="level" id="filter-level1">
+                                <label class="form-check-label text-white" for="filter-level1">
+                                    ⭐
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="checkbox" name="level" id="filter-level2">
+                                <label class="form-check-label text-white" for="filter-level2">
+                                    ⭐⭐
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="checkbox" name="level" id="filter-level3">
+                                <label class="form-check-label text-white" for="filter-level3">
+                                    ⭐⭐⭐
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h5 class="text-white">소요 시간</h5>
+            <div>
+                <div class="form-check">
+                    <div class="container" style="margin: 20px auto 50px 50px;">
+                        <div class="row justify-content-start">
+                            <div class="col-1">
+                                <input class="form-check-input" type="checkbox" id="filter-short">
+                                <label class="form-check-label text-white" for="filter-short">
+                                    1시간
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="checkbox" id="filter-medium">
+                                <label class="form-check-label text-white" for="filter-medium">
+                                    2시간
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="checkbox" id="filter-long">
+                                <label class="form-check-label text-white" for="filter-long">
+                                    3시간
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h5 class="text-white">정렬</h5>
+            <div>
+                <div class="form-check">
+                    <div class="container" style="margin: 20px auto 50px 50px;">
+                        <div class="row justify-content-start">
+                            <div class="col-1">
+                                <input class="form-check-input" type="radio" name="align" value="recommend-sort"
+                                       id="recommend-sort" checked>
+                                <label class="form-check-label text-white" for="defaultCheck13">
+                                    추천순
+                                </label>
+                            </div>
+                            <div class="col-1">
+                                <input class="form-check-input" type="radio" name="align" value="name-sort"
+                                       id="date-sort">
+                                <label class="form-check-label text-white" for="defaultCheck14">
+                                    이름순
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 30px;">
+            </div>
+
+        </div>
+
+    </div>
+    <nav class="navbar navbar-dark bg-dark">
+        <button id="filter" class=" btn btn-outline-secondary" onclick="selectedRecipeFilter()">수정</button>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent"
+                aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+</div>
+
 <div class="wrap">
     <!-- 레시피 선택 화면 (첫 화면) -->
     <div class="container" id="recipe-choice-container">
@@ -131,9 +277,11 @@
             🍳 왓츠 인 마이 냉장고? :
 
             <div class="input-group" style="height: 50px;">
-                <input id="search-input" type="text" class="form-control" placeholder="재료를 입력해주세요" aria-label="Text input with dropdown button">
+                <input id="search-input" type="text" class="form-control" placeholder="재료를 입력해주세요"
+                aria-label="Text input with dropdown button">
                 <div class="input-group-append">
-                    <select class="btn btn-outline-secondary dropdown-toggle" type="select" onchange="ingredientDisplay(this)" data-toggle="dropdown"
+                    <select class="btn btn-outline-secondary dropdown-toggle" type="select"
+                    onchange="ingredientDisplay(this)" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
                         <option selected hidden>재료 리스트</option>
                         <optgroup label="재료" id="ingredient-select-list">
@@ -172,7 +320,7 @@
             <br>
 
             ⏱ 소요 시간
-            <div class="form-check" >
+            <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="short">
                 <label class="form-check-label" for="short">30분~1시간</label>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -215,7 +363,7 @@
                     <a class="nav-link active" aria-current="page" href="#" onclick="changePart('rec')">추천</a>
                 </li>
                 <li class="nav-item" id="part-like">
-                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true"
+                    <a id="favorite-page" class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true"
                        onclick="changePart('like')">즐겨찾기</a>
                 </li>
             </ul>

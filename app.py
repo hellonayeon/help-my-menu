@@ -26,10 +26,6 @@ def home():
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        # print(payload['user_id'])
-        # print(user_info['_id'])
-        # print(user_info)
-        # payload['user_id']와 user_info['_id'] 찍어보면 원래부터 똑같네요.
         return render_template('index.html', user_info=user_info)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -211,6 +207,7 @@ def make_recipe_list():
             nation_nm = recipe_info['NATION_NM']
             level_nm = recipe_info['LEVEL_NM']
             cooking_time = recipe_info['COOKING_TIME']
+            recipe_sort = recipe_info["SORTED"]
 
             level_nm_list = []
             for i in level_nm:
@@ -237,14 +234,13 @@ def make_recipe_list():
                 irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[i]}, {"_id": False, "RECIPE_ID": True}))
                 tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
                 ingredient_set = ingredient_set & tmp_set
-
             data_we_want = list(recipe_ids & ingredient_set)
 
         # 만약 'GET' 방식이면, "레시피 검색 기능" 혹은 "좋아요 탭"을 사용한 것으로 인식 
         elif request.method == 'GET':
             recipe_search_name = request.args.get("recipe-search-name")
             user_id = request.args.get("user_id")
-
+            recipe_sort = request.args.get("sort")
             # 'GET' 방식이면서, API 통신 url에 recipe_search_name이 존재하면 "레시피 검색 기능"으로 인식
             if recipe_search_name:
                 data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
@@ -254,7 +250,6 @@ def make_recipe_list():
             # 'GET' 방식이면서, API 통신 url에 args가 None이면, "index.html 좋아요 탭"으로 인식
             else:
                 data_we_want = list(db.likes.find({"USER_ID": _id}).distinct("RECIPE_ID"))
-
 
         ## 검색 결과를 출력하기 위해 DB에서 찾은 RECIPE_ID에 해당하는 레시피 상세 정보들을 data_we_get에 저장 후 전송
         # data_we_want 리스트가 비어있지 않은 경우: data_we_want != [] 랑 동일한 구문, PEP8 가이드 준수
@@ -266,6 +261,16 @@ def make_recipe_list():
                 data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID": int(data_we_want[i])}, projection))
                 data_we_get[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": data_we_want[i]})
                 data_we_get[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": data_we_want[i], "USER_ID": _id}))
+
+            # 레시피 리스트 정렬 후에 데이터를 보냄. default는 추천순으로 정렬
+            data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
+
+            if recipe_sort == None :
+                pass
+            elif "recommend-sort" in recipe_sort:
+                data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
+            elif "name-sort" in recipe_sort:
+                data_we_get = sorted(data_we_get, key=lambda k: k['RECIPE_NM_KO'], reverse=False)
             return jsonify({'msg': 'success', "data_we_get": data_we_get})
         else:
             return jsonify({'msg': 'nothing'})
