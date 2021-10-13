@@ -20,9 +20,16 @@ $(document).ready(function () {
 
     // 사진 업로드
     bsCustomFileInput.init()
-
-    // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
-    showControl(recipeChoiceDisplay)
+    let url = window.location.href
+    console.log(url)
+    console.log(typeof(url))
+    if (url.includes("recipe-name-kor-search=")) {
+        gRecipeSearchName = url.split('=').at(-1)
+        postRecipeInfo("searchRecipes", 0);
+    } else {
+        // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
+        showControl(recipeChoiceDisplay)
+    }
 });
 
 /* 화면에 보여지는 내용 보이기, 숨기기 */
@@ -124,8 +131,7 @@ function recipeNameKorSearch() {
     if (recipeName.length < 2) {
         alert("검색할 레시피 이름을 2글자 이상 기입하세요.");
     } else {
-        gRecipeSearchName = recipeName
-        postRecipeInfo("searchRecipes", 0);
+        window.open(`/?recipe-name-kor-search=${recipeName}`)
     }
 }
 
