@@ -19,7 +19,6 @@ db = client.dbrecipe
 with open('secrets.json') as file:
     secrets = json.loads(file.read())
 
-
 @app.route('/')
 def home():
     token_receive = request.cookies.get('mytoken')
@@ -211,10 +210,13 @@ def make_recipe_list():
         if request.method == 'POST':
             data_we_want = []
             recipe_info = request.get_json()
+            print(recipe_info)
             irdnt_nm = recipe_info['IRDNT_NM']
             nation_nm = recipe_info['NATION_NM']
             level_nm = recipe_info['LEVEL_NM']
             cooking_time = recipe_info['COOKING_TIME']
+            recipe_sort = recipe_info["SORTED"]
+            print(recipe_sort)
 
             level_nm_list = []
             for i in level_nm:
@@ -231,8 +233,9 @@ def make_recipe_list():
                 nation_nm.remove('서양, 이탈리아')
             for i in nation_nm:
                 nation_nm_list.append({"NATION_NM": i})
-            selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
 
+
+            selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
             recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
             first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[0]}, {"_id": False, "RECIPE_ID": True}))
@@ -247,6 +250,8 @@ def make_recipe_list():
         # 만약 'GET' 방식이면, "레시피 검색 기능" 혹은 "좋아요 탭"을 사용한 것으로 인식 
         elif request.method == 'GET':
             recipe_search_name = request.args.get("recipe-search-name")
+            recipe_sort = request.args.get("sort")
+            print("dd",recipe_sort)
 
             # 'GET' 방식이면서, API 통신 url에 args(url에서 ? 뒤의 값)이 존재하면 "레시피 검색 기능"으로 인식
             if recipe_search_name:
@@ -266,6 +271,14 @@ def make_recipe_list():
                 data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID": int(data_we_want[i])}, projection))
                 data_we_get[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": data_we_want[i]})
                 data_we_get[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": data_we_want[i], "USER_ID": _id}))
+
+            # 레시피 리스트 정렬 후에 데이터를 보냄. default는 추천순으로 정렬
+            data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
+
+            if "recommend-sort" in recipe_sort:
+                data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
+            elif "name-sort" in recipe_sort:
+                data_we_get = sorted(data_we_get, key=lambda k: k['RECIPE_NM_KO'], reverse=False)
             return jsonify({'msg': 'success', "data_we_get": data_we_get})
         else:
             return jsonify({'msg': 'nothing'})
@@ -408,7 +421,7 @@ def update_like() :
             "USER_ID": user_info["_id"]
         }
 
-        if action == "like" : 
+        if action == "like" :
             db.likes.insert_one(doc)
         else:
             db.likes.delete_one(doc)
