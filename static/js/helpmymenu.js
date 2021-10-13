@@ -130,7 +130,7 @@ function recipeNameKorSearch() {
         alert("검색할 레시피 이름을 2글자 이상 기입하세요.");
     } else {
         gRecipeSearchName = recipeName
-        postRecipeInfo("searchRecipes");
+        postRecipeInfo("searchRecipes", 0);
         // FIXME: 로딩창을 띄울 경우 원래 검색하던 위치로 다시 돌아갈 수 없는 경우 발생
         // showControl의 인수에 따라 검색하기 이전 페이지로 돌아가도록 하는 코드가 필요합니다.
         // 아주 사소한 것이라 안 고쳐도 됩니다.
@@ -206,11 +206,11 @@ function selectedRecipeNation() {
         }
     }
     showControl(recipeLoadingDisplay);
-    postRecipeInfo("search");
+    postRecipeInfo("search", 0);
 }
 
 // 레시피 리스트 만들기 ("레시피 보기" or "레시피 검색" or 좋아요 탭)
-function postRecipeInfo(status) {
+function postRecipeInfo(status, _id) {
     // "레시피 보기"를 클릭한 경우, 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
     if (status == "search") {
         var recipeInfo = {"IRDNT_NM": gIrdntNm, "NATION_NM": gNationNm, "LEVEL_NM": gLevelNm, "COOKING_TIME": gCookingTime}
@@ -225,7 +225,7 @@ function postRecipeInfo(status) {
                     $('#recipe-list').empty();
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], "search")
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, _id)
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -245,7 +245,7 @@ function postRecipeInfo(status) {
                     changePart("rec");
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], "search")
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, _id)
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -254,20 +254,20 @@ function postRecipeInfo(status) {
                 }
             }
         });
-    // 좋아요 탭을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
-    } else if (status == "liked" || (status != "liked" && status)) {
-        let urlForLikedOrMypage = status == "liked" ? `/recipe/search` : `/recipe/search?user_id=${status}`
+    // index.html 좋아요탭 혹은 user.html 즐겨찾기을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
+    } else if (status == "liked" || (status == "likedMypage")) {
+        let urlForLikedOrMypage = status == "liked" ? `/recipe/search` : `/recipe/search?user_id=${_id}`
         $.ajax({
             type: "GET",
             url: urlForLikedOrMypage,
             success: function (response) {
-                let idToAppend = status == "liked" ? "#recipe-liked-list" : `#recipe-liked-mypage-list-${status}`
+                let idToAppend = status == "liked" ? "#recipe-liked-list" : `#recipe-liked-mypage-list`
                 let idAlertNoLiked = status == "liked" ? "alert-no-liked" : "alert-no-liked-in-my-page"
                 $(idToAppend).empty();
                 if (response['msg'] == 'success') {
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, _id)
                     }
                 } else if (response['msg'] == 'nothing') {
                     let tempHtml = `<div class=${idAlertNoLiked}>좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
@@ -279,14 +279,13 @@ function postRecipeInfo(status) {
 }
 
 // 검색한 레시피 리스트 & 좋아요 탭 레시피 리스트 출력
-function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status) {
+function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status, _id) {
     let classHeart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
     let classColor = recipeLikebyMe ? "heart liked" : "heart"
-    let idTyep
-    let toggleLikeNum
-    if (status == "search") {idTyep = "-list"; heartIdType = ""; toggleLikeNum = 0;}
-    else if (status == "liked") {idTyep = "-liked-list"; heartIdType = "-liked"; toggleLikeNum = 2;}
-    else if (status) {idTyep = `-liked-mypage-list-${status}`; heartIdType = "-liked-mypage"; toggleLikeNum = status;}
+    let idTyep, toggleLikeNum, userId
+    if (status == "search" || status == "searchRecipes") {idTyep = "-list"; heartIdType = ""; toggleLikeNum = 0; userId = 0;}
+    else if (status == "liked") {idTyep = "-liked-list"; heartIdType = "-liked"; toggleLikeNum = 2; userId = 0;}
+    else if (status == "likedMypage") {idTyep = `-liked-mypage-list`; heartIdType = "-liked-mypage"; toggleLikeNum = 3; userId = _id}
 
     let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin:10px 12.5px 10px 12.5px;  min-width: 200px; max-width: 200px;">                                
                         <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
@@ -295,7 +294,7 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
                                 <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
-                                <a id="likes${heartIdType}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, '${toggleLikeNum}')"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                                <a id="likes${heartIdType}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum}, '${userId}')"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
                     </div>`
@@ -515,13 +514,9 @@ function showPasswordDialog(recipeId, nickNm) {
 
 
 // 좋아요 기능
-function toggleLike(recipe_id, num) {
+function toggleLike(recipe_id, toggleLikeNum, userId) {
     let likeIdArray = ["","-detail", "-liked", "-liked-mypage"]
-    let likeId
-    if (num=='0') {num = 0}
-    else if (num == '2') {num = 2}
-    if (typeof(num) == "number") {likeId = $(`#likes${likeIdArray[num]}-${recipe_id}`)}
-    else {likeId = $(`#likes-liked-mypage-${recipe_id}`);}
+    let likeId = $(`#likes${likeIdArray[toggleLikeNum]}-${recipe_id}`)
     $.ajax({
         type : 'POST',
         url : `recipe/update_like`,
@@ -530,7 +525,7 @@ function toggleLike(recipe_id, num) {
         },
         success : function(response) {
             for(let i = 0; i < likeIdArray.length; i++) {
-                likeId = i < 3 ? $(`#likes${likeIdArray[i]}-${recipe_id}`) : $(`#likes-liked-mypage-${recipe_id}`)
+                likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
                 if (response['action'] == "like") {
                     if (likeId.find("i").hasClass("fa-heart-o")) {likeId.find("i").removeClass("fa-heart-o").addClass("fa-heart")}
                     if (!likeId.hasClass("liked")) {likeId.addClass("liked")}
@@ -574,7 +569,7 @@ function changePart(part) {
     } else {
         $('#recipe-list').hide();
         $('#recipe-liked-list').show();
-        postRecipeInfo("liked");
+        postRecipeInfo("liked", 0);
         if ($('#part-like').children("a").hasClass("disabled")) {
             $('#part-like').children("a").removeClass("disabled")
             $('#part-like').children("a").addClass("active")

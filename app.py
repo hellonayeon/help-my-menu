@@ -247,12 +247,13 @@ def make_recipe_list():
             recipe_search_name = request.args.get("recipe-search-name")
             user_id = request.args.get("user_id")
 
-            # 'GET' 방식이면서, API 통신 url에 args(url에서 ? 뒤의 값)이 존재하면 "레시피 검색 기능"으로 인식
+            # 'GET' 방식이면서, API 통신 url에 recipe_search_name이 존재하면 "레시피 검색 기능"으로 인식
             if recipe_search_name:
                 data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
-            # 'GET' 방식이면서, API 통신 url에 args가 None("")이면 "좋아요 탭"으로 인식
+            # 'GET' 방식이면서, API 통신 url에 user_id이 존재하면  "user.html 좋아요 탭"으로 인식
             elif user_id:
                 data_we_want = list(db.likes.find({"USER_ID": user_id}).distinct("RECIPE_ID"))
+            # 'GET' 방식이면서, API 통신 url에 args가 None이면, "index.html 좋아요 탭"으로 인식
             else:
                 data_we_want = list(db.likes.find({"USER_ID": _id}).distinct("RECIPE_ID"))
 
