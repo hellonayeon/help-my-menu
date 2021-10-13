@@ -236,6 +236,17 @@ function selectedRecipeFilter() {
             return 0
         }
         postRecipeInfo("liked");
+
+    } else if ($("#search-recipe-input").val()) {
+        if ($("input[name='align']:checked").val()) {
+            gSorted[0] = $("input[name='align']:checked").val()
+            console.log("간장")
+        } else {
+            alert("정렬을 선택해주세요.")
+            return 0
+        }
+        postRecipeInfo("searchRecipes");
+
     } else {
         // 추천레시피 탭에서 호출 시 조건 + 정렬 다 적용
         // 식사 유형 데이터 저장
@@ -331,7 +342,7 @@ function postRecipeInfo(status) {
     } else if (status == "searchRecipes") {
         $.ajax({
             type: "GET",
-            url: `/recipe/search?recipe-search-name=${gRecipeSearchName}?sort=${gSorted[0]}`,
+            url: `/recipe/search?recipe-search-name=${gRecipeSearchName}&sort=${gSorted[0]}`,
             success: function (response) {
                 if (response['msg'] == 'success') {
                     gSorted = [];
