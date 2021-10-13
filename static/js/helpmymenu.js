@@ -317,7 +317,7 @@ function postRecipeInfo(status, info) {
                   
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
                     }
                     showControl(recipeListDisplay);
 
@@ -342,7 +342,7 @@ function postRecipeInfo(status, info) {
                     changePart("rec");
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -364,7 +364,7 @@ function postRecipeInfo(status, info) {
                     changePart("rec");
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
                     }
                     showControl(recipeListDisplay);
                 } else if (response['msg'] == 'nothing') {
@@ -387,7 +387,7 @@ function postRecipeInfo(status, info) {
                 if (response['msg'] == 'success') {
                     let recipe = response['data_we_get']
                     for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status, info)
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
                     }
                 } else if (response['msg'] == 'nothing') {
                     let tempHtml = `<div class=${idAlertNoLiked}>좋아요한 레시피가 없습니다.😥<br>관심있는 레시피에 좋아요를 눌러보세요.</div>`
@@ -402,10 +402,10 @@ function postRecipeInfo(status, info) {
 function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status, info) {
     let classHeart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
     let classColor = recipeLikebyMe ? "heart liked" : "heart"
-    let idType, heartIdType, toggleLikeNum, userId
+    let idType, heartIdType, toggleLikeNum
     if (status == "search" || status == "searchRecipes" || status == "filter") {idType = "-list"; heartIdType = ""; toggleLikeNum = 0;}
     else if (status == "liked") {idType = "-liked-list"; heartIdType = "-liked"; toggleLikeNum = 2;}
-    else if (status == "likedInMypage") {idType = `-liked-mypage-list`; heartIdType = "-liked-mypage"; toggleLikeNum = 3; userId = info}
+    else if (status == "likedInMypage") {idType = `-liked-mypage-list`; heartIdType = "-liked-mypage"; toggleLikeNum = 3;}
 
     let tempHtml = `<div id="recipe${recipeId}" class="card" style="margin:10px 12.5px 10px 12.5px;  min-width: 200px; max-width: 200px;">                                
                         <img class="card-img-top img-fix" src="${recipeUrl}" alt="Card image cap">
@@ -414,7 +414,7 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
                                 <a href="javascript:void(0);" onclick="getRecipeDetail(${recipeId}); getComment(${recipeId}); showControl(recipeDetailDisplay)" class="card-link">자세히</a>
-                                <a id="likes${heartIdType}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum}, '${userId}')"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
+                                <a id="likes${heartIdType}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum})"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
                     </div>`
@@ -634,7 +634,7 @@ function showPasswordDialog(recipeId, nickNm) {
 
 
 // 좋아요 기능
-function toggleLike(recipe_id, toggleLikeNum, userId) {
+function toggleLike(recipe_id, toggleLikeNum) {
     let likeIdArray = ["","-detail", "-liked", "-liked-mypage"]
     let likeId = $(`#likes${likeIdArray[toggleLikeNum]}-${recipe_id}`)
     $.ajax({
