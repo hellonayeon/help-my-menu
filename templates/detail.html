@@ -41,8 +41,9 @@
 
     <!-- 'Help My Menu' Javascript, CSS -->
     <script type="text/javascript" src="/static/js/helpmymenu.js"></script>
-    <script type="text/javascript" src="/static/js/detail.js"></script>
+    <script type="text/javascript" src="/static/js/comment.js"></script>
     <link rel="stylesheet" href="/static/css/helpmymenu.css">
+    <link rel="stylesheet" href="/static/css/comment.css">
 
     <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
@@ -52,7 +53,7 @@
     <script>
         $(document).ready(function(){
             // 상세페이지 로딩 시 댓글 리스트 가져오기
-            getComment({{ recipe_info.RECIPE_ID }})
+            getComment({{ recipe_info.RECIPE_ID }}, "{{ user_id }}")
         })
     </script>
 </head>
@@ -158,18 +159,6 @@
         <div class="row">
             <button type="button" class="btn btn-primary" onclick="showControl(recipeListDisplay)">닫기</button>
         </div>
-    </div>
-</div>
-
-<!-- 댓글 삭제 시 띄우는 다이얼로그 -->
-<div id="comment-pw-confirm-dialog" style="display: none">
-    <p>댓글 작성시 사용한 비밀번호를 입력해주세요!</p>
-    <div class="input-group mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">비밀번호</span>
-        </div>
-        <input type="password" class="form-control" id="comment-pw-confirm-input" aria-label="Default"
-               aria-describedby="inputGroup-sizing-default">
     </div>
 </div>
 
