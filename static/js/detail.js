@@ -16,9 +16,6 @@ function saveComment(recipeId) {
     let text = $('#comment-text-area').val();
     let imgSrc = $('#file')[0].files[0];
 
-    // 아이디 또는 비밀번호, 댓글 내용을 입력 안한 경우
-    if (!checkCommentUserInfo(nickNm, pw, text)) return
-
     let formData = new FormData()
     formData.append("recipe_id", recipeId)
     formData.append("text", text)
