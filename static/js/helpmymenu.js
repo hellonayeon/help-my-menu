@@ -10,15 +10,19 @@ let gIndex = 1
 
 $(document).ready(function () {
     ingredientListing();
-    bestRecipeInfo()
 
     // 사진 업로드
     bsCustomFileInput.init()
 
+    // 접속한 url에 따라 [일반적인 홈 접속]인지 [마이페이지-레시피 검색 기능]인지 구별
     let url = window.location.href
+    // 검색을 통한 접근이면 url에 recipe-name-kor-search가 포함됨.
     if (url.includes("recipe-name-kor-search=")) {
         gRecipeSearchName = url.split('=').at(-1)
         postRecipeInfo("searchRecipes", 0);
+    } else {
+        // 일반적인 홈페이지 접근이라면 "추천 리스트" 출력
+        bestRecipeInfo()
     }
 });
 
@@ -94,7 +98,8 @@ function searchShow() {
 
 // 레시피 검색 (Navbar 오른쪽)
 function recipeNameKorSearch() {
-    let recipeName = $('#search-recipe-input').val();
+    // 오른쪽 상단 navbar의 검색 input 박스의 내용을 가져와서 2글자 미만이면 alert, 아니면 페이지 이동으로 검색
+        let recipeName = $('#search-recipe-input').val();
     if (recipeName.length < 2) {
         alert("검색할 레시피 이름을 2글자 이상 기입하세요.");
     } else {
@@ -218,9 +223,9 @@ function bestRecipeInfo() {
     });
 }
 
-// 레시피 리스트 만들기 ("레시피 보기" or "레시피 검색" or 좋아요 탭 or )
+// 레시피 리스트 만들기 ("필터 수정", "레시피 검색", "마이페이지 즐겨찾기")
 function postRecipeInfo(status, info) {
-    // "레시피 보기"를 클릭한 경우, 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
+    // 검색 리스트에서 필터 "수정"을 클릭한 경우, 사용자 지정 조건에 맞는 검색 리스트 호출 & 출력
     if (status == "filter") {
         var recipeInfo = {
             "IRDNT_NM": gIrdntNm,
@@ -303,8 +308,8 @@ function postRecipeInfo(status, info) {
 function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikesCount, recipeLikebyMe, status) {
     let classHeart = recipeLikebyMe ? "fa-heart" : "fa-heart-o"
     let classColor = recipeLikebyMe ? "heart liked" : "heart"
-
-    let idType, heartIdType, toggleLikeNum, userId
+    // 한 페이지 안의 좋아요 버튼을 구별하기 위한 조건문
+    let idType, heartIdType, toggleLikeNum
     if (status == "filter") {
         idType = "-list";
         heartIdType = "";
@@ -319,8 +324,8 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
         toggleLikeNum = 3;
     } else if (status == "searchRecipes") {
         idType = "-search-list";
-        heartIdType = "";
-        toggleLikeNum = 0;
+        heartIdType = "-search";
+        toggleLikeNum = 4;
     }
 
 
@@ -330,7 +335,7 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
                             <h5 class="card-title">${recipeName}</h5>
                             <p class="card-text text-overflow" style="min-height: 100px; max-height: 100px;">${recipeDesc}</p>
                             <div class="card-footer">
-                                <a href="/recipe/detail?recipe-id=${recipeId}" target="_blank" class="card-link">자세히</a>
+                                <a href="/recipe/detail?recipe-id=${recipeId}" class="card-link">자세히</a>
                                 <a id="likes${heartIdType}-${recipeId}" class="${classColor}" onclick="toggleLike(${recipeId}, ${toggleLikeNum})"><i class="fa ${classHeart}" aria-hidden="true"></i>&nbsp;<span class="like-num">${num2str(recipeLikesCount)}</span></a>
                             </div>
                         </div>
@@ -340,8 +345,10 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
 
 // 좋아요 기능
 function toggleLike(recipe_id, toggleLikeNum) {
-    let likeIdArray = ["","-detail", "-liked", "-liked-mypage"]
+    // toggleLikeNum은 어디서 호출했는지에 따라 배열의 위치에 맞게 정수값을 주었습니다.
+    let likeIdArray = ["","-detail", "-liked", "-liked-mypage", "-search"]
     let likeId = $(`#likes${likeIdArray[toggleLikeNum]}-${recipe_id}`)
+    // 좋아요 설정 및 해제는 app.py에서 DB에 좋아요 데이터가 있는지 없는지를 기준으로 동작하고, 그 결과를 가져옵니다.
     $.ajax({
         type : 'POST',
         url : `/recipe/update_like`,
@@ -352,6 +359,8 @@ function toggleLike(recipe_id, toggleLikeNum) {
             for (let i = 0; i < likeIdArray.length; i++) {
                 likeId = $(`#likes${likeIdArray[i]}-${recipe_id}`)
                 if (response['action'] == "like") {
+                    // "좋아요" 설정 시, 꽉 찬 하트(fa-heart) + 빨간색(liked 클래스 추가)
+                    // liked 클래스는 css 파일 참고해보세요. .heart .liked {} 입니다.
                     if (likeId.find("i").hasClass("fa-heart-o")) {
                         likeId.find("i").removeClass("fa-heart-o").addClass("fa-heart")
                     }
@@ -359,6 +368,7 @@ function toggleLike(recipe_id, toggleLikeNum) {
                         likeId.addClass("liked")
                     }
                 } else {
+                    // "좋아요" 해제 시, 빈 하트(fa-heart-o) + 검은색(liked 클래스 삭제)
                     if (likeId.find("i").hasClass("fa-heart")) {
                         likeId.find("i").removeClass("fa-heart").addClass("fa-heart-o")
                     }
@@ -366,6 +376,7 @@ function toggleLike(recipe_id, toggleLikeNum) {
                         likeId.removeClass("liked")
                     }
                 }
+                // 좋아요 수 반영
                 likeId.find("span.like-num").text(num2str(response["likes_count"]))
             }
         }
