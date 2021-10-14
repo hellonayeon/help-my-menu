@@ -429,6 +429,45 @@ def delete_comment():
     return jsonify({'result': 'success'})
 
 
+# 댓글 수정 API
+@app.route('/recipe/comment', methods=['PUT'])
+def update_comment():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        _id = payload['user_id']
+
+        comment_id = request.form["comment_id"]
+        text = request.form["text"]
+
+        # [업로드 이미지 처리]
+        # 클라이언트가 업로드한 파일을 서버에 저장
+        fname = ""
+        today = datetime.now()
+        if len(request.files) != 0:
+            file = request.files["img_src"]
+
+            # 이미지 확장자
+            # 가장 마지막 문자열 가져오기 [-1]
+            # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
+            extension = file.filename.split('.')[-1]
+
+            time = today.strftime('%Y-%m-%d-%H-%M-%S')
+            fname = f'file-{_id}-{time}.{extension}'
+
+            save_to = f'static/comment-images/{fname}'
+            file.save(save_to)
+
+        db.comment.update_one({"_id": ObjectId(comment_id)}, {"$set": {"TEXT": text, "IMG_SRC": fname}})
+
+        return jsonify({'result': 'success'})
+
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+
 # 좋아요 기능
 @app.route('/recipe/update_like', methods=['POST'])
 @app.route('/user/recipe/update_like', methods=['POST'])
