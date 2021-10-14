@@ -1,18 +1,16 @@
-let isUpdateBtnClicked = false
-
 /* 댓글 리스트 요청 함수 */
-function getComment(recipeId, userId) {
+function getComment(recipeId, userId, myId) {
     $.ajax({
         type: "GET",
         url: `/recipe/comment?recipe-id=${recipeId}&user-id=${userId}`,
         success: function (response) {
-            makeComment(response, userId)
+            makeComment(response, userId, myId)
         }
     })
 }
 
 /* 작성한 댓글을 댓글 리스트에 출력하는 함수 */
-function makeComment(comments, userId) {
+function makeComment(comments, userId, myId) {
     // 댓글 리스트 다시 출력
     $('#comment-list').empty()
 
@@ -41,18 +39,19 @@ function makeComment(comments, userId) {
                              <hr>`
         $('#comment-list').append(commentHtml)
 
+        // console.log(myId, userId, comment["USER_ID"])
         // 사용자에 따라 선택적으로 '수정' / '삭제' 버튼 생성
-        if(userId == comment["USER_ID"]) {
+        if(myId == comment["USER_ID"]) {
             let commentUpdateBtnHTML = `<button class="comment-update-btn" 
-                                         onclick="makeCommentUpdateDiv(${comment["RECIPE_ID"]}, '${comment["_id"]}', '${comment["USER_ID"]}', '${comment["TEXT"]}', '${comment["IMG_SRC"]}')">수정
+                                         onclick="makeCommentUpdateDiv(${comment["RECIPE_ID"]}, '${comment["_id"]}', '${comment["USER_ID"]}', '${comment["TEXT"]}', '${comment["IMG_SRC"]}', '${myId}')">수정
                                         </button> &nbsp; &nbsp;
-                                        <button class="comment-delete-btn" onclick="deleteComment(${comment["RECIPE_ID"]}, '${comment["_id"]}', '${comment["USER_ID"]}')">삭제</button>`
+                                        <button class="comment-delete-btn" onclick="deleteComment(${comment["RECIPE_ID"]}, '${comment["_id"]}', '${comment["USER_ID"]}', '${myId}')">삭제</button>`
             $(`#comment-control-btn-div-${idx}`).append(commentUpdateBtnHTML)
         }
 
         // 이미지가 있는 경우 댓글 내용에 이미지 출력
         if (comment["IMG_SRC"] != "") {
-            let imgHtml = `<div class="col-12"><img src="../static/comment-images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"></div>`
+            let imgHtml = `<div class="col-12"><img src="../static/comment-images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"><br><br></div>`
             $(`#comment-content-${idx}`).append(imgHtml)
         }
 
@@ -61,7 +60,7 @@ function makeComment(comments, userId) {
     })
 }
 
-function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc) {
+function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc, myId) {
     // 수정을 연속적으로 누르는 경우 처리
     $(`#comment-update-box-${commentId}`).empty()
 
@@ -90,7 +89,7 @@ function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc) {
                                         </button>
                                         &nbsp; &nbsp;
                                         <button type="button" class="btn btn-primary"
-                                                onclick="updateComment(${recipeId}, '${commentId}', '${userId}')">수정
+                                                onclick="updateComment(${recipeId}, '${commentId}', '${userId}', '${myId}')">수정
                                         </button>
                                     </div>
                                 </div>`
@@ -111,7 +110,7 @@ function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc) {
 }
 
 /* 댓글 저장 요청 함수 */
-function saveComment(recipeId, userId) {
+function saveComment(recipeId, userId, myId) {
     let text = $('#comment-textarea').val();
     let imgSrc = $('#comment-file')[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
     // console.log($('#comment-file'))
@@ -139,14 +138,13 @@ function saveComment(recipeId, userId) {
                 $('#comment-file').empty()
                 $('#comment-img-src-label').empty()
                 $('#comment-textarea').val("")
-
-                getComment(recipeId, userId)
+                getComment(recipeId, userId, myId)
             }
         }
     })
 }
 
-function deleteComment(recipeId, commentId, userId) {
+function deleteComment(recipeId, commentId, userId, myId) {
     $.ajax({
         type: "DELETE",
         url: "/recipe/comment",
@@ -154,13 +152,13 @@ function deleteComment(recipeId, commentId, userId) {
         success: function (response) {
             if (response["result"] == "success") {
                 // 댓글 다시 출력: 삭제된 댓글 반영
-                getComment(recipeId, userId)
+                getComment(recipeId, userId, myId)
             }
         }
     })
 }
 
-function updateComment(recipeId, commentId, userId) {
+function updateComment(recipeId, commentId, userId, myId) {
     let text = $(`#comment-update-textarea-${commentId}`).val();
     let imgSrc = $(`#comment-update-file-${commentId}`)[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
 
@@ -192,7 +190,7 @@ function updateComment(recipeId, commentId, userId) {
                 // 댓글 수정 영역 컴포넌트들 지우기
                 $(`#comment-update-box-${commentId}`).empty()
 
-                getComment(recipeId, userId)
+                getComment(recipeId, userId, myId)
             }
         }
     })

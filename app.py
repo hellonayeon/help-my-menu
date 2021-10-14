@@ -44,11 +44,12 @@ def user(_id):
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        my_id = payload['user_id']
         # 내 마이페이지면 True, 다른 사람 마이페이지면 False
-        is_mypage_user = (_id == payload['user_id'])
+        is_mypage_user = (_id == my_id)
 
         user_info = db.users.find_one({'_id': ObjectId(_id)})
-        return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user)
+        return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user, my_id=my_id)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:

@@ -53,7 +53,7 @@
     <script>
         $(document).ready(function(){
             // 상세페이지 로딩 시 댓글 리스트 가져오기
-            getComment({{ recipe_info.RECIPE_ID }}, "{{ user_id }}")
+            getComment({{ recipe_info.RECIPE_ID }}, "{{ user_id }}", "{{ user_id }}")
         })
 
 
@@ -149,7 +149,7 @@
                 </div>
                 <div class="row justify-content-end" id="comment-save-box">
                     <div class="col-sm-2" id="comment-upload-btn-div">
-                        <button type="button" class="btn btn-primary" onclick="saveComment({{ recipe_info.RECIPE_ID }}, '{{ user_id }}')">댓글 작성</button>
+                        <button type="button" class="btn btn-primary" onclick="saveComment({{ recipe_info.RECIPE_ID }}, '{{ user_id }}', '{{ user_id }}')">댓글 작성</button>
                     </div>
                 </div>
             </div>

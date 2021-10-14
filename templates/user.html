@@ -84,7 +84,7 @@
                 <a class="nav-link" href="/">홈<span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item active">
-                <a class="nav-link" href="/user/{{ user_info._id }}">마이페이지</a>
+                <a class="nav-link" href="/user/{{ my_id }}">마이페이지</a>
             </li>
         </ul>
         <ul class="navbar-nav" style="padding-right: 20px;">
@@ -235,7 +235,7 @@
         </li>
         <li class="nav-item width-btn">
             <a class="nav-link" data-toggle="pill" href="#pills-profile" role="tab"
-               onclick="tabControl(USER_COMMENT); getComment(undefined, '{{ user_info._id }}')">댓글</a>
+               onclick="tabControl(USER_COMMENT); getComment(undefined, '{{ user_info._id }}', '{{ my_id }}')">댓글</a>
         </li>
         <li class="nav-item width-btn">
             <a class="nav-link" data-toggle="pill" href="#pills-profile" role="tab"
