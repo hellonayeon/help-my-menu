@@ -25,7 +25,19 @@ def home():
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        return render_template('index.html', user_info=user_info)
+        _id = payload["user_id"]
+
+        best_recipe = []
+        like_recipe = list(db.likes.find({}).distinct("RECIPE_ID"))
+        print(like_recipe)
+        for i in range(len(like_recipe)):
+            best_recipe.append(db.recipe_basic.find_one({"RECIPE_ID": int(like_recipe[i])}))
+            print(best_recipe)
+            best_recipe[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": like_recipe[i]})
+            best_recipe[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": like_recipe[i], "USER_ID": _id}))
+
+        best_recipe = sorted(best_recipe, key=lambda k: k['LIKES_COUNT'], reverse=True)[:20]
+        return render_template('index.html', user_info=user_info, best_recipe=best_recipe)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
