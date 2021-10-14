@@ -2,7 +2,7 @@ name: recipe-recommend-service
 on:
   push:
     branches:
-      - feature/53_CI/CD_env
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest

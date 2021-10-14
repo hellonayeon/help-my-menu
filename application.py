@@ -26,10 +26,8 @@ def home():
 
         best_recipe = []
         like_recipe = list(db.likes.find({}).distinct("RECIPE_ID"))
-        print(like_recipe)
         for i in range(len(like_recipe)):
             best_recipe.append(db.recipe_basic.find_one({"RECIPE_ID": int(like_recipe[i])}))
-            print(best_recipe)
             best_recipe[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": like_recipe[i]})
             best_recipe[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": like_recipe[i], "USER_ID": _id}))
 
@@ -212,7 +210,6 @@ def make_recipe_list():
         if request.method == 'POST':
             data_we_want = []
             recipe_info = request.get_json()
-            print(recipe_info)
             irdnt_nm = recipe_info['IRDNT_NM']
             nation_nm = recipe_info['NATION_NM']
             level_nm = recipe_info['LEVEL_NM']
@@ -347,7 +344,6 @@ def get_comments():
     if recipe_id != "undefined":
         comments = list(db.comment.find({"RECIPE_ID": int(recipe_id)}))
 
-        print(comments)
         # 댓글을 작성한 사용자의 '이름' '프로필 사진' 가져와서 각각의 댓글 딕셔너리에 저장
         for comment in comments:
             user = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
