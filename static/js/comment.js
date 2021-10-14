@@ -37,7 +37,7 @@ function makeComment(comments, userId) {
                              </div>
                              <hr>`
         $('#comment-list').append(commentHtml)
-
+        console.log(userId, comment["USER_ID"])
         // 사용자에 따라 선택적으로 '수정' / '삭제' 버튼 생성
         if(userId == comment["USER_ID"]) {
             let commentUpdateBtnHTML = `<button class="comment-update-btn" onclick="updateComment(${comment["RECIPE_ID"]}, ${comment["_id"]}, '${comment["USER_ID"]}')">수정</button> &nbsp; &nbsp;
@@ -57,7 +57,7 @@ function makeComment(comments, userId) {
 }
 
 /* 댓글 저장 요청 함수 */
-function saveComment(recipeId) {
+function saveComment(recipeId, userId) {
     let text = $('#comment-text-area').val();
     let imgSrc = $('#file')[0].files[0];
 
@@ -80,7 +80,7 @@ function saveComment(recipeId) {
                 $('#img-src-label').empty()
                 $('#comment-text-area').val("")
 
-                getComment(recipeId)
+                getComment(recipeId, userId)
             } else {
                 // 중복된 닉네임일 경우, 닉네임이랑 비밀번호만 지우기
 
