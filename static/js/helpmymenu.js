@@ -20,9 +20,6 @@ $(document).ready(function () {
     if (url.includes("recipe-name-kor-search=")) {
         gRecipeSearchName = url.split('=').at(-1)
         postRecipeInfo("searchRecipes", 0);
-    } else {
-        // 일반적인 홈페이지 접근이라면 "추천 리스트" 출력
-        bestRecipeInfo()
     }
 });
 
@@ -207,21 +204,6 @@ function selectedRecipeFilter() {
     }
 }
 
-// 메인화면 추천 레시피 리스트 출력
-function bestRecipeInfo() {
-    $.ajax({
-        type: "GET",
-        url: '/recipe/search',
-        success: function (response) {
-            if (response['msg'] == 'success') {
-                let recipe = response['data_we_get']
-                for (let i = 0; i < recipe.length; i++) {
-                    makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
-                }
-            }
-        }
-    });
-}
 
 // 레시피 리스트 만들기 ("필터 수정", "레시피 검색", "마이페이지 즐겨찾기")
 function postRecipeInfo(status, info) {
