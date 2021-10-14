@@ -197,7 +197,7 @@ def ingredient_listing():
     return jsonify({'recipe_ingredient': irdnt, 'recipe_name_kor': recipe})
 
 
-# "레시피 보기" 버튼 클릭 or "레시피 검색" 버튼 클릭 or 좋아요 탭 버튼을 클릭 시 실행
+# "레시피 검색" 버튼 클릭, 좋아요 탭 버튼, 필터 수정 버튼을 클릭 시 실행
 @application.route('/recipe/search', methods=['POST', 'GET'])
 def make_recipe_list():
     token_receive = request.cookies.get('mytoken')
@@ -206,7 +206,7 @@ def make_recipe_list():
         _id = payload["user_id"]
 
         ## 결과로 출력할 RECIPE_ID들을 DB에서 가져오는 과정.
-        # 만약 POST 방식이면, "레시피 보기" 버튼 클릭으로 인식.
+        # 만약 POST 방식이면, "필터 수정" 클릭으로 인식.
         if request.method == 'POST':
             data_we_want = []
             recipe_info = request.get_json()
@@ -260,7 +260,6 @@ def make_recipe_list():
                 data_we_want = list(db.likes.find({"USER_ID": _id}).distinct("RECIPE_ID"))
 
         ## 검색 결과를 출력하기 위해 DB에서 찾은 RECIPE_ID에 해당하는 레시피 상세 정보들을 data_we_get에 저장 후 전송
-        # data_we_want 리스트가 비어있지 않은 경우: data_we_want != [] 랑 동일한 구문, PEP8 가이드 준수
         if data_we_want:
             projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
                         "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
