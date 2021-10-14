@@ -25,7 +25,19 @@ def home():
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        return render_template('index.html', user_info=user_info)
+        _id = payload["user_id"]
+
+        best_recipe = []
+        like_recipe = list(db.likes.find({}).distinct("RECIPE_ID"))
+        print(like_recipe)
+        for i in range(len(like_recipe)):
+            best_recipe.append(db.recipe_basic.find_one({"RECIPE_ID": int(like_recipe[i])}))
+            print(best_recipe)
+            best_recipe[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": like_recipe[i]})
+            best_recipe[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": like_recipe[i], "USER_ID": _id}))
+
+        best_recipe = sorted(best_recipe, key=lambda k: k['LIKES_COUNT'], reverse=True)[:20]
+        return render_template('index.html', user_info=user_info, best_recipe=best_recipe)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -44,11 +56,12 @@ def user(_id):
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        my_id = payload['user_id']
         # 내 마이페이지면 True, 다른 사람 마이페이지면 False
-        is_mypage_user = (_id == payload['user_id'])
+        is_mypage_user = (_id == my_id)
 
         user_info = db.users.find_one({'_id': ObjectId(_id)})
-        return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user)
+        return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user, my_id=my_id)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -330,27 +343,29 @@ def get_comments():
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
     # 상세페이지 댓글
-    recipe_id = int(request.args.get("recipe-id"))
+    recipe_id = request.args.get("recipe-id")
     # 마이페이지 댓글
     user_id = request.args.get("user-id")
 
-    if recipe_id is not None:
-        comments = list(db.comment.find({"RECIPE_ID": recipe_id}))
+    if recipe_id != "undefined":
+        comments = list(db.comment.find({"RECIPE_ID": int(recipe_id)}))
 
         print(comments)
         # 댓글을 작성한 사용자의 '이름' '프로필 사진' 가져와서 각각의 댓글 딕셔너리에 저장
         for comment in comments:
-            print(ObjectId(comment["USER_ID"]))
-            user_info = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
-            comment["USERNAME"] = user_info["USERNAME"]
-            comment["PROFILE_PIC_REAL"] = user_info["PROFILE_PIC_REAL"]
+            user = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
+            comment["USERNAME"] = user["USERNAME"]
+            comment["PROFILE_PIC_REAL"] = user["PROFILE_PIC_REAL"]
             comment["_id"] = str(comment["_id"])
     else:
-        user_info = db.users.find_one({"_id": ObjectId(user_id)})
-        username = ["USERNAME"]
-        profile_pic_real = ["PROFILE_PIC_REAL"]
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        username = user["USERNAME"]
+        profile_pic_real = user["PROFILE_PIC_REAL"]
 
-        comments = list(db.comment.find({"USER_ID": user_id}))
+        # 마이페이지 댓글 리스트의 경우 'RECIPE_ID' 제거
+        # 댓글 제거 후 모든 댓글 리스트들을 가져올때 'RECIPE_ID'를 URL로 넘겨주면
+        # 다른 사람이 쓴 모든 댓글도 출력
+        comments = list(db.comment.find({"USER_ID": user_id}, {"RECIPE_ID": False}))
         for comment in comments:
             comment["USERNAME"] = username
             comment["PROFILE_PIC_REAL"] = profile_pic_real
@@ -373,8 +388,7 @@ def save_comment():
         # [업로드 이미지 처리]
         # 클라이언트가 업로드한 파일을 서버에 저장
         fname = ""
-        extension = ""
-        today = today = datetime.now()  # 현재 시각 가져오기
+        today = datetime.now()
         if len(request.files) != 0:
             file = request.files["img_src"]
 
@@ -383,7 +397,6 @@ def save_comment():
             # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
             extension = file.filename.split('.')[-1]
 
-            today = datetime.now()  # 현재 시각 가져오기
             time = today.strftime('%Y-%m-%d-%H-%M-%S')
             fname = f'file-{_id}-{time}.{extension}'
 
@@ -427,6 +440,45 @@ def delete_comment():
     db.comment.delete_one({"_id": ObjectId(comment_id)})
 
     return jsonify({'result': 'success'})
+
+
+# 댓글 수정 API
+@app.route('/recipe/comment', methods=['PUT'])
+def update_comment():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
+        _id = payload['user_id']
+
+        comment_id = request.form["comment_id"]
+        text = request.form["text"]
+
+        # [업로드 이미지 처리]
+        # 클라이언트가 업로드한 파일을 서버에 저장
+        fname = ""
+        today = datetime.now()
+        if len(request.files) != 0:
+            file = request.files["img_src"]
+
+            # 이미지 확장자
+            # 가장 마지막 문자열 가져오기 [-1]
+            # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
+            extension = file.filename.split('.')[-1]
+
+            time = today.strftime('%Y-%m-%d-%H-%M-%S')
+            fname = f'file-{_id}-{time}.{extension}'
+
+            save_to = f'static/comment-images/{fname}'
+            file.save(save_to)
+
+        db.comment.update_one({"_id": ObjectId(comment_id)}, {"$set": {"TEXT": text, "IMG_SRC": fname}})
+
+        return jsonify({'result': 'success'})
+
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
 
 # 좋아요 기능

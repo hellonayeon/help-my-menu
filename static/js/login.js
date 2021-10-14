@@ -1,7 +1,6 @@
 function signIn() {
     let email = $("#input-email").val()
     let password = $("#input-password").val()
-    console.log(email, password)
 
     if (email == "") {
         $("#help-email-login").text("아이디를 입력해주세요.")
@@ -41,8 +40,8 @@ function toggleSignUpAndIn() {
     $("#signup").toggleClass("is-hidden")
 }
 
-function isNickname(asValue) {
-    var regExp = /^(?=.*[a-zA-Z])[-a-zA-Z0-9_.]{4,10}$/;
+function isUserNickname(asValue) {
+    var regExp = /[가-힣a-zA-Z0-9_.]{3,10}$/;
     return regExp.test(asValue);
 }
 
@@ -63,13 +62,13 @@ function signUp() {
     let repassword = $("#repassword").val();
 
     if (username == "") {
-        alert("닉네임을 입력해주세요.\n닉네임은 4-10자의 영문, 숫자, 일부 특수문자(._-)만 입력 가능합니다.")
+        alert("닉네임을 입력해주세요.\n닉네임은 한글과 영문과 숫자, 일부 특수문자(._-) 사용 가능. 3-10자 길이")
         return;
-    } else if (username.length < 4 || username.length > 10 || !isNickname(username)) {
-        alert("닉네임을 확인해주세요.\n닉네임은 4-10자의 영문, 숫자, 일부 특수문자(._-)만 입력 가능합니다.")
+    } else if (username.length < 4 || username.length > 10 || !isUserNickname(username)) {
+        alert("닉네임을 확인해주세요.\n닉네임은 한글과 영문과 숫자, 일부 특수문자(._-) 사용 가능. 3-10자 길이")
         return;
     }
-
+    
     if (email == "") {
         alert("이메일을 입력해주세요.")
         return;
