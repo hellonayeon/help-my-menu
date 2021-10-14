@@ -56,7 +56,6 @@ function updateProfile() {
     form_data.append("username_give", username)
     form_data.append("file_give", file)
     form_data.append("introduce_give", introduce)
-    console.log(username, file, introduce, form_data)
 
     $.ajax({
         type: "POST",
@@ -117,7 +116,6 @@ function changePassword() {
         $('#input-more-password').focus()
         return;
     }
-    console.log("test")
     $.ajax({
         type: "POST",
         url: "/user/change-password",
