@@ -62,7 +62,6 @@ function makeComment(comments, userId) {
 }
 
 function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc) {
-    console.log("makeCommentUpdateDiv call")
     // 수정을 연속적으로 누르는 경우 처리
     $(`#comment-update-box-${commentId}`).empty()
 
@@ -101,13 +100,21 @@ function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc) {
     if(imgSrc != "") {
         $(`#comment-update-img-src-label-${commentId}`).text(imgSrc)
     }
+
+    $(`#comment-update-file-${commentId}`).change(function() {
+        let selectedImgSrc = $(`#comment-update-file-${commentId}`)[0].files[0]["name"]
+        $(`#comment-update-img-src-label-${commentId}`).text(selectedImgSrc)
+
+        // console.log($(`#comment-update-file-${commentId}`)[0].files[0])
+        // console.log(selectedImgSrc)
+    })
 }
 
 /* 댓글 저장 요청 함수 */
 function saveComment(recipeId, userId) {
     let text = $('#comment-textarea').val();
-    console.log($('#comment-file'))
     let imgSrc = $('#comment-file')[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
+    // console.log($('#comment-file'))
 
     if(text == "" && imgSrc == undefined) {
         alert("내용을 입력하세요!")
@@ -155,7 +162,6 @@ function deleteComment(recipeId, commentId, userId) {
 
 function updateComment(recipeId, commentId, userId) {
     let text = $(`#comment-update-textarea-${commentId}`).val();
-    console.log($(`#comment-update-file-${commentId}`))
     let imgSrc = $(`#comment-update-file-${commentId}`)[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
 
     if(text == "" && imgSrc == undefined) {
