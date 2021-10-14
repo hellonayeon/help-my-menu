@@ -2,7 +2,7 @@ name: recipe-recommend-service
 on:
   push:
     branches:
-      - master
+      - bug/87_backend_cloud
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,8 +37,8 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: recipe-app
-          environment_name: Recipeapp-env
+          application_name: helpmymenu-app
+          environment_name: Helpmymenuapp-env
           version_label: "python-${{ steps.format-time.outputs.replaced }}"
           region: ap-northeast-2
           deployment_package: deploy.zip
