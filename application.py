@@ -21,8 +21,20 @@ def home():
     try:
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
         user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        user_info['_id'] = payload['user_id']
-        return render_template('index.html', user_info=user_info)
+
+        _id = payload["user_id"]
+
+        best_recipe = []
+        like_recipe = list(db.likes.find({}).distinct("RECIPE_ID"))
+        print(like_recipe)
+        for i in range(len(like_recipe)):
+            best_recipe.append(db.recipe_basic.find_one({"RECIPE_ID": int(like_recipe[i])}))
+            print(best_recipe)
+            best_recipe[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": like_recipe[i]})
+            best_recipe[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": like_recipe[i], "USER_ID": _id}))
+
+        best_recipe = sorted(best_recipe, key=lambda k: k['LIKES_COUNT'], reverse=True)[:20]
+        return render_template('index.html', user_info=user_info, best_recipe=best_recipe)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -41,15 +53,12 @@ def user(_id):
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+        my_id = payload['user_id']
+        # 내 마이페이지면 True, 다른 사람 마이페이지면 False
+        is_mypage_user = (_id == my_id)
 
-        # TODO: 다른 사람이 마이페이지를 방문할 경우 처리 필요(?) / status 데이터 사용
-        # 사용자 토큰의 user_id 와 API로 넘어온 _id가 동일하지 않을 경우 로그인화면으로 다시 돌려보냄.
-        if _id != payload['user_id']:
-            return redirect(url_for("login", msg="로그인 정보가 정확하지 않습니다."))
-
-        user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        user_info['_id'] = payload['user_id']
-        return render_template('user.html', user_info=user_info)
+        user_info = db.users.find_one({'_id': ObjectId(_id)})
+        return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user, my_id=my_id)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -146,8 +155,8 @@ def sign_in():
     if result is not None:
         _id = str(result['_id'])
         payload = {
-         'user_id': _id,
-         'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
+            'user_id': _id,
+            'exp': datetime.utcnow() + timedelta(seconds=60 * 60 * 24)  # 로그인 24시간 유지
         }
         token = jwt.encode(payload, os.environ["JWT_SECRET_KEY"], algorithm='HS256')
 
@@ -203,10 +212,12 @@ def make_recipe_list():
         if request.method == 'POST':
             data_we_want = []
             recipe_info = request.get_json()
+            print(recipe_info)
             irdnt_nm = recipe_info['IRDNT_NM']
             nation_nm = recipe_info['NATION_NM']
             level_nm = recipe_info['LEVEL_NM']
             cooking_time = recipe_info['COOKING_TIME']
+            recipe_sort = recipe_info["SORTED"]
 
             level_nm_list = []
             for i in level_nm:
@@ -223,8 +234,9 @@ def make_recipe_list():
                 nation_nm.remove('서양, 이탈리아')
             for i in nation_nm:
                 nation_nm_list.append({"NATION_NM": i})
-            selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
 
+
+            selected_by_condition = list(db.recipe_basic.find({"$and": [{"$or": level_nm_list}, {"$or": nation_nm_list}, {"$or": cooking_time_list}]}))
             recipe_ids = set([selected['RECIPE_ID'] for selected in selected_by_condition])
 
             first_irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[0]}, {"_id": False, "RECIPE_ID": True}))
@@ -233,20 +245,22 @@ def make_recipe_list():
                 irdnt_ids = list(db.recipe_ingredient.find({"IRDNT_NM": irdnt_nm[i]}, {"_id": False, "RECIPE_ID": True}))
                 tmp_set = set([irdnt['RECIPE_ID'] for irdnt in irdnt_ids])
                 ingredient_set = ingredient_set & tmp_set
-
             data_we_want = list(recipe_ids & ingredient_set)
 
         # 만약 'GET' 방식이면, "레시피 검색 기능" 혹은 "좋아요 탭"을 사용한 것으로 인식
         elif request.method == 'GET':
             recipe_search_name = request.args.get("recipe-search-name")
-
-            # 'GET' 방식이면서, API 통신 url에 args(url에서 ? 뒤의 값)이 존재하면 "레시피 검색 기능"으로 인식
+            user_id = request.args.get("user_id")
+            recipe_sort = request.args.get("sort")
+            # 'GET' 방식이면서, API 통신 url에 recipe_search_name이 존재하면 "레시피 검색 기능"으로 인식
             if recipe_search_name:
                 data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
-            # 'GET' 방식이면서, API 통신 url에 args가 None("")이면 "좋아요 탭"으로 인식
+            # 'GET' 방식이면서, API 통신 url에 user_id이 존재하면  "user.html 좋아요 탭"으로 인식
+            elif user_id:
+                data_we_want = list(db.likes.find({"USER_ID": user_id}).distinct("RECIPE_ID"))
+            # 'GET' 방식이면서, API 통신 url에 args가 None이면, "index.html 좋아요 탭"으로 인식
             else:
                 data_we_want = list(db.likes.find({"USER_ID": _id}).distinct("RECIPE_ID"))
-
 
         ## 검색 결과를 출력하기 위해 DB에서 찾은 RECIPE_ID에 해당하는 레시피 상세 정보들을 data_we_get에 저장 후 전송
         # data_we_want 리스트가 비어있지 않은 경우: data_we_want != [] 랑 동일한 구문, PEP8 가이드 준수
@@ -258,6 +272,16 @@ def make_recipe_list():
                 data_we_get.append(db.recipe_basic.find_one({"RECIPE_ID": int(data_we_want[i])}, projection))
                 data_we_get[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": data_we_want[i]})
                 data_we_get[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": data_we_want[i], "USER_ID": _id}))
+
+            # 레시피 리스트 정렬 후에 데이터를 보냄. default는 추천순으로 정렬
+            data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
+
+            if recipe_sort == None :
+                pass
+            elif "recommend-sort" in recipe_sort:
+                data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
+            elif "name-sort" in recipe_sort:
+                data_we_get = sorted(data_we_get, key=lambda k: k['RECIPE_NM_KO'], reverse=False)
             return jsonify({'msg': 'success', "data_we_get": data_we_get})
         else:
             return jsonify({'msg': 'nothing'})
@@ -269,7 +293,6 @@ def make_recipe_list():
 
 
 # 레시피 상세정보 API
-# TODO: 사용자가 레시피 등록할 경우, 레시피 관리 어떻게 할건지 생각해보기
 @application.route('/recipe/detail', methods=['GET'])
 def get_recipe_detail():
     recipe_id = int(request.args.get("recipe-id"))
@@ -281,22 +304,23 @@ def get_recipe_detail():
         # 레시피 정보
         projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
                     "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
-        info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
+        recipe_info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
 
         # 상세정보(조리과정)
         projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
-        detail = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
+        steps = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
 
         # 재료정보
         projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
-        ingredients = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
+        irdnts = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
 
         # 좋아요 정보
-        like_info = [{}]
-        like_info[0]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
-        like_info[0]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
+        like_info = {}
+        like_info['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
+        like_info['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
 
-        return jsonify({"info": info, "detail": detail, "ingredients": ingredients, "like_info": like_info})
+        return render_template('detail.html',
+                               user_id = _id, recipe_info=recipe_info, steps=steps, irdnts=irdnts, like_info=like_info)
 
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -306,8 +330,43 @@ def get_recipe_detail():
 # 댓글 목록 API
 @application.route('/recipe/comment', methods=['GET'])
 def get_comments():
-    recipe_id = int(request.args.get("recipe-id"))
-    comments = list(db.comment.find({"RECIPE_ID": recipe_id}, {"_id": False}))
+    # 토큰 유효성 검사
+    token_receive = request.cookies.get('mytoken')
+    try:
+        jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+    # 상세페이지 댓글
+    recipe_id = request.args.get("recipe-id")
+    # 마이페이지 댓글
+    user_id = request.args.get("user-id")
+
+    if recipe_id != "undefined":
+        comments = list(db.comment.find({"RECIPE_ID": int(recipe_id)}))
+
+        print(comments)
+        # 댓글을 작성한 사용자의 '이름' '프로필 사진' 가져와서 각각의 댓글 딕셔너리에 저장
+        for comment in comments:
+            user = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
+            comment["USERNAME"] = user["USERNAME"]
+            comment["PROFILE_PIC_REAL"] = user["PROFILE_PIC_REAL"]
+            comment["_id"] = str(comment["_id"])
+    else:
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        username = user["USERNAME"]
+        profile_pic_real = user["PROFILE_PIC_REAL"]
+
+        # 마이페이지 댓글 리스트의 경우 'RECIPE_ID' 제거
+        # 댓글 제거 후 모든 댓글 리스트들을 가져올때 'RECIPE_ID'를 URL로 넘겨주면
+        # 다른 사람이 쓴 모든 댓글도 출력
+        comments = list(db.comment.find({"USER_ID": user_id}, {"RECIPE_ID": False}))
+        for comment in comments:
+            comment["USERNAME"] = username
+            comment["PROFILE_PIC_REAL"] = profile_pic_real
+            comment["_id"] = str(comment["_id"])
 
     return jsonify(comments)
 
@@ -315,69 +374,108 @@ def get_comments():
 # 댓글 작성 API
 @application.route('/recipe/comment', methods=['POST'])
 def save_comment():
-    recipe_id = int(request.form["recipe_id"])
-    text = request.form["text"]
-    nick_nm = request.form["nick_nm"]
-    pw = request.form["pw"]
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+        _id = payload['user_id']
 
-    # 이미 있는 닉네임인 경우 해당 레코드 반환
-    used_nick_nm = db.comment.find_one({"NICK_NM": {"$in": [nick_nm]}})
-    if used_nick_nm != None:
-        return jsonify({'result': 'failure', 'msg': '이미 있는 닉네임입니다. 다른 닉네임을 입력해주세요!'})
+        recipe_id = int(request.form["recipe_id"])
+        text = request.form["text"]
 
-    # [업로드 이미지 처리]
-    # 클라이언트가 업로드한 파일을 서버에 저장
-    fname = ""
-    extension = ""
-    today = today = datetime.now()  # 현재 시각 가져오기
-    if len(request.files) != 0:
-        file = request.files["img_src"]
+        # [업로드 이미지 처리]
+        # 클라이언트가 업로드한 파일을 서버에 저장
+        fname = ""
+        today = datetime.now()
+        if len(request.files) != 0:
+            file = request.files["img_src"]
 
-        # 이미지 확장자
-        # 가장 마지막 문자열 가져오기 [-1]
-        # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
-        extension = file.filename.split('.')[-1]
+            # 이미지 확장자
+            # 가장 마지막 문자열 가져오기 [-1]
+            # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
+            extension = file.filename.split('.')[-1]
 
-        today = datetime.now()  # 현재 시각 가져오기
-        time = today.strftime('%Y-%m-%d-%H-%M-%S')
-        fname = f'file-{time}.{extension}'
+            time = today.strftime('%Y-%m-%d-%H-%M-%S')
+            fname = f'file-{_id}-{time}.{extension}'
 
-        save_to = f'static/comment-images/{fname}'  # python f-string
-        file.save(save_to)  # 날짜 기반 새로운 파일 이름 생성 후 프로젝트 static/comment-comment-images/ 폴더에 저장
+            save_to = f'static/comment-images/{fname}'
+            file.save(save_to)
 
-    # 업데이트 날짜 표시
-    date = today.strftime('%Y.%m.%d')
+        # 업데이트 날짜 표시
+        date = today.strftime('%Y.%m.%d')
 
-    # [DB 처리]
-    doc = {
-        'RECIPE_ID': recipe_id,
-        'TEXT': text,
-        'IMG_SRC': fname,
-        'DATE': date,
-        'NICK_NM': nick_nm,
-        'PW': pw
-    }
+        # [DB 처리]
+        doc = {
+            'RECIPE_ID': recipe_id,
+            'TEXT': text,
+            'IMG_SRC': fname,
+            'DATE': date,
+            'USER_ID': _id
+        }
 
-    db.comment.insert_one(doc)
+        db.comment.insert_one(doc)
 
-    return jsonify({'result': 'success'})
+        return jsonify({'result': 'success'})
+
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
 
 # 댓글 삭제 API
 @application.route('/recipe/comment', methods=['DELETE'])
 def delete_comment():
-    nick_nm = request.form["nick_nm"]
-    pw = request.form["pw"]
-    comment = db.comment.find_one({"NICK_NM": nick_nm}, {"_id": False})
+    token_receive = request.cookies.get('mytoken')
+    try:
+        jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
-    # 닉네임에 해당되는 비밀번호가 일치하지 않을 경우
-    if (pw != comment["PW"]):
-        return jsonify({'result': 'failure', 'msg': '비밀번호가 일치하지 않습니다!'})
-
-    # 일치하는 경우 삭제
-    db.comment.delete_one(comment)
+    comment_id = request.form["comment_id"]
+    db.comment.delete_one({"_id": ObjectId(comment_id)})
 
     return jsonify({'result': 'success'})
+
+
+# 댓글 수정 API
+@application.route('/recipe/comment', methods=['PUT'])
+def update_comment():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+        _id = payload['user_id']
+
+        comment_id = request.form["comment_id"]
+        text = request.form["text"]
+
+        # [업로드 이미지 처리]
+        # 클라이언트가 업로드한 파일을 서버에 저장
+        fname = ""
+        today = datetime.now()
+        if len(request.files) != 0:
+            file = request.files["img_src"]
+
+            # 이미지 확장자
+            # 가장 마지막 문자열 가져오기 [-1]
+            # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
+            extension = file.filename.split('.')[-1]
+
+            time = today.strftime('%Y-%m-%d-%H-%M-%S')
+            fname = f'file-{_id}-{time}.{extension}'
+
+            save_to = f'static/comment-images/{fname}'
+            file.save(save_to)
+
+        db.comment.update_one({"_id": ObjectId(comment_id)}, {"$set": {"TEXT": text, "IMG_SRC": fname}})
+
+        return jsonify({'result': 'success'})
+
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
 
 # 좋아요 기능
@@ -389,24 +487,22 @@ def update_like() :
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
         _id = payload["user_id"]
 
-        user_info = db.users.find_one({"_id": ObjectId(_id)})
-        user_info["_id"] = _id
-
         recipe_id = int(request.form["recipe_id"])
-        action = request.form["action"]
 
         doc = {
             "RECIPE_ID": recipe_id,
-            "USER_ID": user_info["_id"]
+            "USER_ID": _id
         }
-
-        if action == "like" :
-            db.likes.insert_one(doc)
-        else:
+        
+        if db.likes.find_one(doc) :
             db.likes.delete_one(doc)
+            action = "unlike"
+        else:
+            db.likes.insert_one(doc)
+            action = "like"
 
         likes_count = db.likes.count_documents({"RECIPE_ID":recipe_id})
-        return jsonify({"likes_count":likes_count})
+        return jsonify({"action": action, "likes_count":likes_count})
 
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))

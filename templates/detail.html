@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- File Upload -->
+    <script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.js"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Google Font: Jua -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+    <!-- google Font: Noto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300&display=swap" rel="stylesheet">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> <!-- jQuery UI -->
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!-- 'Help My Menu' Javascript, CSS -->
+    <script type="text/javascript" src="/static/js/helpmymenu.js"></script>
+    <script type="text/javascript" src="/static/js/comment.js"></script>
+    <link rel="stylesheet" href="/static/css/helpmymenu.css">
+    <link rel="stylesheet" href="/static/css/comment.css">
+
+    <title>우당탕탕 | 헤얿 마이 메뉴</title>
+
+    <style>
+
+    </style>
+    <script>
+        $(document).ready(function(){
+            // 상세페이지 로딩 시 댓글 리스트 가져오기
+            getComment({{ recipe_info.RECIPE_ID }}, "{{ user_id }}", "{{ user_id }}")
+        })
+
+
+    </script>
+</head>
+
+<body>
+
+<!-- 상단 Navbar -->
+<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="/">헤얿 마이 메뉴!</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+  
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">홈<span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/user/{{ user_id }}">마이페이지</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav" style="padding-right: 20px;">
+            <li class="nav-item">
+
+                <a class="nav-link" onclick="logout()" href="#">로그아웃</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <input id="search-recipe-input" class="form-control mr-sm-2" placeholder="레시피를 입력하세요">
+            <button class="btn btn-outline-secondary my-2 my-sm-0" onclick="recipeNameKorSearch();">레시피 검색</button>
+        </div>
+    </div>
+</nav>
+
+<div class="wrap">
+    <!-- 레시피 상세보기 화면 내용 -->
+    <!-- 레시피 상세 정보 영역 -->
+    <div class="container" id="recipe-detail-container">
+        <div class="container" id="detail-box">
+            <div class="row">
+                <div class="col" class="detail-img-container"><img id="detail-img" src="{{ recipe_info.IMG_URL }}"></div>
+                <div class="col" id="detail-info">
+                    <span class="detail-title">{{ recipe_info.RECIPE_NM_KO }}</span>
+                    <span class="detail-info">{{ recipe_info.COOKING_TIME }}</span>
+                    <span class="detail-info">{{ recipe_info.QNT }}</span>
+                    {{  like_info.LiKE_BY_ME  }}
+                    {% if like_info.LIKE_BY_ME %}
+                    <a id="likes-detail-{{ recipe_info.RECIPE_ID }}" class="heart-detail liked" onclick="toggleLike({{ recipe_info.RECIPE_ID }}, 1)">
+                        <i class="fa fa-heart" aria-hidden="true"></i> &nbsp;
+                    {% else %}
+                    <a id="likes-detail-{{ recipe_info.RECIPE_ID }}" class="heart-detail" onclick="toggleLike({{ recipe_info.RECIPE_ID }}, 1)">
+                        <i class="fa fa-heart-o" aria-hidden="true"></i> &nbsp;
+                    {% endif %}
+                    <span class="like-num" id="detail-like-num">
+                        <script type="text/javascript">
+                            $('#detail-like-num').text(num2str({{ like_info.LIKES_COUNT }}))
+                        </script>
+                    </span>
+                    </a>
+
+                    <h4>{{ recipe_info.SUMRY }}</h4>
+
+                    {% for irdnt in irdnts %}
+                        <span class="badge badge-primary ingredient-tag">{{ irdnt.IRDNT_NM }}: {{ irdnt.IRDNT_CPCTY }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="row" id="detail-step">
+                {% for step in steps %}
+                    <div class="col-12">
+                        STEP <span class="detail-step-num">{{ step.COOKING_NO }}. </span>{{ step.COOKING_DC }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- 댓글 영역 -->
+        <div class="container" id="comment-box">
+            <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>
+            <!-- 댓글 입력 [텍스트, 사진, 확인] -->
+            <div class=".container-fluid">
+                <div class="row">
+                    <div class="col-sm form-floating">
+                            <textarea class="form-control comment-textarea" placeholder="댓글을 작성하세요"
+                                      id="comment-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="row comment-img-upload-box justify-content-end" id="comment-img-upload-box">
+                    <div class="col-10 input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">사진 업로드</span>
+                        </div>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="comment-file">
+                            <label class="custom-file-label" for="file" id="comment-img-src-label">사진을 선택하세요</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row justify-content-end" id="comment-save-box">
+                    <div class="col-sm-2" id="comment-upload-btn-div">
+                        <button type="button" class="btn btn-primary" onclick="saveComment({{ recipe_info.RECIPE_ID }}, '{{ user_id }}', '{{ user_id }}')">댓글 작성</button>
+                    </div>
+                </div>
+            </div>
+            <br><br><br>
+            <!-- 등록된 댓글 리스트 -->
+            <div class="container" id="comment-list"></div>
+        </div>
+
+        <div class="row">
+            <button type="button" class="btn btn-primary" onclick="self.close()">닫기</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
