@@ -372,8 +372,7 @@ def save_comment():
         # [업로드 이미지 처리]
         # 클라이언트가 업로드한 파일을 서버에 저장
         fname = ""
-        extension = ""
-        today = today = datetime.now()  # 현재 시각 가져오기
+        today = datetime.now()
         if len(request.files) != 0:
             file = request.files["img_src"]
 
@@ -382,7 +381,6 @@ def save_comment():
             # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
             extension = file.filename.split('.')[-1]
 
-            today = datetime.now()  # 현재 시각 가져오기
             time = today.strftime('%Y-%m-%d-%H-%M-%S')
             fname = f'file-{_id}-{time}.{extension}'
 

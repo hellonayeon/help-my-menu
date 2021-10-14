@@ -37,7 +37,7 @@ function makeComment(comments, userId) {
                              </div>
                              <hr>`
         $('#comment-list').append(commentHtml)
-        console.log(userId, comment["USER_ID"])
+
         // 사용자에 따라 선택적으로 '수정' / '삭제' 버튼 생성
         if(userId == comment["USER_ID"]) {
             let commentUpdateBtnHTML = `<button class="comment-update-btn" onclick="updateComment(${comment["RECIPE_ID"]}, ${comment["_id"]}, '${comment["USER_ID"]}')">수정</button> &nbsp; &nbsp;
@@ -59,7 +59,12 @@ function makeComment(comments, userId) {
 /* 댓글 저장 요청 함수 */
 function saveComment(recipeId, userId) {
     let text = $('#comment-text-area').val();
-    let imgSrc = $('#file')[0].files[0];
+    let imgSrc = $('#file')[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
+
+    if(text == "" && imgSrc == undefined) {
+        alert("내용을 입력하세요!")
+        return
+    }
 
     let formData = new FormData()
     formData.append("recipe_id", recipeId)
@@ -75,7 +80,7 @@ function saveComment(recipeId, userId) {
         processData: false,
         success: function (response) {
             if (response['result'] == "success") {
-                // 업로드된 파일, 댓글내용, 닉네임, 비밀번호 지우기
+                // 업로드된 파일, 댓글내용 지우기
                 $('#file').val("")
                 $('#img-src-label').empty()
                 $('#comment-text-area').val("")
