@@ -39,7 +39,6 @@ function makeComment(comments, userId, myId) {
                              <hr>`
         $('#comment-list').append(commentHtml)
 
-        // console.log(myId, userId, comment["USER_ID"])
         // 사용자에 따라 선택적으로 '수정' / '삭제' 버튼 생성
         if(myId == comment["USER_ID"]) {
             let commentUpdateBtnHTML = `<button class="comment-update-btn" 
@@ -103,9 +102,6 @@ function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc, myId) {
     $(`#comment-update-file-${commentId}`).change(function() {
         let selectedImgSrc = $(`#comment-update-file-${commentId}`)[0].files[0]["name"]
         $(`#comment-update-img-src-label-${commentId}`).text(selectedImgSrc)
-
-        // console.log($(`#comment-update-file-${commentId}`)[0].files[0])
-        // console.log(selectedImgSrc)
     })
 }
 
@@ -113,7 +109,6 @@ function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc, myId) {
 function saveComment(recipeId, userId, myId) {
     let text = $('#comment-textarea').val();
     let imgSrc = $('#comment-file')[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
-    // console.log($('#comment-file'))
 
     if(text == "" && imgSrc == undefined) {
         alert("내용을 입력하세요!")
