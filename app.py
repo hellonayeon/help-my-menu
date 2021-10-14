@@ -337,8 +337,10 @@ def get_comments():
     if recipe_id is not None:
         comments = list(db.comment.find({"RECIPE_ID": recipe_id}))
 
+        print(comments)
         # 댓글을 작성한 사용자의 '이름' '프로필 사진' 가져와서 각각의 댓글 딕셔너리에 저장
         for comment in comments:
+            print(ObjectId(comment["USER_ID"]))
             user_info = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
             comment["USERNAME"] = user_info["USERNAME"]
             comment["PROFILE_PIC_REAL"] = user_info["PROFILE_PIC_REAL"]

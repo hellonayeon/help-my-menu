@@ -21,8 +21,6 @@ $(document).ready(function () {
     // 사진 업로드
     bsCustomFileInput.init()
     let url = window.location.href
-    console.log(url)
-    console.log(typeof(url))
     if (url.includes("recipe-name-kor-search=")) {
         gRecipeSearchName = url.split('=').at(-1)
         postRecipeInfo("searchRecipes", 0);
