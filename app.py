@@ -25,7 +25,19 @@ def home():
     try:
         payload = jwt.decode(token_receive, secrets["SECRET_KEY"], algorithms=['HS256'])
         user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-        return render_template('index.html', user_info=user_info)
+        _id = payload["user_id"]
+
+        best_recipe = []
+        like_recipe = list(db.likes.find({}).distinct("RECIPE_ID"))
+        print(like_recipe)
+        for i in range(len(like_recipe)):
+            best_recipe.append(db.recipe_basic.find_one({"RECIPE_ID": int(like_recipe[i])}))
+            print(best_recipe)
+            best_recipe[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": like_recipe[i]})
+            best_recipe[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": like_recipe[i], "USER_ID": _id}))
+
+        best_recipe = sorted(best_recipe, key=lambda k: k['LIKES_COUNT'], reverse=True)[:20]
+        return render_template('index.html', user_info=user_info, best_recipe=best_recipe)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -244,7 +256,6 @@ def make_recipe_list():
             user_id = request.args.get("user_id")
             recipe_sort = request.args.get("sort")
             # 'GET' 방식이면서, API 통신 url에 recipe_search_name이 존재하면 "레시피 검색 기능"으로 인식
-
             if recipe_search_name:
                 data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
             # 'GET' 방식이면서, API 통신 url에 user_id이 존재하면  "user.html 좋아요 탭"으로 인식
@@ -339,6 +350,7 @@ def get_comments():
     if recipe_id != "undefined":
         comments = list(db.comment.find({"RECIPE_ID": int(recipe_id)}))
 
+        print(comments)
         # 댓글을 작성한 사용자의 '이름' '프로필 사진' 가져와서 각각의 댓글 딕셔너리에 저장
         for comment in comments:
             user = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
