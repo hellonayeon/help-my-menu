@@ -2,7 +2,7 @@
 function getComment(recipeId, userId) {
     $.ajax({
         type: "GET",
-        url: `/recipe/comment?recipe-id=${recipeId}`,
+        url: `/recipe/comment?recipe-id=${recipeId}&user-id=${userId}`,
         success: function (response) {
             makeComment(response, userId)
         }
@@ -40,6 +40,7 @@ function makeComment(comments, userId) {
 
         // 사용자에 따라 선택적으로 '수정' / '삭제' 버튼 생성
         if(userId == comment["USER_ID"]) {
+            console.log(comment['RECIPE_ID'])
             let commentUpdateBtnHTML = `<button class="comment-update-btn" onclick="updateComment(${comment["RECIPE_ID"]}, ${comment["_id"]}, '${comment["USER_ID"]}')">수정</button> &nbsp; &nbsp;
                                         <button class="comment-delete-btn" onclick="deleteComment(${comment["RECIPE_ID"]}, '${comment["_id"]}', '${comment["USER_ID"]}')">삭제</button>`
             $(`#comment-control-btn-div-${idx}`).append(commentUpdateBtnHTML)

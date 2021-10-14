@@ -331,25 +331,28 @@ def get_comments():
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
     # 상세페이지 댓글
-    recipe_id = int(request.args.get("recipe-id"))
+    recipe_id = request.args.get("recipe-id")
     # 마이페이지 댓글
     user_id = request.args.get("user-id")
 
-    if recipe_id is not None:
-        comments = list(db.comment.find({"RECIPE_ID": recipe_id}))
+    if recipe_id != "undefined":
+        comments = list(db.comment.find({"RECIPE_ID": int(recipe_id)}))
 
         # 댓글을 작성한 사용자의 '이름' '프로필 사진' 가져와서 각각의 댓글 딕셔너리에 저장
         for comment in comments:
-            user_info = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
-            comment["USERNAME"] = user_info["USERNAME"]
-            comment["PROFILE_PIC_REAL"] = user_info["PROFILE_PIC_REAL"]
+            user = db.users.find_one({"_id": ObjectId(comment["USER_ID"])})
+            comment["USERNAME"] = user["USERNAME"]
+            comment["PROFILE_PIC_REAL"] = user["PROFILE_PIC_REAL"]
             comment["_id"] = str(comment["_id"])
     else:
-        user_info = db.users.find_one({"_id": ObjectId(user_id)})
-        username = ["USERNAME"]
-        profile_pic_real = ["PROFILE_PIC_REAL"]
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        username = user["USERNAME"]
+        profile_pic_real = user["PROFILE_PIC_REAL"]
 
-        comments = list(db.comment.find({"USER_ID": user_id}))
+        # 마이페이지 댓글 리스트의 경우 'RECIPE_ID' 제거
+        # 댓글 제거 후 모든 댓글 리스트들을 가져올때 'RECIPE_ID'를 URL로 넘겨주면
+        # 다른 사람이 쓴 모든 댓글도 출력
+        comments = list(db.comment.find({"USER_ID": user_id}, {"RECIPE_ID": False}))
         for comment in comments:
             comment["USERNAME"] = username
             comment["PROFILE_PIC_REAL"] = profile_pic_real

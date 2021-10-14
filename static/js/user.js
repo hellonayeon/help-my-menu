@@ -1,3 +1,28 @@
+const USER_RECIPE = "USER_RECIPE"
+const USER_COMMENT = "USER_COMMENT"
+const USER_LIKED = "USER_LIKED"
+
+function tabControl(tab) {
+    switch (tab){
+        case USER_RECIPE:
+            $('#liked-box').hide()
+            $('#comment-box').hide()
+            // 작성 레시피 출력 영역 show
+            break;
+        case USER_COMMENT:
+            // 작성 레시피 출력 영역 hide
+            $('#liked-box').hide()
+            $('#comment-box').show()
+            break;
+        case USER_LIKED:
+            // 작성 레시피 출력 영역 hide
+            $('#comment-box').hide()
+            $('#liked-box').show()
+            break;
+    }
+}
+
+
 function updateCondition() {
     // 프로필 수정 조건
     let checkname = $('#change-username').val()

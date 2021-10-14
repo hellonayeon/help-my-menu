@@ -43,8 +43,11 @@
     <script type="text/javascript" src="/static/js/helpmymenu.js"></script>
     <script type="text/javascript" src="/static/js/user.js"></script>
     <script type="text/javascript" src="/static/js/login.js"></script>
+    <script type="text/javascript" src="/static/js/comment.js"></script>
     <link rel="stylesheet" href="/static/css/helpmymenu.css">
     <link rel="stylesheet" href="/static/css/user.css">
+    <link rel="stylesheet" href="/static/css/comment.css">
+
 
     <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
@@ -53,6 +56,10 @@
         @import url('https://fonts.googleapis.com/css?family=Numans');
     </style>
     <script>
+        $(document).ready(function() {
+            // showControl(작성한 레시피 리스트)
+
+        })
 
         $('#myModal').on('shown.bs.modal', function () {
             $('#myInput').trigger('focus')
@@ -222,26 +229,64 @@
 
     <!-- 즐겨찾기 & 내가쓴글 태그 start -->
     <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-        <li class="nav-item widthBtn">
-            <a class="nav-link active" id="pills-home-tab" data-toggle="pill" href="#pills-home" role="tab"
-               aria-controls="pills-home" aria-selected="true">작성한 레시피</a>
+        <li class="nav-item width-btn">
+            <a class="nav-link active" data-toggle="pill" href="#pills-home" role="tab"
+               onclick="tabControl(USER_RECIPE);">작성한 레시피</a>
         </li>
-        <li class="nav-item widthBtn">
-            <a class="nav-link active" id="pills-home-tab" data-toggle="pill" href="#pills-home" role="tab"
-               aria-controls="pills-home" aria-selected="false">댓글</a>
+        <li class="nav-item width-btn">
+            <a class="nav-link" data-toggle="pill" href="#pills-profile" role="tab"
+               onclick="tabControl(USER_COMMENT); getComment(undefined, '{{ user_info._id }}')">댓글</a>
         </li>
-        <li class="nav-item widthBtn">
-            <a class="nav-link" id="pills-profile-tab" data-toggle="pill" href="#pills-profile" role="tab"
-               aria-controls="pills-profile" aria-selected="false" onclick="postRecipeInfo('likedInMypage', '{{ user_info._id }}')">즐겨찾기</a>
+        <li class="nav-item width-btn">
+            <a class="nav-link" data-toggle="pill" href="#pills-profile" role="tab"
+               onclick="tabControl(USER_LIKED); postRecipeInfo('likedInMypage', '{{ user_info._id }}')">즐겨찾기</a>
         </li>
     </ul>
-    <div class="tab-content" id="pills-tabContent">
+    <!-- 즐겨찾기 & 내가쓴글 태그 end -->
+
+    <!-- 작성한 레시피 리스트 -->
+
+    <!-- 댓글 리스트 -->
+    <div class="container" id="comment-box" style="display: none">
+{#            <div class="row"><h3 class="col" id="comment-title">댓글</h3></div>#}
+{#            <!-- 댓글 입력 [텍스트, 사진, 확인] -->#}
+{#            <div class=".container-fluid">#}
+{#                <div class="row">#}
+{#                    <div class="col-sm form-floating">#}
+{#                            <textarea class="form-control comment-text-area" placeholder="댓글을 작성하세요"#}
+{#                                      id="comment-text-area"></textarea>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="row comment-img-upload-box justify-content-end" id="comment-img-upload-box">#}
+{#                    <div class="col-sm-6 input-group mb-3">#}
+{#                        <div class="input-group-prepend">#}
+{#                            <span class="input-group-text">사진 업로드</span>#}
+{#                        </div>#}
+{#                        <div class="custom-file">#}
+{#                            <input type="file" class="custom-file-input" id="file">#}
+{#                            <label class="custom-file-label" for="file" id="img-src-label">사진을 선택하세요</label>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="row justify-content-end" id="comment-save-box">#}
+{#                    <div class="col-sm-2" id="comment-upload-btn-div">#}
+{#                        <button type="button" class="btn btn-primary" onclick="saveComment({{ recipe_info.RECIPE_ID }}, '{{ user_id }}')">댓글 작성</button>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#            <br><br><br>#}
+            <!-- 등록된 댓글 리스트 -->
+            <div class="container" id="comment-list"></div>
+        </div>
+
+    <!-- 즐겨찾기 리스트 -->
+    <div class="tab-content" id="liked-box" style="display: none">
         <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
         </div>
         <div class="card-deck" id="recipe-liked-mypage-list" class="recipe-liked-mypage-list" role="tabpanel" aria-labelledby="pills-profile-tab">
         </div>
     </div>
-    <!-- 즐겨찾기 & 내가쓴글 태그 end -->
+
 </div>
 </body>
 </html>
