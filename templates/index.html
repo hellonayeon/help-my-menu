@@ -296,9 +296,7 @@
                            style="min-height: 100px; max-height: 100px;">{{ recipe.SUMRY }}</p>
                         {% if recipe.LIKE_BY_ME %}
                             <div class="card-footer">
-                                <a href="javascript:void(0);"
-                                   onclick="getRecipeDetail({{ recipe.RECIPE_ID }}); getComment({{ recipe.RECIPE_ID }});"
-                                   class="card-link">자세히</a>
+                                <a href="/recipe/detail?recipe-id={{ recipe.RECIPE_ID }}" target="_blank" class="card-link">자세히</a>
                                 <a id="likes-{{ recipe.RECIPE_ID }}" class="heart liked"
                                    onclick="toggleLike({{ recipe.RECIPE_ID }}, 0)">
                                     <i class="fa fa-heart" aria-hidden="true">
@@ -312,9 +310,7 @@
                             </div>
                         {% else %}
                             <div class="card-footer">
-                                <a href="javascript:void(0);"
-                                   onclick="getRecipeDetail({{ recipe.RECIPE_ID }}); getComment({{ recipe.RECIPE_ID }});"
-                                   class="card-link">자세히</a>
+                                <a href="/recipe/detail?recipe-id={{ recipe.RECIPE_ID }}" target="_blank" class="card-link">자세히</a>
                                 <a id="likes-{{ recipe.RECIPE_ID }}" class="heart"
                                    onclick="toggleLike({{ recipe.RECIPE_ID }},0)">
                                     <i class="fa fa-heart-o" aria-hidden="true"></i>&nbsp;<span

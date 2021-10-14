@@ -19,9 +19,6 @@ $(document).ready(function () {
     if (url.includes("recipe-name-kor-search=")) {
         gRecipeSearchName = url.split('=').at(-1)
         postRecipeInfo("searchRecipes", 0);
-    } else {
-        // 화면 출력 내용: 초기에는 "재료 선택 화면"으로 설정
-        showControl(recipeChoiceDisplay)
     }
 });
 
@@ -101,7 +98,7 @@ function recipeNameKorSearch() {
     if (recipeName.length < 2) {
         alert("검색할 레시피 이름을 2글자 이상 기입하세요.");
     } else {
-        window.open(`/?recipe-name-kor-search=${recipeName}`)
+        location.href = `/?recipe-name-kor-search=${recipeName}`
     }
 }
 
@@ -274,25 +271,6 @@ function postRecipeInfo(status, info) {
                     }
                 } else if (response['msg'] == 'nothing') {
                     alert("조건에 해당 되는 레시피가 없습니다.😥")
-                }
-            }
-        });
-        // index.html 좋아요탭 혹은 user.html 즐겨찾기을 눌렀을 경우, 사용자가 좋아요한 레시피 호출 & 출력
-    } else if (status == "searchRecipesInMyPage") {
-        $.ajax({
-            type: "GET",
-            url: `/recipe/search?recipe-search-name=${info}&sort=${gSorted[0]}`,
-            success: function (response) {
-                if (response['msg'] == 'success') {
-                    gSorted = [];
-                    $('#recipe-list').empty();
-                    let recipe = response['data_we_get']
-                    for (let i = 0; i < recipe.length; i++) {
-                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
-                    }
-                } else if (response['msg'] == 'nothing') {
-                    alert("조건에 해당 되는 레시피가 없습니다.😥")
-                    window.location.href = '/';
                 }
             }
         });
