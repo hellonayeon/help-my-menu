@@ -15,6 +15,8 @@ client = MongoClient(os.environ['MONGO_DB_PATH'])
 db = client.dbrecipe
 
 
+# 재배포하면 기존에 저장되있던 이미지가 사라지는지 테스트
+
 @application.route('/')
 def home():
     token_receive = request.cookies.get('mytoken')
