@@ -45,8 +45,10 @@
     <script type="text/javascript" src="/static/js/helpmymenu.js"></script>
     <script type="text/javascript" src="/static/js/user.js"></script>
     <script type="text/javascript" src="/static/js/login.js"></script>
+    <script type="text/javascript" src="/static/js/add_recipe.js"></script>
     <link rel="stylesheet" href="/static/css/helpmymenu.css">
     <link rel="stylesheet" href="/static/css/user.css">
+    <link rel="stylesheet" href="/static/css/add_recipe.css">
 
     <title>우당탕탕 | 헤얿 마이 메뉴</title>
 
@@ -54,284 +56,212 @@
         /* TODO: 글꼴 통일하기 */
         @import url('https://fonts.googleapis.com/css?family=Numans');
 
-        * {
+        .banner {
+            font-size: 70px;
+            background-color: #E68A7B;
+            text-align: center;
+            width: 100%;
+            height: 180px;
+            margin: 30px 0px 0px 0px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .add_recipe_wrap {
             width: 900px;
             margin-left: auto;
             margin-right: auto;
-            list-style: none;
-        }
-
-        ul {
-            padding: 16px 0;
-        }
-
-        ul li {
-            display: inline-block;
-            margin: 0 5px;
-            font-size: 14px;
-            letter-spacing: -.5px;
         }
 
         form {
             padding-top: 16px;
         }
 
-        ul li.tag-item {
-            padding: 4px 8px;
-            background-color: coral;
-            color: white;
-        }
-
-        .tag-item:hover {
-            background-color: orangered;
-            color: white;
-        }
-
-        .del-btn {
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-left: 8px;
-        }
-
         .add-btn {
-            color: #FFF2F6;;
+            color: #FFF2F6;
             background-color: #fc6c3f;
             width: 100px;
             border-radius: 10px;
         }
     </style>
     <script>
-        let fileArr;
-        let fileInfoArr = [];
-
-        //썸네일 클릭시 삭제.
-        function fileRemove(index) {
-            console.log("index: " + index);
-            fileInfoArr.splice(index, 1);
-
-            let imgId = "#img_id_" + index;
-            $(imgId).remove();
-            console.log(fileInfoArr);
-        }
-
-        //썸네일 미리보기.
-        function previewImage(targetObj, View_area) {
-            let files = targetObj.files;
-            fileArr = Array.prototype.slice.call(files);
-
-            let preview = document.getElementById(View_area); //div id
-            let ua = window.navigator.userAgent;
-
-            //ie일때(IE8 이하에서만 작동)
-            if (ua.indexOf("MSIE") > -1) {
-                targetObj.select();
-                try {
-                    let src = document.selection.createRange().text; // get file full path(IE9, IE10에서 사용 불가)
-                    let ie_preview_error = document.getElementById("ie_preview_error_" + View_area);
-
-
-                    if (ie_preview_error) {
-                        preview.removeChild(ie_preview_error); //error가 있으면 delete
-                    }
-
-                    let img = document.getElementById(View_area); //이미지가 뿌려질 곳
-
-                    //이미지 로딩, sizingMethod는 div에 맞춰서 사이즈를 자동조절 하는 역할
-                    img.style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='" + src + "', sizingMethod='scale')";
-                } catch (e) {
-                    if (!document.getElementById("ie_preview_error_" + View_area)) {
-                        let info = document.createElement("<p>");
-                        info.id = "ie_preview_error_" + View_area;
-                        info.innerHTML = e.name;
-                        preview.insertBefore(info, null);
-                    }
-                }
-                //ie가 아닐때(크롬, 사파리, FF)
-            } else {
-                let files = targetObj.files;
-                for (let i = 0; i < files.length; i++) {
-                    let file = files[i];
-                    fileInfoArr.push(file);
-
-                    let imageType = /image.*/; //이미지 파일일경우만.. 뿌려준다.
-                    if (!file.type.match(imageType))
-                        continue;
-                    // let prevImg = document.getElementById("prev_" + View_area); //이전에 미리보기가 있다면 삭제
-                    // if (prevImg) {
-                    //     preview.removeChild(prevImg);
-                    // }
-
-                    let span = document.createElement('span');
-                    span.id = "img_id_" + i;
-                    span.style.width = '100px';
-                    span.style.height = '100px';
-                    preview.appendChild(span);
-
-                    let img = document.createElement("img");
-                    img.className = "addImg";
-                    img.classList.add("obj");
-                    img.file = file;
-                    img.style.width = 'inherit';
-                    img.style.height = 'inherit';
-                    img.style.cursor = 'pointer';
-                    const idx = i;
-                    img.onclick = () => fileRemove(idx);   //이미지를 클릭했을 때.
-                    span.appendChild(img);
-
-                    if (window.FileReader) { // FireFox, Chrome, Opera 확인.
-                        let reader = new FileReader();
-                        reader.onloadend = (function (aImg) {
-                            return function (e) {
-                                aImg.src = e.target.result;
-                            };
-                        })(img);
-                        reader.readAsDataURL(file);
-                    } else { // safari is not supported FileReader
-                        //alert('not supported FileReader');
-                        if (!document.getElementById("sfr_preview_error_"
-                            + View_area)) {
-                            let info = document.createElement("p");
-                            info.id = "sfr_preview_error_" + View_area;
-                            info.innerHTML = "not supported FileReader";
-                            preview.insertBefore(info, null);
-                        }
-                    }
-                }
-            }
-        }
-
-        //form데이터 전송
-        function dataSubmit() {
-            let token = $("meta[name='_csrf']").attr("content");
-            let header = $("meta[name='_csrf_header']").attr("content");
-
-            let data = new FormData($("#storeAddForm")[0]);
-
+        //첫 화면 재료 선택 데이터 가져오기
+        function ingredientListing() {
             $.ajax({
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader(header, token);
-                },
-                url: "url",
-                data: data,
-                processData: false, //false 필수
-                contentType: false, //false 필수
-                enctype: 'multipart/form-data',
-                type: "POST",
-            }).done(function (fragment) {
-                $("#resultDiv").replaceWith(fragment);
+                type: "GET",
+                url: "/ingredient-and-recipe",
+                data: {},
+                success: function (response) {
+                    let ingreList = response['recipe_ingredient']
+
+                    for (let i = 0; i < ingreList.length; i++) {
+                        let ingredient = ingreList[i]
+                        let tempHtml = `<option value="main">${ingredient}</option>`
+                        $('#ingredient-select-list').append(tempHtml)
+                    }
+                }
             });
         }
 
-        $(document)
-            .ready(function () {
-
-                let tag = {};
-                let counter = 0;
-
-                // 태그를 추가한다.
-                function addTag(value) {
-                    tag[counter] = value; // 태그를 Object 안에 추가
-                    counter++; // counter 증가 삭제를 위한 del-btn 의 고유 id
+        //검색 자동완성 기능
+        $(function autoSearch() {
+            $.ajax({
+                type: "GET",
+                url: "/ingredient-and-recipe",
+                data: {},
+                success: function (response) {
+                    gIngreList = response["recipe_ingredient"]
+                    gRecipeNameList = response['recipe_name_kor']
+                    searchShow()
                 }
-
-                // 최종적으로 서버에 넘길때 tag 안에 있는 값을 array type 으로 만들어서 넘긴다.
-                function marginTag() {
-                    return Object.values(tag)
-                        .filter(function (word) {
-                            return word !== "";
-                        });
-                }
-
-                $("#tag")
-                    .on("keyup", function (e) {
-                        let self = $(this);
-                        console.log("keypress");
-
-                        // input 에 focus 되있을 때 엔터 및 스페이스바 입력시 구동
-                        if (e.key === "Enter" || e.keyCode == 32) {
-
-                            let tagValue = self.val(); // 값 가져오기
-
-                            // 값이 없으면 동작 안합니다.
-                            if (tagValue !== "") {
-
-                                // 같은 태그가 있는지 검사한다. 있다면 해당값이 array 로 return 된다.
-                                let result = Object.values(tag)
-                                    .filter(function (word) {
-                                        return word === tagValue;
-                                    })
-
-                                // 태그 중복 검사
-                                if (result.length == 0) {
-                                    $("#tag-list")
-                                        .append("<li class='tag-item'>" + tagValue + "<span class='del-btn' idx='" + counter + "'>x</span></li>");
-                                    addTag(tagValue);
-                                    self.val("");
-                                } else {
-                                    alert("태그값이 중복됩니다.");
-                                }
-                            }
-                            e.preventDefault(); // SpaceBar 시 빈공간이 생기지 않도록 방지
-                        }
-                    });
-
-                // 삭제 버튼
-                // 삭제 버튼은 비동기적 생성이므로 document 최초 생성시가 아닌 검색을 통해 이벤트를 구현시킨다.
-                $(document)
-                    .on("click", ".del-btn", function (e) {
-                        let index = $(this)
-                            .attr("idx");
-                        tag[index] = "";
-                        $(this)
-                            .parent()
-                            .remove();
-                    });
             })
+        });
+
+        // 재료 검색 자동완성, 선택한 재료 표시하기 & 선택 재료 데이터 저장 / 레시피 검색 자동완성
+        function searchShow() {
+            $("#search-input").autocomplete({
+                autoFocus: true,
+                source: gIngreList,
+                select: function (event, ui) {
+                    let ingredient = ui.item.value
+
+                    if (gIrdntNm.indexOf(ingredient) == -1) {
+                        let tempHtml = `<input type="button" class="btn btn-outline-primary" id="selected-ingredient-button-${gIndex}" value="" style="margin: auto 5px 3px auto;" onclick="cancleSelectingIngredientAdded(this)"/>`
+                        $('#selected-ingredient-display-main').append(tempHtml)
+                        let temp = 'selected-ingredient-button-' + gIndex
+                        document.getElementById(temp).value = ingredient;
+                        gIndex += 1;
+                        gIrdntNm.push(ingredient);
+                    }
+                },
+                focus: function (event, ui) {
+                    return false;
+                },
+                minLength: 1,
+                delay: 100,
+                disabled: false
+            });
+
+            $("#search-recipe-input").autocomplete({
+                autoFocus: true,
+                source: gRecipeNameList,
+                focus: function (event, ui) {
+                    return false;
+                },
+                minLength: 1,
+                delay: 100,
+                disabled: false
+            });
+        }
     </script>
 </head>
 <body>
+<!-- 상단 Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="/">헤얿 마이 메뉴!</a>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">홈</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/user/{{ user_info._id }}">마이페이지</a>
+            </li>
+            <li class="nav-item" style="margin-left: 870px;">
+                <a class="nav-link" onclick="logout()" href="#">로그아웃</a>
+            </li>
+        </ul>
+        <div class="form-inline my-2 my-lg-0">
+            <input id="search-recipe-input" class="form-control mr-sm-2" placeholder="레시피를 입력하세요">
+            <button class="btn btn-outline-secondary my-2 my-sm-0" onclick="recipeNameKorSearch();">레시피 검색</button>
+        </div>
+    </div>
+</nav>
+
 <section onclick="location.href='/'" class="banner">
     help my menu
 </section>
 
-<div layout:fragment="content">
-    <div class="row border-bottom" style="margin-top: 10px; margin-bottom: 10px;"></div>
-    <form id="addForm">
-        <div style="display: inline;">
-            <label for="img_upload">
-                <img src="/static/images/img_upload.png" style="width:300px; height:300px; cursor: pointer;">
+<div class="add_recipe_wrap">
+    <form method="post" enctype="multipart/form-data">
+        <div class="button" style="margin-top: 30px;">
+            <label for="chooseFile">
+                <img src="/static/images/img_upload.png">
             </label>
-            <input type="file" name="img_upload" id="img_upload"
-                   onchange="previewImage(this,'View_area')"
-                   style="display: none;" multiple>
-
-            <span id='View_area'
-                  style='position:relative; color: black; border: 5px; solid: black;'>
-        </span>
-            <input type="text" placeholder="요리명을 입력하세요."/>
         </div>
-        <div style="margin-top:40px; margin-left:40px;" class="content">
-            <div style="display: flex;">
-                <h3 style="width: 150px; margin-right:30px;">재료 리스트</h3>
-                <input type="text" id="tag" size="20" placeholder="재료를 추가해주세요."/>
-            </div>
-
-            <ul id="tag-list">
-            </ul>
-            <h1>조리법</h1>
-            <ol>
-                <li>첫번째 방법</li>
-                <li>두번째 방법</li>
-                <li>세번째 방법</li>
-            </ol>
-        </div>
-        <div style="align-content: center; width: 100%; text-align: center;">
-            <input type="button" class="add-btn" onclick="dataSubmit();"
-                   value="등록하기">
-        </div>
-
+        <input type="file" id="chooseFile" name="chooseFile" accept="image/*" onchange="loadFile(this)">
     </form>
+
+    <div style="margin-top: 30px;">
+        <h3>요리명</h3>
+        <input type="text" style="width: 900px;" placeholder="요리명을 입력하세요."/>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <h3>재료 리스트</h3>
+        <div class="input-group" style="height: 50px;">
+            <input id="search-input" type="text" class="form-control" placeholder="재료를 입력해주세요"
+                   aria-label="Text input with dropdown button"/>
+            <div class="input-group-append">
+                <select class="btn btn-outline-secondary dropdown-toggle" type="select"
+                        onchange="ingredientDisplay(this)" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                    <option selected hidden>재료 리스트</option>
+                    <optgroup label="재료" id="ingredient-select-list"></optgroup>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <h3>조리법</h3>
+        <textarea style="width: 900px; height: 200px;" placeholder="조리과정과 나만의 팁을 알려주세요."></textarea>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <h3>레시피 종류</h3>
+        <div class="input-group">
+            <select class="custom-select" id="recipe-type-select-list">
+                <option selected>해당 레시피의 종류를 선택해주세요.</option>
+                <option value="한식">한식</option>
+                <option value="서양, 이탈리아">양식</option>
+                <option value="중국">중식</option>
+                <option value="일본">일식</option>
+                <option value="동남아시아">동남아</option>
+                <option value="퓨전">그 외</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-check" style="margin-top: 30px;">
+        <h3>난이도</h3>
+        <input type="checkbox" class="form-check-input" id="level1">
+        <label class="form-check-label" for="level1">⭐</label>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="checkbox" class="form-check-input" id="level2">
+        <label class="form-check-label" for="level2">⭐⭐</label>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="checkbox" class="form-check-input" id="level3">
+        <label class="form-check-label" for="level3">⭐⭐⭐</label>
+    </div>
+
+    <div class="form-check" style="margin-top: 30px;">
+        <h3>소요시간</h3>
+        <input type="checkbox" class="form-check-input" id="short">
+        <label class="form-check-label" for="short">30분~1시간</label>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="checkbox" class="form-check-input" id="medium">
+        <label class="form-check-label" for="medium">1~2시간</label>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="checkbox" class="form-check-input" id="long">
+        <label class="form-check-label" for="long">2~3시간</label>
+    </div>
+
+    <div style="align-content: center; width: 100%; text-align: center;">
+        <input type="button" class="add-btn" onclick="dataSubmit();"
+               value="등록하기">
+    </div>
 </div>
 </body>
 </html>

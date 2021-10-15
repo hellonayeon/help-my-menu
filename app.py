@@ -408,7 +408,7 @@ def update_like() :
             "USER_ID": user_info["_id"]
         }
 
-        if action == "like" : 
+        if action == "like" :
             db.likes.insert_one(doc)
         else:
             db.likes.delete_one(doc)
@@ -421,6 +421,14 @@ def update_like() :
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
+# 레시피 등록 기능
+@app.route('/recipe', methods=['POST'])
+def save_recipe():
+    recipe_id = int(request.form["recipe_id"])
+    text = request.form["text"]
+    nick_nm = request.form["nick_nm"]
+    pw = request.form["pw"]
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=5000, debug=True)
+
