@@ -86,11 +86,11 @@ def update_profile():
 
             filename = secure_filename(file_receive.filename)
             extension = filename.split(".")[-1]
-            file_path = f"{os.environ['BUCKET_ENDPOINT']}/profile_pics/{_id}.{extension}"
+            file_path = f"profile_pics/{_id}.{extension}"
 
             s3 = boto3.client('s3')
             s3.put_object(
-                ACL="public-read",
+                ACL="public-read-write",
                 Bucket=os.environ["BUCKET_NAME"],
                 Body=file_receive,
                 Key=file_path,
@@ -98,7 +98,7 @@ def update_profile():
             )
 
             new_doc["PROFILE_PIC"] = filename
-            new_doc["PROFILE_PIC_REAL"] = file_path
+            new_doc["PROFILE_PIC_REAL"] = f'{os.environ["BUCKET_ENDPOINT"]}/{file_path}'
 
         db.users.update_one({'_id': ObjectId(_id)}, {'$set': new_doc})
 
@@ -405,17 +405,25 @@ def save_comment():
         recipe_id = int(request.form["recipe_id"])
         text = request.form["text"]
 
-        # [업로드 이미지 처리]
-        # 클라이언트가 업로드한 파일을 서버에 저장
         fname = ""
         today = datetime.now()
+        date = today.strftime('%Y.%m.%d')
+
+        # [DB 처리]
+        doc = {
+            'RECIPE_ID': recipe_id,
+            'TEXT': text,
+            'DATE': date,
+            'USER_ID': _id
+        }
+
         if len(request.files) != 0:
             file = request.files["img_src"]
             # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
             extension = file.filename.split('.')[-1]
 
             time = today.strftime('%Y-%m-%d-%H-%M-%S')
-            fname = f'{os.environ["BUCKET_ENDPOINT"]}/comment-images/file-{_id}-{time}.{extension}'
+            fname = f'comment-images/file-{_id}-{time}.{extension}'
 
             s3 = boto3.client('s3')
             s3.put_object(
@@ -426,17 +434,7 @@ def save_comment():
                 ContentType=file.content_type
             )
 
-        # 업데이트 날짜 표시
-        date = today.strftime('%Y.%m.%d')
-
-        # [DB 처리]
-        doc = {
-            'RECIPE_ID': recipe_id,
-            'TEXT': text,
-            'IMG_SRC': fname,
-            'DATE': date,
-            'USER_ID': _id
-        }
+            doc['IMG_SRC'] = f'{os.environ["BUCKET_ENDPOINT"]}/{fname}'
 
         db.comment.insert_one(doc)
 
@@ -486,7 +484,7 @@ def update_comment():
             extension = file.filename.split('.')[-1]
 
             time = today.strftime('%Y-%m-%d-%H-%M-%S')
-            fname = f'{os.environ["BUCKET_ENDPOINT"]}/comment-images/file-{_id}-{time}.{extension}'
+            fname = f'comment-images/file-{_id}-{time}.{extension}'
 
             s3 = boto3.client('s3')
             s3.put_object(
@@ -497,7 +495,8 @@ def update_comment():
                 ContentType=file.content_type
             )
 
-        db.comment.update_one({"_id": ObjectId(comment_id)}, {"$set": {"TEXT": text, "IMG_SRC": fname}})
+        img_src = f'{os.environ["BUCKET_ENDPOINT"]}/{fname}'
+        db.comment.update_one({"_id": ObjectId(comment_id)}, {"$set": {"TEXT": text, "IMG_SRC": img_src}})
 
         return jsonify({'result': 'success'})
 
