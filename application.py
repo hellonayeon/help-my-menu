@@ -124,7 +124,7 @@ def delete_img():
         else:
             # profile_pic_real = bucket_endpoint/directory/file
             dir = user["PROFILE_PIC_REAL"].split('/')
-            fname = f'{dir[1]}/{dir[2]}'
+            fname = f'{dir[-2]}/{dir[-1]}'
 
             s3 = boto3.client('s3')
             s3.delete_object(
