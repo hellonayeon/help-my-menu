@@ -54,7 +54,7 @@ function makeComment(comments, userId, myId) {
 
         // 이미지가 있는 경우 댓글 내용에 이미지 출력
         if (comment["IMG_SRC"] != undefined) {
-            let imgHtml = `<div class="col-12"><img src="../static/comment-images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"><br><br></div>`
+            let imgHtml = `<div class="col-12"><img src="${comment["IMG_SRC"]}" style="width: 250px; height: 200px"><br><br></div>`
             $(`#comment-content-${idx}`).append(imgHtml)
         }
 
