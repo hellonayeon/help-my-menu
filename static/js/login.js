@@ -41,7 +41,10 @@ function toggleSignUpAndIn() {
 }
 
 function isUserNickname(asValue) {
-    var regExp = /[가-힣a-zA-Z0-9_.]{3,10}$/;
+    var regExp = /^[가-힣a-zA-Z0-9_.]{3,10}$/;
+    console.log(regExp.test(asValue))
+    console.log(regExp.test("진짜"))
+    console.log(regExp.test("이것은열자가넘어가어디까지되나보자젠장할는문자일지도스트링일지도모르지요"))
     return regExp.test(asValue);
 }
 
@@ -64,7 +67,7 @@ function signUp() {
     if (username == "") {
         alert("닉네임을 입력해주세요.\n닉네임은 한글과 영문과 숫자, 일부 특수문자(._-) 사용 가능. 3-10자 길이")
         return;
-    } else if (username.length < 4 || username.length > 10 || !isUserNickname(username)) {
+    } else if (username.length < 3 || username.length > 10 || !isUserNickname(username)) {
         alert("닉네임을 확인해주세요.\n닉네임은 한글과 영문과 숫자, 일부 특수문자(._-) 사용 가능. 3-10자 길이")
         return;
     }

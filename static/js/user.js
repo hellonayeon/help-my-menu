@@ -32,6 +32,7 @@ function updateCondition() {
         return
     }
     if (!isUserNickname(checkname)) {
+        console.log("왜 동작하는걸까?")
         $('#username-condition').text("닉네임 형식을 확인해주세요 한글과 영문과 숫자, 일부 특수문자(._-) 사용 가능. 3-10자 길이").removeClass("is-safe").addClass("is-danger")
         $('#input-username').focus()
         return
@@ -48,6 +49,7 @@ function updateProfile() {
         return
     }
 
+    console.log("여기오면안돼!")
     // 프로필 변경
     let username = $('#change-username').val()
     let file = $('#change-file')[0].files[0]
