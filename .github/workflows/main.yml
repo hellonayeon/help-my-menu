@@ -1,8 +1,8 @@
-name: recipe-recommend-service
+name: help-my-menu
 on:
   push:
     branches:
-      - bug/87_backend_cloud
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest
