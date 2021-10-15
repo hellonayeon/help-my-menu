@@ -1,3 +1,28 @@
+const USER_RECIPE = "USER_RECIPE"
+const USER_COMMENT = "USER_COMMENT"
+const USER_LIKED = "USER_LIKED"
+
+function tabControl(tab) {
+    switch (tab){
+        case USER_RECIPE:
+            $('#liked-box').hide()
+            $('#comment-box').hide()
+            // 작성 레시피 출력 영역 show
+            break;
+        case USER_COMMENT:
+            // 작성 레시피 출력 영역 hide
+            $('#liked-box').hide()
+            $('#comment-box').show()
+            break;
+        case USER_LIKED:
+            // 작성 레시피 출력 영역 hide
+            $('#comment-box').hide()
+            $('#liked-box').show()
+            break;
+    }
+}
+
+
 function updateCondition() {
     // 프로필 수정 조건
     let checkname = $('#change-username').val()
@@ -7,6 +32,7 @@ function updateCondition() {
         return
     }
     if (!isUserNickname(checkname)) {
+        console.log("왜 동작하는걸까?")
         $('#username-condition').text("닉네임 형식을 확인해주세요 한글과 영문과 숫자, 일부 특수문자(._-) 사용 가능. 3-10자 길이").removeClass("is-safe").addClass("is-danger")
         $('#input-username').focus()
         return
@@ -23,6 +49,7 @@ function updateProfile() {
         return
     }
 
+    console.log("여기오면안돼!")
     // 프로필 변경
     let username = $('#change-username').val()
     let file = $('#change-file')[0].files[0]
@@ -31,7 +58,6 @@ function updateProfile() {
     form_data.append("username_give", username)
     form_data.append("file_give", file)
     form_data.append("introduce_give", introduce)
-    console.log(username, file, introduce, form_data)
 
     $.ajax({
         type: "POST",
@@ -92,7 +118,6 @@ function changePassword() {
         $('#input-more-password').focus()
         return;
     }
-    console.log("test")
     $.ajax({
         type: "POST",
         url: "/user/change-password",
@@ -114,10 +139,3 @@ function changePassword() {
     })
 
 }
-
-// FIXME: 로그인화면과 조건 상이하여 함수 하나 더 생성했음.
-function isUserNickname(asValue) {
-    var regExp = /[가-힣a-zA-Z0-9_.]{3,10}$/;
-    return regExp.test(asValue);
-}
-

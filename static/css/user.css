@@ -80,16 +80,16 @@
     display: none;
 }
 
-.widthBtn {
+.width-btn {
     width: 150px;
     text-align: center;
 }
 
-#recipe-liked-mp-list {
+.recipe-liked-mypage-list {
     margin : auto;
 }
 
-#alert-no-liked-in-my-page {
+.alert-no-liked-in-my-page {
     font-size:x-large;
     display: block;
     margin: 50px auto auto auto;

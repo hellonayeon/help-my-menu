@@ -3,7 +3,7 @@
 <br>
 
 ## 🔗 라이브
-<a href="http://nayeonkwon.shop">http://nayeonkwon.shop</a>
+<a href="http://helpmymenu.site">Help my menu !</a>
 
 ## 📢 소개
 여러분의 냉장고에 있는 재료들로 만들 수 있는 요리를 추천 받고, 훌륭한 레시피를 친구들과 공유해보세요.
