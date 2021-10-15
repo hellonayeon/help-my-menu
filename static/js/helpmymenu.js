@@ -158,6 +158,11 @@ function selectedRecipeFilter() {
     } else {
         // 추천레시피 탭에서 호출 시 조건 + 정렬 다 적용
         // 식사 유형 데이터 저장
+        if (gIrdntNm[0] == undefined) {
+            alert("재료를 먼저 선택해 주세요!")
+            return 0
+        }
+
         if ($("input[name=nation]:checked").val() == undefined) {
 
             gNationNm.push('한식', '일식', '중식', '서양, 이탈리아', '동남아시아', '퓨전')
