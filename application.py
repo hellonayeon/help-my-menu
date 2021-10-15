@@ -15,7 +15,6 @@ application = Flask(__name__)
 client = MongoClient(os.environ['MONGO_DB_PATH'])
 db = client.dbrecipe
 
-# EB 재배포하면 이미지 사라지는 문제 테스트
 
 @application.route('/')
 def home():
