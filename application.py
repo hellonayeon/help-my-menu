@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import jwt  # pip install PyJWT
 import hashlib
+import boto3
 
 # Flask 초기화
 application = Flask(__name__)
@@ -56,6 +57,7 @@ def user(_id):
         is_mypage_user = (_id == my_id)
 
         user_info = db.users.find_one({'_id': ObjectId(_id)})
+
         return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user, my_id=my_id)
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
@@ -70,21 +72,36 @@ def update_profile():
     try:
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
         _id = payload["user_id"]
+
         username_receive = request.form["username_give"]
         introduce_receive = request.form["introduce_give"]
+
         new_doc = {
             "USERNAME": username_receive,
             "PROFILE_INFO": introduce_receive
         }
+
         if 'file_give' in request.files:
             file_receive = request.files["file_give"]
+
             filename = secure_filename(file_receive.filename)
             extension = filename.split(".")[-1]
             file_path = f"profile_pics/{_id}.{extension}"
-            file_receive.save("./static/" + file_path)
+
+            s3 = boto3.client('s3')
+            s3.put_object(
+                ACL="public-read-write",
+                Bucket=os.environ["BUCKET_NAME"],
+                Body=file_receive,
+                Key=file_path,
+                ContentType=file_receive.content_type
+            )
+
             new_doc["PROFILE_PIC"] = filename
-            new_doc["PROFILE_PIC_REAL"] = file_path
+            new_doc["PROFILE_PIC_REAL"] = f'{os.environ["BUCKET_ENDPOINT"]}/{file_path}'
+
         db.users.update_one({'_id': ObjectId(_id)}, {'$set': new_doc})
+
         return jsonify({"result": "success", 'msg': '프로필을 업데이트했습니다.'})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
@@ -99,11 +116,22 @@ def delete_img():
         _id = payload["user_id"]
         origin_doc = {
             "PROFILE_PIC": "",
-            "PROFILE_PIC_REAL": 'profile_pics/profile_placeholder.png'
+            "PROFILE_PIC_REAL": f'{os.environ["BUCKET_ENDPOINT"]}/profile_pics/profile_placeholder.png'
         }
-        if db.users.find_one({'_id': ObjectId(_id)})["PROFILE_PIC"] == "":
+        user = db.users.find_one({'_id': ObjectId(_id)}, {'_id': False})
+        if user["PROFILE_PIC"] == "":
             msg = "이미지가 없습니다.."
         else:
+            # profile_pic_real = bucket_endpoint/directory/file
+            dir = user["PROFILE_PIC_REAL"].split('/')
+            fname = f'{dir[-2]}/{dir[-1]}'
+
+            s3 = boto3.client('s3')
+            s3.delete_object(
+                Bucket=os.environ["BUCKET_NAME"],
+                Key=fname
+            )
+
             db.users.update_one({'_id': ObjectId(_id)}, {'$set': origin_doc})
             msg = "이미지 삭제 완료!."
         return jsonify({"result": "success", 'msg': msg})
@@ -181,7 +209,7 @@ def sign_up():
         "EMAIL": email_receive,  # 이메일
         "PASSWORD": password_hash,  # 비밀번호
         "PROFILE_PIC": "",  # 프로필 사진 파일 이름
-        "PROFILE_PIC_REAL": "profile_pics/profile_placeholder.png",  # 프로필 사진 기본 이미지
+        "PROFILE_PIC_REAL": f"{os.environ['BUCKET_ENDPOINT']}/profile_pics/profile_placeholder.png",  # 프로필 사진 기본 이미지
         "PROFILE_INFO": ""  # 프로필 한 마디
     }
     db.users.insert_one(doc)
@@ -377,35 +405,36 @@ def save_comment():
         recipe_id = int(request.form["recipe_id"])
         text = request.form["text"]
 
-        # [업로드 이미지 처리]
-        # 클라이언트가 업로드한 파일을 서버에 저장
         fname = ""
         today = datetime.now()
-        if len(request.files) != 0:
-            file = request.files["img_src"]
-
-            # 이미지 확장자
-            # 가장 마지막 문자열 가져오기 [-1]
-            # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
-            extension = file.filename.split('.')[-1]
-
-            time = today.strftime('%Y-%m-%d-%H-%M-%S')
-            fname = f'file-{_id}-{time}.{extension}'
-
-            save_to = f'static/comment-images/{fname}'
-            file.save(save_to)
-
-        # 업데이트 날짜 표시
         date = today.strftime('%Y.%m.%d')
 
         # [DB 처리]
         doc = {
             'RECIPE_ID': recipe_id,
             'TEXT': text,
-            'IMG_SRC': fname,
             'DATE': date,
             'USER_ID': _id
         }
+
+        if len(request.files) != 0:
+            file = request.files["img_src"]
+            # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
+            extension = file.filename.split('.')[-1]
+
+            time = today.strftime('%Y-%m-%d-%H-%M-%S')
+            fname = f'comment-images/file-{_id}-{time}.{extension}'
+
+            s3 = boto3.client('s3')
+            s3.put_object(
+                ACL="public-read-write",
+                Bucket=os.environ["BUCKET_NAME"],
+                Body=file,
+                Key=fname,
+                ContentType=file.content_type
+            )
+
+            doc['IMG_SRC'] = f'{os.environ["BUCKET_ENDPOINT"]}/{fname}'
 
         db.comment.insert_one(doc)
 
@@ -451,19 +480,23 @@ def update_comment():
         today = datetime.now()
         if len(request.files) != 0:
             file = request.files["img_src"]
-
-            # 이미지 확장자
-            # 가장 마지막 문자열 가져오기 [-1]
             # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
             extension = file.filename.split('.')[-1]
 
             time = today.strftime('%Y-%m-%d-%H-%M-%S')
-            fname = f'file-{_id}-{time}.{extension}'
+            fname = f'comment-images/file-{_id}-{time}.{extension}'
 
-            save_to = f'static/comment-images/{fname}'
-            file.save(save_to)
+            s3 = boto3.client('s3')
+            s3.put_object(
+                ACL="public-read-write",
+                Bucket=os.environ["BUCKET_NAME"],
+                Body=file,
+                Key=fname,
+                ContentType=file.content_type
+            )
 
-        db.comment.update_one({"_id": ObjectId(comment_id)}, {"$set": {"TEXT": text, "IMG_SRC": fname}})
+        img_src = f'{os.environ["BUCKET_ENDPOINT"]}/{fname}'
+        db.comment.update_one({"_id": ObjectId(comment_id)}, {"$set": {"TEXT": text, "IMG_SRC": img_src}})
 
         return jsonify({'result': 'success'})
 

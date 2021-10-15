@@ -19,7 +19,11 @@ function makeComment(comments, userId, myId) {
                                 <div class="row justify-content-between">
                                 <div class="col-4">
                                     <div class="row">
-                                        <div class="col-6"><a href="/user/${comment["USER_ID"]}"><img src="/static/${comment["PROFILE_PIC_REAL"]}" alt="Avatar" style="border-radius: 50%; width: 80px; height: 80px"></a></div>
+                                        <div class="col-6">
+                                            <a href="/user/${comment["USER_ID"]}">
+                                                <img src="${comment["PROFILE_PIC_REAL"]}" alt="Avatar" style="border-radius: 50%; width: 80px; height: 80px">
+                                            </a>
+                                        </div>
                                         <div class="col-6 comment-profile">
                                         <div class="row"><span>${comment["USERNAME"]}</span></div>
                                         <div class="row"><span>${comment["DATE"]}</span></div>
@@ -49,8 +53,8 @@ function makeComment(comments, userId, myId) {
         }
 
         // 이미지가 있는 경우 댓글 내용에 이미지 출력
-        if (comment["IMG_SRC"] != "") {
-            let imgHtml = `<div class="col-12"><img src="../static/comment-images/${comment["IMG_SRC"]}" style="width: 250px; height: 200px"><br><br></div>`
+        if (comment["IMG_SRC"] != undefined) {
+            let imgHtml = `<div class="col-12"><img src="${comment["IMG_SRC"]}" style="width: 250px; height: 200px"><br><br></div>`
             $(`#comment-content-${idx}`).append(imgHtml)
         }
 
