@@ -19,7 +19,11 @@ function makeComment(comments, userId, myId) {
                                 <div class="row justify-content-between">
                                 <div class="col-4">
                                     <div class="row">
-                                        <div class="col-6"><a href="/user/${comment["USER_ID"]}"><img src="/static/${comment["PROFILE_PIC_REAL"]}" alt="Avatar" style="border-radius: 50%; width: 80px; height: 80px"></a></div>
+                                        <div class="col-6">
+                                            <a href="/user/${comment["USER_ID"]}">
+                                                <img src="${comment["PROFILE_PIC_REAL"]}" alt="Avatar" style="border-radius: 50%; width: 80px; height: 80px">
+                                            </a>
+                                        </div>
                                         <div class="col-6 comment-profile">
                                         <div class="row"><span>${comment["USERNAME"]}</span></div>
                                         <div class="row"><span>${comment["DATE"]}</span></div>

@@ -102,7 +102,7 @@
     <!-- 사용자 정보 표시 start -->
     <section class="user-info">
         <div class="thumbnail-area">
-            <img src="{{ url_for('static', filename=user_info.PROFILE_PIC_REAL) }}" alt="..."
+            <img src="{{ user_info.PROFILE_PIC_REAL }}" alt="..."
                  style="border-radius: 50px;">
             {% if is_mypage_user %}
             <button type="button" class="btn btn-secondary img-button" data-toggle="modal" data-target="#exampleModal"
