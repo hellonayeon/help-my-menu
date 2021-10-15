@@ -16,6 +16,8 @@ db = client.dbrecipe
 
 
 # 재배포하면 기존에 저장되있던 이미지가 사라지는지 테스트
+# |__ 새로운 인스턴스로 교체되서 생기는 문제인가 테스트
+
 
 @application.route('/')
 def home():
