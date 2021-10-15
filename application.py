@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import jwt  # pip install PyJWT
 import hashlib
+import boto3
 
 # Flask 초기화
 application = Flask(__name__)
@@ -13,10 +14,6 @@ application = Flask(__name__)
 # MongoDB 초기화
 client = MongoClient(os.environ['MONGO_DB_PATH'])
 db = client.dbrecipe
-
-
-# 재배포하면 기존에 저장되있던 이미지가 사라지는지 테스트
-# |__ 새로운 인스턴스로 교체되서 생기는 문제인가 테스트
 
 
 @application.route('/')
@@ -74,21 +71,36 @@ def update_profile():
     try:
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
         _id = payload["user_id"]
+
         username_receive = request.form["username_give"]
         introduce_receive = request.form["introduce_give"]
+
         new_doc = {
             "USERNAME": username_receive,
             "PROFILE_INFO": introduce_receive
         }
+
         if 'file_give' in request.files:
             file_receive = request.files["file_give"]
+
             filename = secure_filename(file_receive.filename)
             extension = filename.split(".")[-1]
             file_path = f"profile_pics/{_id}.{extension}"
-            file_receive.save("./static/" + file_path)
+
+            s3 = boto3.client('s3')
+            s3.put_object(
+                ACL="public-read",
+                Bucket=os.environ["BUCKET_NAME"],
+                Body=file_receive,
+                Key=file_path,
+                ContentType=file_receive.content_type
+            )
+
             new_doc["PROFILE_PIC"] = filename
             new_doc["PROFILE_PIC_REAL"] = file_path
+
         db.users.update_one({'_id': ObjectId(_id)}, {'$set': new_doc})
+
         return jsonify({"result": "success", 'msg': '프로필을 업데이트했습니다.'})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
@@ -387,17 +399,20 @@ def save_comment():
         today = datetime.now()
         if len(request.files) != 0:
             file = request.files["img_src"]
-
-            # 이미지 확장자
-            # 가장 마지막 문자열 가져오기 [-1]
             # TODO: 아이폰 heic 확장자 이미지 예외처리 필요
             extension = file.filename.split('.')[-1]
 
             time = today.strftime('%Y-%m-%d-%H-%M-%S')
-            fname = f'file-{_id}-{time}.{extension}'
+            fname = f'comment-images/file-{_id}-{time}.{extension}'
 
-            save_to = f'static/comment-images/{fname}'
-            file.save(save_to)
+            s3 = boto3.client('s3')
+            s3.put_object(
+                ACL="public-read",
+                Bucket=os.environ["BUCKET_NAME"],
+                Body=file,
+                Key=fname,
+                ContentType=file.content_type
+            )
 
         # 업데이트 날짜 표시
         date = today.strftime('%Y.%m.%d')
