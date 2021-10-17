@@ -53,12 +53,14 @@ function makeComment(comments, userId, myId) {
         }
 
         // 이미지가 있는 경우 댓글 내용에 이미지 출력
-        if (comment["IMG_SRC"] != undefined) {
-            let imgHtml = `<div class="col-12"><img src="${comment["IMG_SRC"]}" style="width: 250px; height: 200px"><br><br></div>`
+        if (comment["IMG_SRC"] != "") {
+            let imgHtml = `<div class="col-12" id="comment-image-content-${comment["_id"]}">
+                                <img src="${comment["IMG_SRC"]}" style="width: 250px; height: 200px; border-radius: 10px;"> &nbsp; &nbsp;
+                           </div>`
             $(`#comment-content-${idx}`).append(imgHtml)
         }
 
-        let txtHtml = `<div class="col-12">${comment["TEXT"]}</div>`
+        let txtHtml = `<div class="col-12"><br>${comment["TEXT"]}</div>`
         $(`#comment-content-${idx}`).append(txtHtml)
     })
 }
@@ -81,8 +83,11 @@ function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc, myId) {
                                         </div>
                                         <div class="custom-file">
                                             <input type="file" class="custom-file-input" id="comment-update-file-${commentId}">
-                                            <label class="custom-file-label" for="file" id="comment-update-img-src-label-${commentId}">사진을 선택하세요</label>
+                                            <label class="custom-file-label" for="file" id="comment-update-img-src-label-${commentId}" style="display:inline-block; overflow: hidden; text-overflow: ellipsis;">사진을 선택하세요</label>
                                         </div>
+                                        <button type="button" class="btn btn-primary" style="margin-left: 10px"
+                                                onclick="$('comment-update-file-${commentId}').val(''); $('#comment-update-img-src-label-${commentId}').text('사진을 선택하세요')">사진 업로드 취소
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="row justify-content-end" id="comment-update-btn-box">
@@ -100,7 +105,7 @@ function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc, myId) {
     $(`#comment-update-box-${commentId}`).append(commentUpdateDivHtml)
     $(`#comment-update-textarea-${commentId}`).val(text)
     if(imgSrc != "") {
-        $(`#comment-update-img-src-label-${commentId}`).text(imgSrc)
+        $(`#comment-image-content-${commentId}`).append(`<i class="fa fa-trash-o" aria-hidden="true" onclick="deleteCommentImage('${commentId}')" style="color: lightcoral; float: bottom;"></i>`)
     }
 
     $(`#comment-update-file-${commentId}`).change(function() {
@@ -112,9 +117,9 @@ function makeCommentUpdateDiv(recipeId, commentId, userId, text, imgSrc, myId) {
 /* 댓글 저장 요청 함수 */
 function saveComment(recipeId, userId, myId) {
     let text = $('#comment-textarea').val();
-    let imgSrc = $('#comment-file')[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
+    let img = $('#comment-file')[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
 
-    if(text == "" && imgSrc == undefined) {
+    if(text == "" && img == undefined) {
         alert("내용을 입력하세요!")
         return
     }
@@ -122,7 +127,10 @@ function saveComment(recipeId, userId, myId) {
     let formData = new FormData()
     formData.append("recipe_id", recipeId)
     formData.append("text", text)
-    formData.append("img_src", imgSrc)
+
+    if(img != undefined) {
+        formData.append("img", img)
+    }
 
     $.ajax({
         type: "POST",
@@ -134,8 +142,8 @@ function saveComment(recipeId, userId, myId) {
         success: function (response) {
             if (response['result'] == "success") {
                 // 업로드된 파일, 댓글내용 지우기
-                $('#comment-file').empty()
-                $('#comment-img-src-label').empty()
+                $('#comment-file').val("") // not .empty()
+                $('#comment-img-src-label').text("사진을 선택하세요")
                 $('#comment-textarea').val("")
                 getComment(recipeId, userId, myId)
             }
@@ -150,6 +158,7 @@ function deleteComment(recipeId, commentId, userId, myId) {
         data: {"comment_id": commentId},
         success: function (response) {
             if (response["result"] == "success") {
+                alert(response["msg"])
                 // 댓글 다시 출력: 삭제된 댓글 반영
                 getComment(recipeId, userId, myId)
             }
@@ -159,9 +168,9 @@ function deleteComment(recipeId, commentId, userId, myId) {
 
 function updateComment(recipeId, commentId, userId, myId) {
     let text = $(`#comment-update-textarea-${commentId}`).val();
-    let imgSrc = $(`#comment-update-file-${commentId}`)[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
+    let img = $(`#comment-update-file-${commentId}`)[0].files[0]; // 파일 업로드하지 않았을 경우 undefined
 
-    if(text == "" && imgSrc == undefined) {
+    if(text == "" && img == undefined) {
         alert("내용을 입력하세요!")
         return
     }
@@ -169,7 +178,10 @@ function updateComment(recipeId, commentId, userId, myId) {
     let formData = new FormData()
     formData.append("comment_id", commentId)
     formData.append("text", text)
-    formData.append("img_src", imgSrc)
+
+    if(img != undefined) {
+        formData.append("img", img)
+    }
 
     $.ajax({
         type: "PUT",
@@ -181,16 +193,27 @@ function updateComment(recipeId, commentId, userId, myId) {
         success: function (response) {
             if (response['result'] == "success") {
                 // 업로드된 파일, 댓글내용 지우기
-                $(`#comment-update-file-${commentId}`).empty()
-                $(`#comment-update-img-src-label-${commentId}`).empty()
+                $(`#comment-update-file-${commentId}`).val("") // file input delete .val("") not .empty()
+                $(`#comment-update-img-src-label-${commentId}`).text("사진을 선택하세요")
                 $(`#comment-update-textarea-${commentId}`).val("")
-
-
                 // 댓글 수정 영역 컴포넌트들 지우기
                 $(`#comment-update-box-${commentId}`).empty()
 
+                alert(response['msg'])
                 getComment(recipeId, userId, myId)
             }
+        }
+    })
+}
+
+function deleteCommentImage(commentId) {
+    $.ajax({
+        type: "DELETE",
+        url: "/recipe/comment/image",
+        data: {"comment_id": commentId},
+        success: function(response) {
+            alert(response["msg"])
+            window.location.reload()
         }
     })
 }
