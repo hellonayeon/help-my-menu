@@ -542,6 +542,20 @@ def update_like() :
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
 
+@application.route('/recipe/register', methods=['GET'])
+def add_recipe_page():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+        user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
+
+        return render_template("add_recipe.html", user_info=user_info)
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+
 # 레시피 등록 페이지
 @application.route('/recipe', methods=['POST'])
 def add_recipe():
@@ -554,8 +568,8 @@ def add_recipe():
         # 레시피 기본 정보
         # ROW_NUM, RECIPE_ID, RECIPE_NM_KO, SUMRY, NATION_NM, COOKING_TIME, QNT, IMG_URL
         # 사용자가 등록한 레시피에는 USER_ID 저장 필요
-        recipe = request.form["give_basic"]
-        recipe_id = db.recipe_basic.count() + 1
+        recipe = request.form["recipe_info_give"]["give_basic"]
+        recipe_id = int(db.recipe_basic.count())
         recipe["ROW_NUM"] = recipe_id
         recipe["RECIPE_ID"] = recipe_id
         recipe["USER_ID"] = _id
@@ -564,9 +578,9 @@ def add_recipe():
 
         # 레시피 재료 정보
         # ROW_NUM, RECIPE_ID, IRDNT_NM, IRDNT_CPCTY("" 빈 값으로)
-        recipe_irdnt = request.form["give_ingredient"]
+        recipe_irdnt = request.form["recipe_info_give"]["ingredient_give"]
         # 레시피 재료 수량 정보
-        recipe_qnt = request.form["give_quantity"]
+        recipe_qnt = request.form["recipe_info_give"]["quantity_give"]
 
         irdnt_list = []
         for idx in range(len(recipe_irdnt)):
@@ -581,7 +595,7 @@ def add_recipe():
         db.recipe_ingredient.insert(irdnt_list)
 
         # 레시피 과정 정보
-        recipe_number = request.form["give_process"]
+        recipe_number = request.form["recipe_info_give"]["process_give"]
         number_list = []
         for idx in range(len(recipe_number)):
             number = {

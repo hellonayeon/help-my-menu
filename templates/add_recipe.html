@@ -197,12 +197,23 @@
             let quantity = gRegisterIngredientQuantity
             let process = gRegisterRecipeProcess
             let form_data = new FormData()
-            form_data.append("give_basic", JSON.stringify(giveBasic))
+
+            {#form_data.append("give_basic", JSON.stringify(giveBasic))#}
+            {#form_data.append("file_give", file)#}
+            {#form_data.append("ingredient_give", JSON.stringify(ingredient))#}
+            {#form_data.append("quantity_give", JSON.stringify(quantity))#}
+            {#form_data.append("process_give", JSON.stringify(process))#}
+            {#console.log(file, giveBasic, ingredient, process, quantity, form_data)#}
+
+            recipe_data = {
+                "give_basic": giveBasic,
+                "ingredient_give": ingredient,
+                "quantity_give": quantity,
+                "process_give": process
+            }
+
+            form_data.append("recipe_info_give", JSON.stringify(recipe_data))
             form_data.append("file_give", file)
-            form_data.append("ingredient_give", JSON.stringify(ingredient))
-            form_data.append("quantity_give", JSON.stringify(quantity))
-            form_data.append("process_give", JSON.stringify(process))
-            console.log(file, giveBasic, ingredient, process, quantity, form_data)
 
             $.ajax({
                 type: "POST",
@@ -241,7 +252,7 @@
                 <a class="nav-link" href="/user/{{ user_info._id }}">마이페이지</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">레시피 등록하기</a>
+                <a class="nav-link" href="/recipe/register">레시피 등록하기</a>
             </li>
         </ul>
         <ul class="navbar-nav" style="padding-right: 20px;">
