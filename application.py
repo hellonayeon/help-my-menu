@@ -521,7 +521,7 @@ def update_like() :
             "RECIPE_ID": recipe_id,
             "USER_ID": _id
         }
-        
+
         if db.likes.find_one(doc) :
             db.likes.delete_one(doc)
             action = "unlike"
@@ -536,6 +536,20 @@ def update_like() :
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+# 레시피 등록 페이지
+@application.route('/recipe/add', methods=['POST'])
+def add_recipe():
+    recipename_receive = request.form['recipename_give']
+    summary_receive = request.form['summary_give']
+
+    doc = {
+    "RECIPE_NM_KO": recipename_receive,  #요리명
+    "SUMRY": summary_receive,  #한 줄 소개
+    }
+
+    db.recipe_basic.insert_one(doc)
+    return jsonify({'result': 'success'})
 
 
 if __name__ == '__main__':
