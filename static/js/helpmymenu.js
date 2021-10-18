@@ -289,6 +289,28 @@ function postRecipeInfo(status, info) {
             }
         })
     }
+    // 마이페이지 작성한 레시피를 눌렀을 경우
+    else if (status == "recipeInMyPage") {
+        $.ajax({
+            type: "GET",
+            url: `/recipe/search?mypage_id=${info}`,
+            success: function (response) {
+                gSorted = [];
+                let idToAppend = status == "liked" ? "#recipe-liked-list" : "#recipe-liked-mypage-list"
+                let idAlertNoLiked = status == "liked" ? "alert-no-liked" : "alert-no-liked-in-my-page"
+                $(idToAppend).empty();
+                if (response['msg'] == 'success') {
+                    let recipe = response['data_we_get']
+                    for (let i = 0; i < recipe.length; i++) {
+                        makeRecipeList(recipe[i]['RECIPE_ID'], recipe[i]['IMG_URL'], recipe[i]['RECIPE_NM_KO'], recipe[i]['SUMRY'], recipe[i]['LIKES_COUNT'], recipe[i]['LIKE_BY_ME'], status)
+                    }
+                } else if (response['msg'] == 'nothing') {
+                    let tempHtml = `<div class=${idAlertNoLiked}>작성한 레시피가 없습니다.😥<br>레시피를 직접 추가해보세요.</div>`
+                    $(idToAppend).append(tempHtml)
+                }
+            }
+        })
+    }
 }
 
 // 검색한 레시피 리스트 & 좋아요 탭 레시피 리스트 출력
@@ -305,7 +327,7 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
         idType = "-liked-list";
         heartIdType = "-liked";
         toggleLikeNum = 2;
-    } else if (status == "likedInMypage") {
+    } else if (status == "likedInMypage" || status == "recipeInMyPage") {
         idType = `-liked-mypage-list`;
         heartIdType = "-liked-mypage";
         toggleLikeNum = 3;

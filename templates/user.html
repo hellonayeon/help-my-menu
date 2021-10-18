@@ -60,6 +60,10 @@
             $('#myInput').trigger('focus')
         })
 
+        $(document).ready(function() {
+            postRecipeInfo("recipeInMyPage", "{{ user_info._id }}")
+        })
+
         {% if msg %}
             alert("{{ msg }}")
         {% endif %}
@@ -240,6 +244,10 @@
     <!-- 즐겨찾기 & 내가쓴글 태그 end -->
 
     <!-- 작성한 레시피 리스트 -->
+    <div class="container" id="recipe-list-container">
+        <div id="recipe-list" class="card-deck">
+        </div>
+    </div>
 
     <!-- 댓글 리스트 -->
     <div class="container" id="comment-box" style="display: none">
