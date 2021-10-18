@@ -277,6 +277,7 @@ def make_recipe_list():
             recipe_search_name = request.args.get("recipe-search-name")
             user_id = request.args.get("user_id")
             recipe_sort = request.args.get("sort")
+            mypage_id = request.args.get("mypage_id")
             # 'GET' 방식이면서, API 통신 url에 recipe_search_name이 존재하면 "레시피 검색 기능"으로 인식
             if recipe_search_name:
                 data_we_want = list(db.recipe_basic.find({"RECIPE_NM_KO": {"$regex": recipe_search_name}}).distinct("RECIPE_ID"))
@@ -284,6 +285,9 @@ def make_recipe_list():
             elif user_id:
                 data_we_want = list(db.likes.find({"USER_ID": user_id}).distinct("RECIPE_ID"))
             # 'GET' 방식이면서, API 통신 url에 args가 None이면, "index.html 좋아요 탭"으로 인식
+            elif mypage_id:
+                data_we_want = list(db.recipe_basic.find({"USER_ID": mypage_id}))
+            # 'GET' 방식이면서, API 통신 url에 'mypage_id' args가 Not None이면, "user.html 작성한 탭"으로 인식
             else:
                 data_we_want = list(db.likes.find({"USER_ID": _id}).distinct("RECIPE_ID"))
 
@@ -537,19 +541,95 @@ def update_like() :
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
+
+@application.route('/recipe/register', methods=['GET'])
+def add_recipe_page():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+        user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
+
+        return render_template("add_recipe.html", user_info=user_info)
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+
 # 레시피 등록 페이지
-@application.route('/recipe/add', methods=['POST'])
+@application.route('/recipe', methods=['POST'])
 def add_recipe():
-    recipename_receive = request.form['recipename_give']
-    summary_receive = request.form['summary_give']
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+        _id = payload["user_id"]
 
-    doc = {
-    "RECIPE_NM_KO": recipename_receive,  #요리명
-    "SUMRY": summary_receive,  #한 줄 소개
-    }
+        # 리스트 데이터
+        # 레시피 기본 정보
+        # ROW_NUM, RECIPE_ID, RECIPE_NM_KO, SUMRY, NATION_NM, COOKING_TIME, QNT, IMG_URL
+        # 사용자가 등록한 레시피에는 USER_ID 저장 필요
+        recipe = request.form["recipe_info_give"]["give_basic"]
+        recipe_id = int(db.recipe_basic.count())
+        recipe["ROW_NUM"] = recipe_id
+        recipe["RECIPE_ID"] = recipe_id
+        recipe["USER_ID"] = _id
 
-    db.recipe_basic.insert_one(doc)
-    return jsonify({'result': 'success'})
+        db.recipe_basic.find_one(recipe)
+
+        # 레시피 재료 정보
+        # ROW_NUM, RECIPE_ID, IRDNT_NM, IRDNT_CPCTY("" 빈 값으로)
+        recipe_irdnt = request.form["recipe_info_give"]["ingredient_give"]
+        # 레시피 재료 수량 정보
+        recipe_qnt = request.form["recipe_info_give"]["quantity_give"]
+
+        irdnt_list = []
+        for idx in range(len(recipe_irdnt)):
+            irdnt = {
+                "ROW_NUM": recipe_id,
+                "RECIPE_ID": recipe_id,
+                "IRDNT_NM": recipe_irdnt[idx],
+                "IRDNT_CPCTY": recipe_qnt[idx]
+            }
+            irdnt_list.append(irdnt)
+
+        db.recipe_ingredient.insert(irdnt_list)
+
+        # 레시피 과정 정보
+        recipe_number = request.form["recipe_info_give"]["process_give"]
+        number_list = []
+        for idx in range(len(recipe_number)):
+            number = {
+                "ROW_NUM": recipe_id,
+                "RECIPE_ID": recipe_id,
+                "COOKING_NO": idx+1,
+                "COOKING_DC": recipe_number[idx]
+            }
+            number_list.append(number)
+
+        db.recipe_number.insert(number_list)
+
+        # TODO: 레시피 이미지 S3 업로드
+        file = request.files[""]
+        print(f'서버로 부터 받은 이미지 파일 이름 {file.filename}')
+        fname = f'{os.environ["BUCKET_ENDPOINT"]}/recipe_image/${file.filename}'
+        print(f'S3 이미지 파일 이름 {fname}')
+
+        s3 = boto3.client('s3')
+        s3.put_object(
+            ACL="public-read-write",
+            Bucket=os.environ["BUCKET_NAME"],
+            Body=file,
+            Key=fname,
+            ContentType=file.content_type
+        )
+
+        return jsonify({'result': 'success'})
+
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
 
 
 if __name__ == '__main__':
