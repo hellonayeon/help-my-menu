@@ -150,8 +150,11 @@
                         </div>
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="comment-file">
-                            <label class="custom-file-label" for="file" id="comment-img-src-label">사진을 선택하세요</label>
+                            <label class="custom-file-label" for="file" id="comment-img-src-label" style="display:inline-block; overflow: hidden; text-overflow: ellipsis;">사진을 선택하세요</label>
                         </div>
+                        <button type="button" class="btn btn-primary" style="margin-left: 20px"
+                                onclick="$('#comment-file').val(''); $('#comment-img-src-label').text('사진을 선택하세요')">사진 업로드 취소
+                        </button>
                     </div>
                 </div>
                 <div class="row justify-content-end" id="comment-save-box">
