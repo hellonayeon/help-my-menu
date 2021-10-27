@@ -51,7 +51,9 @@
     <script>
         $(document).ready(function () {
             getMainRankingPosting();
-        })
+            makeMypageButton()
+        });
+
     </script>
 </head>
 
@@ -70,11 +72,7 @@
             <li class="nav-item active">
                 <a class="nav-link" href="/">홈<span class="sr-only">(current)</span></a>
             </li>
-            <li class="nav-item">
-                {#                <a class="nav-link" href="/user/{{ user_info._id }}">마이페이지</a>#}
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/recipe/register">레시피 등록하기</a>
+            <li id="mypage-button-space" class="nav-item active">
             </li>
         </ul>
         <ul class="navbar-nav" style="padding-right: 20px;">
