@@ -49,7 +49,7 @@ def get_main_ranking_posting():
 
         best_recipe = sorted(best_recipe, key=lambda k: k['LIKES_COUNT'], reverse=True)[:20]
 
-        return jsonify({'msg': 'success', 'best_recipe': best_recipe})
+        return jsonify({'msg': 'success', 'best_recipe': best_recipe, 'user_id': _id})
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -347,7 +347,7 @@ def make_recipe_list():
                 data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
             elif "name-sort" in recipe_sort:
                 data_we_get = sorted(data_we_get, key=lambda k: k['RECIPE_NM_KO'], reverse=False)
-            return jsonify({'msg': 'success', "data_we_get": data_we_get})
+            return jsonify({'msg': 'success', "data_we_get": data_we_get, "user_id": _id})
         else:
             return jsonify({'msg': 'nothing'})
 
@@ -360,33 +360,37 @@ def make_recipe_list():
 # 레시피 상세정보 API
 @application.route('/recipe/detail', methods=['GET'])
 def get_recipe_detail():
-    recipe_id = int(request.args.get("recipe-id"))
-    token_receive = request.cookies.get('mytoken')
     try:
+        token_receive = request.cookies.get('mytoken')
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
         _id = payload["user_id"]
 
-        # 레시피 정보
-        projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                      "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
-        recipe_info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
+        req_type = request.args.get("type")
+        if req_type == "html":
+            return render_template("detail.html")
+        else:
+            recipe_id = int(request.args.get("recipe-id"))
 
-        # 상세정보(조리과정)
-        projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
-        steps = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
+            # 레시피 정보
+            projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
+                          "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
+            recipe_info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
 
-        # 재료정보
-        projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
-        irdnts = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
+            # 상세정보(조리과정)
+            projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
+            steps = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
 
-        # 좋아요 정보
-        like_info = {}
-        like_info['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
-        like_info['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
+            # 재료정보
+            projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
+            irdnts = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
 
-        return render_template('detail.html',
-                               user_id=_id, recipe_info=recipe_info, steps=steps, irdnts=irdnts, like_info=like_info)
+            # 좋아요 정보
+            like_info = {}
+            like_info['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
+            like_info['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
 
+            return jsonify(
+                {"recipe_info": recipe_info, "steps": steps, "irdnts": irdnts, "like_info": like_info, "user_id": _id})
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -624,96 +628,6 @@ def update_like():
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
-
-
-@application.route('/recipe/register', methods=['GET'])
-def add_recipe_page():
-    token_receive = request.cookies.get('mytoken')
-    try:
-        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
-        user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
-
-        return render_template("add_recipe.html", user_info=user_info)
-    except jwt.ExpiredSignatureError:
-        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
-    except jwt.exceptions.DecodeError:
-        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
-
-
-# 레시피 등록 페이지
-@application.route('/recipe', methods=['POST'])
-def add_recipe():
-    token_receive = request.cookies.get('mytoken')
-    try:
-        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
-        _id = payload["user_id"]
-
-        # 리스트 데이터
-        # 레시피 기본 정보
-        # ROW_NUM, RECIPE_ID, RECIPE_NM_KO, SUMRY, NATION_NM, COOKING_TIME, QNT, IMG_URL
-        # 사용자가 등록한 레시피에는 USER_ID 저장 필요
-        recipe = request.form["recipe_info_give"]["give_basic"]
-        recipe_id = int(db.recipe_basic.count())
-        recipe["ROW_NUM"] = recipe_id
-        recipe["RECIPE_ID"] = recipe_id
-        recipe["USER_ID"] = _id
-
-        db.recipe_basic.find_one(recipe)
-
-        # 레시피 재료 정보
-        # ROW_NUM, RECIPE_ID, IRDNT_NM, IRDNT_CPCTY("" 빈 값으로)
-        recipe_irdnt = request.form["recipe_info_give"]["ingredient_give"]
-        # 레시피 재료 수량 정보
-        recipe_qnt = request.form["recipe_info_give"]["quantity_give"]
-
-        irdnt_list = []
-        for idx in range(len(recipe_irdnt)):
-            irdnt = {
-                "ROW_NUM": recipe_id,
-                "RECIPE_ID": recipe_id,
-                "IRDNT_NM": recipe_irdnt[idx],
-                "IRDNT_CPCTY": recipe_qnt[idx]
-            }
-            irdnt_list.append(irdnt)
-
-        db.recipe_ingredient.insert(irdnt_list)
-
-        # 레시피 과정 정보
-        recipe_number = request.form["recipe_info_give"]["process_give"]
-        number_list = []
-        for idx in range(len(recipe_number)):
-            number = {
-                "ROW_NUM": recipe_id,
-                "RECIPE_ID": recipe_id,
-                "COOKING_NO": idx+1,
-                "COOKING_DC": recipe_number[idx]
-            }
-            number_list.append(number)
-
-        db.recipe_number.insert(number_list)
-
-        # TODO: 레시피 이미지 S3 업로드
-        file = request.files[""]
-        print(f'서버로 부터 받은 이미지 파일 이름 {file.filename}')
-        fname = f'{os.environ["BUCKET_ENDPOINT"]}/recipe_image/${file.filename}'
-        print(f'S3 이미지 파일 이름 {fname}')
-
-        s3 = boto3.client('s3')
-        s3.put_object(
-            ACL="public-read-write",
-            Bucket=os.environ["BUCKET_NAME"],
-            Body=file,
-            Key=fname,
-            ContentType=file.content_type
-        )
-
-        return jsonify({'result': 'success'})
-
-    except jwt.ExpiredSignatureError:
-        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
-    except jwt.exceptions.DecodeError:
-        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
-
 
 
 if __name__ == '__main__':
