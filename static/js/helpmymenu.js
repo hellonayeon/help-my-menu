@@ -23,6 +23,21 @@ $(document).ready(function () {
     }
 });
 
+
+function makeMypageButton() {
+    $.ajax({
+        type: "GET",
+        url: `/user`,
+        data: {},
+        success : function(response) {
+            let id = response['my_id']
+            let temp = `<a class="nav-link" href="/user/${id}">마이페이지</a>`
+            $('#mypage-button-space').append(temp)
+        }
+    })
+}
+
+
 //첫 화면 재료 선택 데이터 가져오기
 function ingredientListing() {
     $.ajax({

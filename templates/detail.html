@@ -54,9 +54,11 @@
         $(document).ready(function(){
             // 상세페이지 로딩 시 댓글 리스트 가져오기
             getComment({{ recipe_info.RECIPE_ID }}, "{{ user_id }}", "{{ user_id }}")
-        })
-
-
+        });
+        
+        $(document).ready(function () {
+            makeMypageButton()
+        });
     </script>
 </head>
 
@@ -74,8 +76,7 @@
             <li class="nav-item active">
                 <a class="nav-link" href="/">홈<span class="sr-only">(current)</span></a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/user/{{ user_id }}">마이페이지</a>
+            <li id="mypage-button-space" class="nav-item active">
             </li>
         </ul>
         <ul class="navbar-nav" style="padding-right: 20px;">

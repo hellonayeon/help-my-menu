@@ -49,8 +49,26 @@ def login():
     return render_template('login.html', msg=msg)
 
 
+@application.route('/user')
+def for_mypage_button():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+        my_id = str(payload['user_id'])
+
+        return jsonify({'my_id':my_id})
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+
 @application.route('/user/<_id>')
-def user(_id):
+def render_user_page(_id):
+    return render_template('user.html')
+
+@application.route('/mypage/<_id>', methods=['GET'])
+def mypage(_id):
     # 사용자의 개인 정보를 볼 수 있는 유저 페이지
     token_receive = request.cookies.get('mytoken')
     try:
@@ -60,8 +78,9 @@ def user(_id):
         is_mypage_user = (_id == my_id)
 
         user_info = db.users.find_one({'_id': ObjectId(_id)})
-
-        return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user, my_id=my_id)
+        user_info["_id"] = str(user_info["_id"])
+        
+        return jsonify({'user_info':user_info, 'is_mypage_user':is_mypage_user, 'my_id':my_id})
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
