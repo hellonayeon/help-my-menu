@@ -15,28 +15,41 @@ application = Flask(__name__)
 client = MongoClient(os.environ['MONGO_DB_PATH'])
 db = client.dbrecipe
 
+
 # S3
 s3 = boto3.client('s3')
-
 
 @application.route('/')
 def home():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
-        user_info = db.users.find_one({'_id': ObjectId(payload['user_id'])})
 
+        return render_template('index.html')
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+
+# 첫 화면 재료 항목 불러오기
+@application.route('/ranking', methods=['GET'])
+def get_main_ranking_posting():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
         _id = payload["user_id"]
 
         best_recipe = []
         like_recipe = list(db.likes.find({}).distinct("RECIPE_ID"))
         for i in range(len(like_recipe)):
-            best_recipe.append(db.recipe_basic.find_one({"RECIPE_ID": int(like_recipe[i])}))
+            best_recipe.append(db.recipe_basic.find_one({"RECIPE_ID": int(like_recipe[i])}, {'_id': False}))
             best_recipe[i]['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": like_recipe[i]})
             best_recipe[i]['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": like_recipe[i], "USER_ID": _id}))
 
         best_recipe = sorted(best_recipe, key=lambda k: k['LIKES_COUNT'], reverse=True)[:20]
-        return render_template('index.html', user_info=user_info, best_recipe=best_recipe)
+
+        return jsonify({'msg': 'success', 'best_recipe': best_recipe, 'user_id': _id})
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -49,8 +62,27 @@ def login():
     return render_template('login.html', msg=msg)
 
 
+@application.route('/user')
+def for_mypage_button():
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
+        my_id = str(payload['user_id'])
+
+        return jsonify({'my_id':my_id})
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
+    except jwt.exceptions.DecodeError:
+        return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+
 @application.route('/user/<_id>')
-def user(_id):
+def render_user_page(_id):
+    return render_template('user.html')
+
+
+@application.route('/mypage/<_id>', methods=['GET'])
+def mypage(_id):
     # 사용자의 개인 정보를 볼 수 있는 유저 페이지
     token_receive = request.cookies.get('mytoken')
     try:
@@ -60,8 +92,9 @@ def user(_id):
         is_mypage_user = (_id == my_id)
 
         user_info = db.users.find_one({'_id': ObjectId(_id)})
-
-        return render_template('user.html', user_info=user_info, is_mypage_user=is_mypage_user, my_id=my_id)
+        user_info["_id"] = str(user_info["_id"])
+        
+        return jsonify({'user_info':user_info, 'is_mypage_user':is_mypage_user, 'my_id':my_id})
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
@@ -280,6 +313,7 @@ def make_recipe_list():
             recipe_search_name = request.args.get("recipe-search-name")
             user_id = request.args.get("user_id")
             recipe_sort = request.args.get("sort")
+            mypage_id = request.args.get("mypage_id")
             # 'GET' 방식이면서, API 통신 url에 recipe_search_name이 존재하면 "레시피 검색 기능"으로 인식
             if recipe_search_name:
                 data_we_want = list(
@@ -288,6 +322,9 @@ def make_recipe_list():
             elif user_id:
                 data_we_want = list(db.likes.find({"USER_ID": user_id}).distinct("RECIPE_ID"))
             # 'GET' 방식이면서, API 통신 url에 args가 None이면, "index.html 좋아요 탭"으로 인식
+            elif mypage_id:
+                data_we_want = list(db.recipe_basic.find({"USER_ID": mypage_id}))
+            # 'GET' 방식이면서, API 통신 url에 'mypage_id' args가 Not None이면, "user.html 작성한 탭"으로 인식
             else:
                 data_we_want = list(db.likes.find({"USER_ID": _id}).distinct("RECIPE_ID"))
 
@@ -328,8 +365,8 @@ def get_recipe_detail():
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
         _id = payload["user_id"]
 
-        type = request.args.get("type")
-        if type == "html":
+        req_type = request.args.get("type")
+        if req_type == "html":
             return render_template("detail.html")
         else:
             recipe_id = int(request.args.get("recipe-id"))

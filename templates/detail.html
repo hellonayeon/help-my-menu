@@ -53,6 +53,10 @@
     </style>
     <script>
         $(document).ready(function() {
+            // 네비게이션바 마이페이지 버튼 추가
+            makeMypageButton()
+
+            // 레시피 상세정보 & 댓글 가져오기
             const urlParams = new URLSearchParams(window.location.search);
             let recipeId = urlParams.get('recipe-id')
             let userId = urlParams.get('user-id')
@@ -77,8 +81,7 @@
             <li class="nav-item active">
                 <a class="nav-link" href="/">홈<span class="sr-only">(current)</span></a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/user/{{ user_id }}">마이페이지</a> <!-- TODO: ajax 요청 / js 함수 호출 / onclick -->
+            <li id="mypage-button-space" class="nav-item active">
             </li>
         </ul>
         <ul class="navbar-nav" style="padding-right: 20px;">
@@ -127,7 +130,7 @@
                         </div>
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="comment-file">
-                            <label class="custom-file-label" for="file" id="comment-img-src-label" style="display:inline-block; overflow: hidden; text-overflow: ellipsis;">사진을 선택하세요</label>
+                            <label class="custom-file-label" for="comment-file" id="comment-img-src-label" style="display:inline-block; overflow: hidden; text-overflow: ellipsis;">사진을 선택하세요</label>
                         </div>
                         <button type="button" class="btn btn-primary" style="margin-left: 20px"
                                 onclick="$('#comment-file').val(''); $('#comment-img-src-label').text('사진을 선택하세요')">사진 업로드 취소

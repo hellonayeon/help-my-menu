@@ -42,9 +42,6 @@ function toggleSignUpAndIn() {
 
 function isUserNickname(asValue) {
     var regExp = /^[가-힣a-zA-Z0-9_.]{3,10}$/;
-    console.log(regExp.test(asValue))
-    console.log(regExp.test("진짜"))
-    console.log(regExp.test("이것은열자가넘어가어디까지되나보자젠장할는문자일지도스트링일지도모르지요"))
     return regExp.test(asValue);
 }
 

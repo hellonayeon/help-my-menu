@@ -59,7 +59,15 @@
     </style>
 
     <script>
-
+        $(document).ready(function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const myParam = urlParams.get('msg');
+            if(myParam == '로그인 정보가 존재하지 않습니다.'){
+                alert('로그인 정보가 존재하지 않습니다.')
+            } else if(myParam == '로그인 시간이 만료되었습니다.'){
+                alert('로그인 시간이 만료되었습니다.')
+            }
+        })
     </script>
 </head>
 

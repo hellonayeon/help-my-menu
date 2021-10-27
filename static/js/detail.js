@@ -2,9 +2,8 @@
 function getRecipeDetail(recipeId) {
     $.ajax({
         type: "GET",
-        url: `/recipe/detail?type=json&recipe-id=${recipeId}`,
+        url: `/recipe/detail?req-type=json&recipe-id=${recipeId}`,
         success: function (response) {
-            console.log(response)
             makeRecipeDetail(response["recipe_info"], response["steps"], response["irdnts"], response["like_info"], response['user_id'])
         }
     })
@@ -30,7 +29,7 @@ function makeRecipeDetail(recipeInfo, steps, irdnts, likeInfo, userId) {
     })
 
     // 댓글 저장 시, RECIPE_ID 정보 필요
-    let commentBtnHtml = `<button type="button" class="btn btn-primary" onclick="saveComment(${recipeInfo["RECIPE_ID"]}, ${userId}, ${userId})">댓글 작성</button>`
+    let commentBtnHtml = `<button type="button" class="btn btn-primary" onclick="saveComment(${recipeInfo['RECIPE_ID']}, '${userId}', '${userId}')">댓글 작성</button>`
 
     $('#detail-img').attr("src", recipeInfo["IMG_URL"])
     $('#detail-info').append(infoHtml)
