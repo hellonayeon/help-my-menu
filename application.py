@@ -310,7 +310,7 @@ def make_recipe_list():
                 data_we_get = sorted(data_we_get, key=lambda k: k['LIKES_COUNT'], reverse=True)
             elif "name-sort" in recipe_sort:
                 data_we_get = sorted(data_we_get, key=lambda k: k['RECIPE_NM_KO'], reverse=False)
-            return jsonify({'msg': 'success', "data_we_get": data_we_get})
+            return jsonify({'msg': 'success', "data_we_get": data_we_get, "user_id": _id})
         else:
             return jsonify({'msg': 'nothing'})
 
@@ -323,33 +323,37 @@ def make_recipe_list():
 # 레시피 상세정보 API
 @application.route('/recipe/detail', methods=['GET'])
 def get_recipe_detail():
-    recipe_id = int(request.args.get("recipe-id"))
-    token_receive = request.cookies.get('mytoken')
     try:
+        token_receive = request.cookies.get('mytoken')
         payload = jwt.decode(token_receive, os.environ["JWT_SECRET_KEY"], algorithms=['HS256'])
         _id = payload["user_id"]
 
-        # 레시피 정보
-        projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
-                      "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
-        recipe_info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
+        type = request.args.get("type")
+        if type == "html":
+            return render_template("detail.html")
+        else:
+            recipe_id = int(request.args.get("recipe-id"))
 
-        # 상세정보(조리과정)
-        projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
-        steps = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
+            # 레시피 정보
+            projection = {"RECIPE_ID": True, "RECIPE_NM_KO": True, "SUMRY": True, "NATION_NM": True,
+                          "COOKING_TIME": True, "QNT": True, "IMG_URL": True, "_id": False}
+            recipe_info = db.recipe_basic.find_one({"RECIPE_ID": recipe_id}, projection)
 
-        # 재료정보
-        projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
-        irdnts = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
+            # 상세정보(조리과정)
+            projection = {"COOKING_NO": True, "COOKING_DC": True, "_id": False}
+            steps = list(db.recipe_number.find({"RECIPE_ID": recipe_id}, projection))
 
-        # 좋아요 정보
-        like_info = {}
-        like_info['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
-        like_info['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
+            # 재료정보
+            projection = {"IRDNT_NM": True, "IRDNT_CPCTY": True, "_id": False}
+            irdnts = list(db.recipe_ingredient.find({"RECIPE_ID": recipe_id}, projection))
 
-        return render_template('detail.html',
-                               user_id=_id, recipe_info=recipe_info, steps=steps, irdnts=irdnts, like_info=like_info)
+            # 좋아요 정보
+            like_info = {}
+            like_info['LIKES_COUNT'] = db.likes.count_documents({"RECIPE_ID": recipe_id})
+            like_info['LIKE_BY_ME'] = bool(db.likes.find_one({"RECIPE_ID": recipe_id, "USER_ID": _id}))
 
+            return jsonify(
+                {"recipe_info": recipe_info, "steps": steps, "irdnts": irdnts, "like_info": like_info, "user_id": _id})
     except jwt.ExpiredSignatureError:
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:

@@ -41,6 +41,7 @@
 
     <!-- 'Help My Menu' Javascript, CSS -->
     <script type="text/javascript" src="/static/js/helpmymenu.js"></script>
+    <script type="text/javascript" src="/static/js/detail.js"></script>
     <script type="text/javascript" src="/static/js/comment.js"></script>
     <link rel="stylesheet" href="/static/css/helpmymenu.css">
     <link rel="stylesheet" href="/static/css/comment.css">
@@ -51,12 +52,14 @@
 
     </style>
     <script>
-        $(document).ready(function(){
-            // 상세페이지 로딩 시 댓글 리스트 가져오기
-            getComment({{ recipe_info.RECIPE_ID }}, "{{ user_id }}", "{{ user_id }}")
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let recipeId = urlParams.get('recipe-id')
+            let userId = urlParams.get('user-id')
+
+            getRecipeDetail(recipeId);
+            getComment(recipeId, userId, userId);
         })
-
-
     </script>
 </head>
 
@@ -75,7 +78,7 @@
                 <a class="nav-link" href="/">홈<span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/user/{{ user_id }}">마이페이지</a>
+                <a class="nav-link" href="/user/{{ user_id }}">마이페이지</a> <!-- TODO: ajax 요청 / js 함수 호출 / onclick -->
             </li>
         </ul>
         <ul class="navbar-nav" style="padding-right: 20px;">
@@ -97,39 +100,13 @@
     <div class="container" id="recipe-detail-container">
         <div class="container" id="detail-box">
             <div class="row">
-                <div class="col" class="detail-img-container"><img id="detail-img" src="{{ recipe_info.IMG_URL }}"></div>
+                <div class="col" class="detail-img-container"><img id="detail-img"></div>
                 <div class="col" id="detail-info">
-                    <span class="detail-title">{{ recipe_info.RECIPE_NM_KO }}</span>
-                    <span class="detail-info">{{ recipe_info.COOKING_TIME }}</span>
-                    <span class="detail-info">{{ recipe_info.QNT }}</span>
-                    {{  like_info.LiKE_BY_ME  }}
-                    {% if like_info.LIKE_BY_ME %}
-                    <a id="likes-detail-{{ recipe_info.RECIPE_ID }}" class="heart-detail liked" onclick="toggleLike({{ recipe_info.RECIPE_ID }}, 1)">
-                        <i class="fa fa-heart" aria-hidden="true"></i> &nbsp;
-                    {% else %}
-                    <a id="likes-detail-{{ recipe_info.RECIPE_ID }}" class="heart-detail" onclick="toggleLike({{ recipe_info.RECIPE_ID }}, 1)">
-                        <i class="fa fa-heart-o" aria-hidden="true"></i> &nbsp;
-                    {% endif %}
-                    <span class="like-num" id="detail-like-num">
-                        <script type="text/javascript">
-                            $('#detail-like-num').text(num2str({{ like_info.LIKES_COUNT }}))
-                        </script>
-                    </span>
-                    </a>
-
-                    <h4>{{ recipe_info.SUMRY }}</h4>
-
-                    {% for irdnt in irdnts %}
-                        <span class="badge badge-primary ingredient-tag">{{ irdnt.IRDNT_NM }}: {{ irdnt.IRDNT_CPCTY }}</span>
-                    {% endfor %}
+                    <!-- 레시피 간단 내용 -->
                 </div>
             </div>
             <div class="row" id="detail-step">
-                {% for step in steps %}
-                    <div class="col-12">
-                        STEP <span class="detail-step-num">{{ step.COOKING_NO }}. </span>{{ step.COOKING_DC }}
-                    </div>
-                {% endfor %}
+                <!-- 조리 과정 -->
             </div>
         </div>
         <!-- 댓글 영역 -->
@@ -159,7 +136,7 @@
                 </div>
                 <div class="row justify-content-end" id="comment-save-box">
                     <div class="col-sm-2" id="comment-upload-btn-div">
-                        <button type="button" class="btn btn-primary" onclick="saveComment({{ recipe_info.RECIPE_ID }}, '{{ user_id }}', '{{ user_id }}')">댓글 작성</button>
+                        <!-- 레시피 종류에 따라 버튼 onclick 함수 파라미터 변경 -->
                     </div>
                 </div>
             </div>
