@@ -1,6 +1,5 @@
 import os
 from flask import Flask, render_template, jsonify, request, redirect, url_for
-from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime, timedelta
@@ -11,9 +10,6 @@ import boto3
 
 # Flask
 application = Flask(__name__)
-
-# CORS
-cors = CORS(application, resources={r"/*": {"origins": "*"}})
 
 # MongoDB
 client = MongoClient(os.environ['MONGO_DB_PATH'])
