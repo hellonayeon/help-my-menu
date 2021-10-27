@@ -24,6 +24,11 @@ $(document).ready(function () {
     }
 });
 
+function get_status_login(){
+
+
+}
+
 function getMainRankingPosting() {
     $.ajax({
         type: "GET",

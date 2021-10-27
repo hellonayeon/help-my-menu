@@ -15,7 +15,6 @@ application = Flask(__name__)
 client = MongoClient(os.environ['MONGO_DB_PATH'])
 db = client.dbrecipe
 
-
 @application.route('/')
 def home():
     token_receive = request.cookies.get('mytoken')
@@ -73,6 +72,18 @@ def user(_id):
         return redirect(url_for("login", msg="로그인 시간이 만료되었습니다."))
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
+
+# @application.route('/login/<>', methods=['GET'])
+# def update_profile():
+#     # 사용자 프로필 변경 요청 API
+#     token_receive = request.cookies.get('mytoken')
+#     try:
+#         return jsonify({"result": "success", 'msg': '프로필을 업데이트했습니다.'})
+#     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+#         return redirect(url_for("home"))
+
+
+
 
 
 @application.route('/user', methods=['POST'])
