@@ -51,12 +51,10 @@ def get_main_ranking_posting():
     except jwt.exceptions.DecodeError:
         return redirect(url_for("login", msg="로그인 정보가 존재하지 않습니다."))
 
-
 @application.route('/login')
 def login():
     msg = request.args.get("msg")
     return render_template('login.html', msg=msg)
-
 
 @application.route('/user/<_id>')
 def user(_id):

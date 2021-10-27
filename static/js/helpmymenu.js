@@ -10,7 +10,7 @@ let gIndex = 1
 
 $(document).ready(function () {
     ingredientListing();
-    getMainRankingPosting();
+
 
     // 사진 업로드
     bsCustomFileInput.init()
