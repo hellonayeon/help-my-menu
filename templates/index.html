@@ -69,7 +69,7 @@
                 <a class="nav-link" href="/">홈<span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/user/{{ user_info._id }}">마이페이지</a>
+                {#                <a class="nav-link" href="/user/{{ user_info._id }}">마이페이지</a>#}
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/recipe/register">레시피 등록하기</a>
@@ -289,45 +289,6 @@
     <!-- 레시피 리스트 화면 내용 -->
     <div class="container" id="recipe-list-container">
         <div id="recipe-list" class="card-deck">
-            {% for recipe in best_recipe %}
-                <div id="recipe{{ recipe.RECIPE_ID }}recipeId" class="card"
-                     style="margin:10px 12.5px 10px 12.5px;  min-width: 200px; max-width: 200px;">
-                    <img class="card-img-top img-fix" src="{{ recipe.IMG_URL }}" alt="Card image cap">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ recipe.RECIPE_NM_KO }}</h5>
-                        <p class="card-text text-overflow"
-                           style="min-height: 100px; max-height: 100px;">{{ recipe.SUMRY }}</p>
-                        {% if recipe.LIKE_BY_ME %}
-                            <div class="card-footer">
-                                <a href="/recipe/detail?recipe-id={{ recipe.RECIPE_ID }}" class="card-link">자세히</a>
-                                <a id="likes-{{ recipe.RECIPE_ID }}" class="heart liked"
-                                   onclick="toggleLike({{ recipe.RECIPE_ID }}, 0)">
-                                    <i class="fa fa-heart" aria-hidden="true">
-                                    </i>&nbsp;
-                                    <span id="recipe-like-{{ recipe.RECIPE_ID }}" class="like-num">
-                                        <script type="text/javascript">
-                                            $('#recipe-like-{{ recipe.RECIPE_ID }}').text(num2str({{ recipe.LIKES_COUNT }}))
-                                        </script>
-                                    </span>
-                                </a>
-                            </div>
-                        {% else %}
-                            <div class="card-footer">
-                                <a href="/recipe/detail?recipe-id={{ recipe.RECIPE_ID }}" class="card-link">자세히</a>
-                                <a id="likes-{{ recipe.RECIPE_ID }}" class="heart"
-                                   onclick="toggleLike({{ recipe.RECIPE_ID }},0)">
-                                    <i class="fa fa-heart-o" aria-hidden="true"></i>&nbsp;<span
-                                        id="recipe-like-{{ recipe.RECIPE_ID }}" class="like-num">
-                                        <script type="text/javascript">
-                                            $('#recipe-like-{{ recipe.RECIPE_ID }}').text(num2str({{ recipe.LIKES_COUNT }}))
-                                        </script>
-                                    </span>
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endfor %}
         </div>
         <div id="recipe-liked-list" class="card-deck" style="display: none;"></div>
         <div id="recipe-search-list" class="card-deck" style="display: none;"></div>

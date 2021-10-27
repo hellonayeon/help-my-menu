@@ -10,6 +10,7 @@ let gIndex = 1
 
 $(document).ready(function () {
     ingredientListing();
+    getMainRankingPosting();
 
     // 사진 업로드
     bsCustomFileInput.init()
@@ -22,6 +23,67 @@ $(document).ready(function () {
         postRecipeInfo("searchRecipes", 0);
     }
 });
+
+function getMainRankingPosting() {
+    $.ajax({
+        type: "GET",
+        url: "/ranking",
+        data: {},
+        success: function (response) {
+            if (response['msg'] == 'success') {
+                let bestRecipe = response['best_recipe'];
+
+                let tempHtml = ``
+                for (let i = 0; i < bestRecipe.length; i++) {
+                    let recipeId = bestRecipe[i]['RECIPE_ID'];
+                    let imgUrl = bestRecipe[i]['IMG_URL'];
+                    let recipeNmKo = bestRecipe[i]['RECIPE_NM_KO'];
+                    let sumry = bestRecipe[i]['SUMRY'];
+                    let likesCount = bestRecipe[i]['LIKES_COUNT'];
+                    let likeByMe = bestRecipe[i]['LIKE_BY_ME']
+
+                    tempHtml = `<div id="recipe${recipeId}recipeId" class="card"
+                                 style="margin:10px 12.5px 10px 12.5px;  min-width: 200px; max-width: 200px;">
+                                <img class="card-img-top img-fix" src=${imgUrl} alt="Card image cap">
+                                <div class="card-body">
+                                    <h5 class="card-title">${recipeNmKo}</h5>
+                                    <p class="card-text text-overflow"
+                                       style="min-height: 100px; max-height: 100px;">${sumry}</p>`
+
+                    if (likeByMe){
+                        tempHtml += `<div class="card-footer">
+                                            <a href="/recipe/detail?recipe-id=${recipeId}" class="card-link">자세히</a>
+                                            <a id="likes-${recipeId}" class="heart liked"
+                                               onclick="toggleLike(${recipeId}, 0)">
+                                                <i class="fa fa-heart" aria-hidden="true">
+                                                </i>&nbsp;
+                                                <span id="recipe-like-${recipeId}" class="like-num">
+                                                    ${num2str(likesCount)}
+                                                </span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>`
+                    } else {
+                        tempHtml += `<div class="card-footer">
+                                        <a href="/recipe/detail?recipe-id=${recipeId}" class="card-link">자세히</a>
+                                        <a id="likes-${recipeId}" class="heart"
+                                           onclick="toggleLike(${recipeId},0)">
+                                            <i class="fa fa-heart-o" aria-hidden="true"></i>&nbsp;<span
+                                                id="recipe-like-${recipeId}" class="like-num">
+                                                ${num2str(likesCount)}
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>`
+                    }
+                    $('#recipe-list').append(tempHtml)
+                }
+            }
+        }
+    });
+}
 
 //첫 화면 재료 선택 데이터 가져오기
 function ingredientListing() {
@@ -96,7 +158,7 @@ function searchShow() {
 // 레시피 검색 (Navbar 오른쪽)
 function recipeNameKorSearch() {
     // 오른쪽 상단 navbar의 검색 input 박스의 내용을 가져와서 2글자 미만이면 alert, 아니면 페이지 이동으로 검색
-        let recipeName = $('#search-recipe-input').val();
+    let recipeName = $('#search-recipe-input').val();
     if (recipeName.length < 2) {
         alert("검색할 레시피 이름을 2글자 이상 기입하세요.");
     } else {
@@ -355,14 +417,14 @@ function makeRecipeList(recipeId, recipeUrl, recipeName, recipeDesc, recipeLikes
 // 좋아요 기능
 function toggleLike(recipe_id, toggleLikeNum) {
     // toggleLikeNum은 어디서 호출했는지에 따라 배열의 위치에 맞게 정수값을 주었습니다.
-    let likeIdArray = ["","-detail", "-liked", "-liked-mypage", "-search"]
+    let likeIdArray = ["", "-detail", "-liked", "-liked-mypage", "-search"]
     let likeId = $(`#likes${likeIdArray[toggleLikeNum]}-${recipe_id}`)
     // 좋아요 설정 및 해제는 app.py에서 DB에 좋아요 데이터가 있는지 없는지를 기준으로 동작하고, 그 결과를 가져옵니다.
     $.ajax({
-        type : 'POST',
-        url : `/recipe/update_like`,
-        data : {
-            recipe_id : recipe_id
+        type: 'POST',
+        url: `/recipe/update_like`,
+        data: {
+            recipe_id: recipe_id
         },
         success: function (response) {
             for (let i = 0; i < likeIdArray.length; i++) {
